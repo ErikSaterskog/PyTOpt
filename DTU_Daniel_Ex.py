@@ -9,7 +9,7 @@ import calfem.core as cfc
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
-from scipy.sparse import csc_matrix, linalg
+from scipy.sparse import csc_matrix, linalg, csr_matrix
 
 
 def top(nelx,nely,volfrac,penal,rmin):
@@ -40,26 +40,21 @@ def top(nelx,nely,volfrac,penal,rmin):
         change =np.max(np.max(abs(x-xold)))
         print(str(change) + '\n')
         
-        viridis = cm.get_cmap('Greys', 29)
         
-        
-        if loop == 1:
+        if loop > 50:
             fig, ax = plt.subplots(1, 1, figsize=(6,3),constrained_layout=True)
-        
-        psm = ax.pcolormesh(np.flip(x,0), cmap=viridis, rasterized=True, vmin=0, vmax=1)
-        fig.colorbar(psm, ax=ax)
-        plt.pause(1e-6)
-        #plt.colormaps(gray)
-        #plt.imagesc(-x)
-        #plt.axis(equal)
-        #plt.axis(tight)
-        #plt.axis(off)
-        
-        plt.show()
-        
-        if loop > 100:
+            viridis = cm.get_cmap('Greys', 29)
+            psm = ax.pcolormesh(np.flip(x,0), cmap=viridis, rasterized=True, vmin=0, vmax=1)
+            fig.colorbar(psm, ax=ax)
+            plt.pause(1e-6)
+            plt.show()
             return x
-        
+    fig, ax = plt.subplots(1, 1, figsize=(6,3),constrained_layout=True)
+    viridis = cm.get_cmap('Greys', 29)
+    psm = ax.pcolormesh(np.flip(x,0), cmap=viridis, rasterized=True, vmin=0, vmax=1)
+    fig.colorbar(psm, ax=ax)
+    plt.pause(1e-6)
+    plt.show()    
     return x
 
 def OC(nelx,nely,x,volfrac,dc):
@@ -89,10 +84,8 @@ def Check(nelx,nely,rmin,x,dc):
 
 def FE(nelx,nely,x,penal):
     Ke = lk()
-    #K = csc_matrix((2*(nely+1)*(nelx+1),2*(nely+1)*(nelx+1))).toarray()
-    #F = csc_matrix((2*(nely+1)*(nelx+1),1)).toarray()
-    K = np.array(np.zeros([2*(nely+1)*(nelx+1),2*(nely+1)*(nelx+1)]))
-    F = np.zeros([2*(nely+1)*(nelx+1),1])
+    K = csc_matrix((2*(nely+1)*(nelx+1),2*(nely+1)*(nelx+1))).toarray()
+    F = csc_matrix((2*(nely+1)*(nelx+1),1)).toarray()
     U = F.copy()
     fixdofs = []
     for elx in range(0,nelx):
@@ -102,20 +95,26 @@ def FE(nelx,nely,x,penal):
             edof = [2*n1,2*n1+1, 2*n2,  2*n2+1, 2*n2+2, 2*n2+3, 2*n1+2,  2*n1+3]
             K[np.ix_(edof,edof)] = K[np.ix_(edof,edof)] + x[ely,elx]**penal*Ke
 
-    F[1,0]=-1e8
+    F[1,0]=-1e6
+    
+    
     
     for i in range(0,2*(nely+1),2):
         fixdofs.append(i)
         
     fixdofs.append(2*(nelx+1)*(nely+1)-1)
-            
+    
+    fixdofs = np.array(fixdofs)        
             
     alldofs = [i for i in range(0,2*(nely+1)*(nelx+1))]
     freedofs = np.setdiff1d(alldofs, fixdofs)
     
-    Inv_K = np.linalg.inv(K[np.ix_(freedofs,freedofs)])
     
-    U[np.ix_(freedofs)] = np.matmul(Inv_K,F[freedofs])    
+    Ue= linalg.spsolve(K[np.ix_(freedofs,freedofs)],F[np.ix_(freedofs)])
+    j = -1
+    for i in Ue:
+        j = j + 1
+        U[freedofs[j]] = i 
     return U
 
 
@@ -125,8 +124,7 @@ def lk():
     ex = [0,1,1,0,0.5,1,0.5,0]
     ey = [0,0,1,1,0,0.5,1,0.5]
     ep = [1,2]
-    #D  = [[(1-nu)*E/((1+nu)*(1-2*nu)), (1-2*nu)/2*E/((1+nu)*(1-2*nu))],[(1-2*nu)/2*E/((1+nu)*(1-2*nu)),(1-nu)*E/((1+nu)*(1-2*nu))]]
-    #Ke = cfc.flw2i8e(ex,ey,ep,D)
+    
     
     k = np.array([1/2-nu/6, 1/8+nu/8,
                   -1/4-nu/12, -1/8+3*nu/8,
@@ -140,7 +138,7 @@ def lk():
                              [k[5],k[4],k[3],k[2],k[1],k[0],k[7],k[6]],
                              [k[6],k[3],k[4],k[1],k[2],k[7],k[0],k[5]],
                              [k[7],k[2],k[1],k[4],k[3],k[6],k[5],k[0]]])
-    #Edof = np.zeros([(nely+1)*nelx+1)])
+    
     
     
     
@@ -148,5 +146,5 @@ def lk():
     
     
     
-x = top(20,10,0.5,5.0,0.5)
+x = top(40,20,0.5,3.0,1)
 print(str(x))
