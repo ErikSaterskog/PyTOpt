@@ -9,7 +9,7 @@ Created on Wed Jan 27 09:52:07 2021
 #Really simple test
 import numpy as np
 import calfem.geometry as cfg
-import Mesh_module
+import Mesh
 import calfem.vis as cfv
 
 g = cfg.Geometry()
@@ -40,7 +40,7 @@ g.spline([5, 0],marker=5)
 
 g.surface([0, 1, 2, 3,4,5])
 
-_mesh = Mesh_module.Mesh(g,0.05)
+_mesh = Mesh.Mesh(g,0.05)
 
 coords, edof, dofs, bdofs = _mesh.tri()
 
