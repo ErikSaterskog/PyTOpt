@@ -7,9 +7,13 @@ Created on Thu Jan 21 15:08:32 2021
 import numpy as np
 import calfem.core as cfc
 import matplotlib.pyplot as plt
+import time
 from matplotlib import cm
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
-from scipy.sparse import csc_matrix, linalg, csr_matrix
+from scipy.sparse import csc_matrix, linalg, csr_matrix, lil_matrix, coo_matrix
+from scipy.sparse.linalg import spsolve
+from matplotlib.image import NonUniformImage
+
 
 
 def top(nelx,nely,volfrac,penal,rmin):
@@ -21,8 +25,16 @@ def top(nelx,nely,volfrac,penal,rmin):
     while change > 0.01:
         loop = loop + 1
         xold = x.copy()
-        U = FE(nelx,nely,x,penal)
         
+        
+        tic = time.perf_counter()
+        U = FE(nelx,nely,x,penal)
+        toc = time.perf_counter()
+        print('FE:')
+        print(toc-tic)
+        
+        
+        tic = time.perf_counter()
         Ke = lk()
         c = 0
         dc = np.zeros([nely,nelx])
@@ -31,30 +43,48 @@ def top(nelx,nely,volfrac,penal,rmin):
                 n1 = (nely+1)*(elx)+ely
                 n2 = (nely+1)*(elx+1)+ely
                 Ue = U[[2*n1,2*n1+1, 2*n2,  2*n2+1, 2*n2+2, 2*n2+3, 2*n1+2,  2*n1+3]]
-                c = c + x[ely,elx]**penal*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                #c = c + x[ely,elx]**penal*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                #c = c + (x[ely,elx]**penal*np.transpose(Ue).dot(Ke.dot(Ue)))
                 dc[ely,elx] = -penal*x[ely,elx]**(penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                #dc[ely,elx] = -penal*x[ely,elx]**(penal-1)*(np.transpose(Ue).dot(Ke.dot(Ue)))
+        
+        toc = time.perf_counter()
+        print('C+Sens:')
+        print(toc-tic)
     
+    
+    
+        tic = time.perf_counter()
         dc = Check(nelx,nely,rmin,x,dc)
+        toc = time.perf_counter()
+        print('Check:')
+        print(toc-tic)
         
+        tic = time.perf_counter()
         x = OC(nelx,nely,x,volfrac,dc)
+        toc = time.perf_counter()
+        print('OC:')
+        print(toc-tic)
+        
         change =np.max(np.max(abs(x-xold)))
-        print(str(change) + '\n')
+        print('------------')
+        #print(str(change) + '\n')
         
         
-        if loop > 50:
-            fig, ax = plt.subplots(1, 1, figsize=(6,3),constrained_layout=True)
-            viridis = cm.get_cmap('Greys', 29)
-            psm = ax.pcolormesh(np.flip(x,0), cmap=viridis, rasterized=True, vmin=0, vmax=1)
-            fig.colorbar(psm, ax=ax)
-            plt.pause(1e-6)
-            plt.show()
-            return x
-    fig, ax = plt.subplots(1, 1, figsize=(6,3),constrained_layout=True)
-    viridis = cm.get_cmap('Greys', 29)
-    psm = ax.pcolormesh(np.flip(x,0), cmap=viridis, rasterized=True, vmin=0, vmax=1)
-    fig.colorbar(psm, ax=ax)
-    plt.pause(1e-6)
-    plt.show()    
+    #    if loop > 50:
+    #        fig, ax = plt.subplots(1, 1, figsize=(6,3),constrained_layout=True)
+    #        viridis = cm.get_cmap('Greys', 29)
+    #        psm = ax.pcolormesh(np.flip(x,0), cmap=viridis, rasterized=True, vmin=0, vmax=1)
+    #        fig.colorbar(psm, ax=ax)
+    #        plt.pause(1e-6)
+    #        plt.show()
+    #        return x
+    #fig, ax = plt.subplots(1, 1, figsize=(6,3),constrained_layout=True)
+    #viridis = cm.get_cmap('Greys', 29)
+    #psm = ax.pcolormesh(np.flip(x,0), cmap=viridis, rasterized=True, vmin=0, vmax=1)
+    #fig.colorbar(psm, ax=ax)
+    #plt.pause(1e-6)
+    #plt.show()    
     return x
 
 def OC(nelx,nely,x,volfrac,dc):
@@ -83,22 +113,34 @@ def Check(nelx,nely,rmin,x,dc):
     return new_dc
 
 def FE(nelx,nely,x,penal):
+
     Ke = lk()
-    K = csc_matrix((2*(nely+1)*(nelx+1),2*(nely+1)*(nelx+1))).toarray()
-    F = csc_matrix((2*(nely+1)*(nelx+1),1)).toarray()
+    K = np.zeros([2*(nely+1)*(nelx+1),2*(nely+1)*(nelx+1)])
+    F = np.zeros([2*(nely+1)*(nelx+1),1])
     U = F.copy()
     fixdofs = []
+    edof=[]
+    tic = time.perf_counter()
     for elx in range(0,nelx):
         for ely in range(0,nely):
             n1 =(nely+1)*(elx)+ely
             n2 = (nely+1)*(elx+1)+ely
-            edof = [2*n1,2*n1+1, 2*n2,  2*n2+1, 2*n2+2, 2*n2+3, 2*n1+2,  2*n1+3]
-            K[np.ix_(edof,edof)] = K[np.ix_(edof,edof)] + x[ely,elx]**penal*Ke
+            edof=(2*n1,2*n1+1, 2*n2,  2*n2+1, 2*n2+2, 2*n2+3, 2*n1+2,  2*n1+3)
+            #edof.extend([2*n1,2*n1+1, 2*n2,  2*n2+1, 2*n2+2, 2*n2+3, 2*n1+2,  2*n1+3])
+            edofIndex=np.ix_(edof,edof)
+            K[edofIndex] = K[edofIndex] + x[ely,elx]**penal*Ke
+            
 
+    toc = time.perf_counter()
+    print('FE, ASSEM:')
+    print(toc-tic)
     F[1,0]=-1e6
     
+    #K=csr_matrix(K)
+    #F=csr_matrix(F)
     
-    
+    tic = time.perf_counter()
+        
     for i in range(0,2*(nely+1),2):
         fixdofs.append(i)
         
@@ -109,17 +151,22 @@ def FE(nelx,nely,x,penal):
     alldofs = [i for i in range(0,2*(nely+1)*(nelx+1))]
     freedofs = np.setdiff1d(alldofs, fixdofs)
     
+
+    Ue = spsolve(K[np.ix_(freedofs,freedofs)],F[np.ix_(freedofs)])
+
     
-    Ue= linalg.spsolve(K[np.ix_(freedofs,freedofs)],F[np.ix_(freedofs)])
     j = -1
     for i in Ue:
         j = j + 1
         U[freedofs[j]] = i 
     return U
 
+    toc = time.perf_counter()
+    print('FE, SOLVE:')
+    print(toc-tic)
 
 def lk():
-    E = 210*10**9
+    E = 210*1e9
     nu = 0.3
     ex = [0,1,1,0,0.5,1,0.5,0]
     ey = [0,0,1,1,0,0.5,1,0.5]
@@ -144,7 +191,22 @@ def lk():
     
     return Ke
     
-    
-    
-x = top(40,20,0.5,3.0,1)
-print(str(x))
+
+tic = time.perf_counter()
+x = top(40,30,0.5,3.0,1.5)
+toc = time.perf_counter()
+print(toc-tic)
+
+
+plt.matshow(x)
+plt.show()
+
+
+
+
+
+
+
+
+
+
