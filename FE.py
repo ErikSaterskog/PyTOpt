@@ -40,7 +40,7 @@ def FE(x,SIMP_penal,eDof,coord,fixDofs,F):
     #Start timer
     tic1 = time.perf_counter()
     
-    #Sparse Matrices?
+    #Sparse Matrices??
     #K=csr_matrix(K)
     #F=csr_matrix(F)
     
