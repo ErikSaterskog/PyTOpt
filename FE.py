@@ -6,7 +6,7 @@ import calfem.core as cfc
 
 
 
-def FE(x,SIMP_penal,eDof,coord,fixDofs):
+def FE(x,SIMP_penal,eDof,coord,fixDofs,F):
 
     #Settings
     E=210*1e9
@@ -24,7 +24,7 @@ def FE(x,SIMP_penal,eDof,coord,fixDofs):
     
     #Initialize Vecotors and Matrices
     K = np.zeros([nDof,])
-    F = np.zeros([nDof,1])
+    #F = np.zeros([nDof,1])
     U = np.zeros([nDof,1])
     
     
@@ -40,6 +40,7 @@ def FE(x,SIMP_penal,eDof,coord,fixDofs):
     #Start timer
     tic1 = time.perf_counter()
     
+    #Sparse Matrices?
     #K=csr_matrix(K)
     #F=csr_matrix(F)
     
@@ -58,7 +59,8 @@ def FE(x,SIMP_penal,eDof,coord,fixDofs):
 
     toc1 = time.perf_counter()
 
-    F[1,0]=-1e6
+    
+    #F[1,0]=-1e6
     
     #Add Boundary Conditions
         
