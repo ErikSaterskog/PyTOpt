@@ -6,7 +6,7 @@ import calfem.core as cfc
 
 
 
-def FE(x,SIMP_penal,eDof,coord,fixDofs,F):
+def _FE(x,SIMP_penal,eDof,coord,fixDofs,F):
 
     #Settings
     E=210*1e9
