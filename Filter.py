@@ -22,6 +22,16 @@ def Check(eDof,coords,rmin,x,dc):
     
     #Find centers of elements
     
+    
+    
+    
+    
+    
+    np.ix_(eDof[elem,:],eDof[elem,:])
+    
+    
+    
+    
     #Loop through all elements
     
     #Find elements within rmin of current element

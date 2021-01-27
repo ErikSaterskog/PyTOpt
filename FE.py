@@ -29,9 +29,9 @@ def FE(x,SIMP_penal,eDof,coord,fixDofs,F):
     
     
     #Check element type
-    if len(eDof[0,:])==4:   #Triangular Element
+    if len(eDof[0,:])==6:   #Triangular Element
         Tri=True
-    elif len(eDof[0,:])==5:
+    elif len(eDof[0,:])==8:
         Tri=False           #Use Quad Instead
     else:
         raise Exception('Unrecognized Element Shape, Check eDof Matrix')

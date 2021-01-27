@@ -45,4 +45,5 @@ _mesh = Mesh.Mesh(g,0.05)
 coords, edof, dofs, bdofs = _mesh.tri()
 
 cfv.drawMesh(coords, edof, 2, 3)
+cfv.showAndWait()
 #cfv.figure()
