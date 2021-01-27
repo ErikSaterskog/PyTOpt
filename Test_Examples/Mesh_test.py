@@ -9,8 +9,8 @@ Created on Wed Jan 27 09:52:07 2021
 #Really simple test
 import numpy as np
 import calfem.geometry as cfg
-import Mesh_module
 import calfem.vis as cfv
+import Main
 
 el_type = 2
 g = cfg.Geometry()
@@ -41,13 +41,17 @@ g.spline([5, 0],marker=5)
 
 g.surface([0, 1, 2, 3,4,5])
 
-_mesh = Mesh_module.Mesh(g,0.05)
+force = [-1000,9,2] #First magnutude, second marker,third direction
+bmarker = 3
 
-if el_type == 2:
-    coords, edof, dofs, bdofs = _mesh.tri()
-elif el_type ==3:
-    coords, edof, dofs, bdofs = _mesh.quad()
-else:
-    print("Wrong el_type!")
-cfv.drawMesh(coords, edof, 2, el_type)
-#cfv.figure()
+Main.mainer(g,el_type,force,bmarker)
+
+
+
+
+
+
+
+
+
+
