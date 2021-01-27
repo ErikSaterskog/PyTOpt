@@ -6,8 +6,14 @@ import calfem.core as cfc
 
 
 
-def FE(x,SIMP_penal,eDof,coord):
+def FE(x,SIMP_penal,eDof,coord,fixDofs):
 
+    #Settings
+    E=210*1e9
+    v=0.3
+    ptype=2         #ptype=1 => plane stress, ptype=2 => plane strain
+    ep=[ptype,1]    #ep[ptype, thickness]  
+    Timers=True     #Print Timers 
     
     #Check sizes
     nDof=np.max(eDof)
@@ -21,7 +27,6 @@ def FE(x,SIMP_penal,eDof,coord):
     F = np.zeros([nDof,1])
     U = np.zeros([nDof,1])
     
-    fixdofs = []
     
     #Check element type
     if len(eDof[0,:])==4:   #Triangular Element
@@ -33,10 +38,13 @@ def FE(x,SIMP_penal,eDof,coord):
     
     
     #Start timer
-    tic = time.perf_counter()
+    tic1 = time.perf_counter()
     
     #K=csr_matrix(K)
     #F=csr_matrix(F)
+    
+    #Linear Elastic Constitutive Matrix
+    D=cfc.hooke(ptype, E, v)
     
     #ASSEMBLE, should be done using coo_matrix() if possible
     for elem in range(0,nElem):            
@@ -48,36 +56,32 @@ def FE(x,SIMP_penal,eDof,coord):
             K[edofIndex] = K[edofIndex] + x[elem]**SIMP_penal*Ke
             
 
-    toc = time.perf_counter()
-    print('FE, ASSEM:')
-    print(toc-tic)
+    toc1 = time.perf_counter()
+
     F[1,0]=-1e6
     
-
-    
-    tic = time.perf_counter()
+    #Add Boundary Conditions
         
-    for i in range(0,2*(nely+1),2):
-        fixdofs.append(i)
-        
-    fixdofs.append(2*(nelx+1)*(nely+1)-1)
-    fixdofs = np.array(fixdofs)        
+    #fixDofs = np.array(fixDofs)        
             
-    alldofs = [i for i in range(0,2*(nely+1)*(nelx+1))]
-    freedofs = np.setdiff1d(alldofs, fixdofs)
+    allDofs = [i for i in range(0,nElem)]
+    freeDofs = np.setdiff1d(allDofs, fixDofs)
     
-
-    Ue = spsolve(K[np.ix_(freedofs,freedofs)],F[np.ix_(freedofs)])
-
+    tic2 = time.perf_counter()
+    Ue = spsolve(K[np.ix_(freeDofs,freeDofs)],F[np.ix_(freeDofs)])
+    toc2 = time.perf_counter()
     
     j = -1
     for i in Ue:
         j = j + 1
-        U[freedofs[j]] = i 
+        U[freeDofs[j]] = i 
 
-    toc = time.perf_counter()
-    print('FE, SOLVE:')
-    print(toc-tic)
+
+    if Timers==True:
+        print('FE, ASSEM:')
+        print(toc1-tic1)
+        print('FE, SOLVE:')
+        print(toc2-tic2)
 
     return U
 
