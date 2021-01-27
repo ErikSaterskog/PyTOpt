@@ -12,6 +12,7 @@ import calfem.geometry as cfg
 import Mesh_module
 import calfem.vis as cfv
 
+el_type = 2
 g = cfg.Geometry()
 
 g.point([0,0])          #0
@@ -42,7 +43,11 @@ g.surface([0, 1, 2, 3,4,5])
 
 _mesh = Mesh_module.Mesh(g,0.05)
 
-coords, edof, dofs, bdofs = _mesh.tri()
-
-cfv.drawMesh(coords, edof, 2, 3)
+if el_type == 2:
+    coords, edof, dofs, bdofs = _mesh.tri()
+elif el_type ==3:
+    coords, edof, dofs, bdofs = _mesh.quad()
+else:
+    print("Wrong el_type!")
+cfv.drawMesh(coords, edof, 2, el_type)
 #cfv.figure()
