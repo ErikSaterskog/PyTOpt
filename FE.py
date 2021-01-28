@@ -18,8 +18,8 @@ def _FE(x,SIMP_penal,eDof,coord,fixDofs,F):
     #Check sizes
     nDof=np.max(eDof)
     nElem=np.size(eDof,0)
-    ex=coord[0]
-    ey=coord[1]
+    nx=coord[0]
+    ny=coord[1]
     
     
     #Initialize Vecotors and Matrices
@@ -31,11 +31,26 @@ def _FE(x,SIMP_penal,eDof,coord,fixDofs,F):
     #Check element type
     if len(eDof[0,:])==6:   #Triangular Element
         Tri=True
+        elemX=np.zeros([nElem,3])
+        elemY=np.zeros([nElem,3])
     elif len(eDof[0,:])==8:
         Tri=False           #Use Quad Instead
+        elemX=np.zeros([nElem,4])
+        elemY=np.zeros([nElem,4])
     else:
         raise Exception('Unrecognized Element Shape, Check eDof Matrix')
+
+
     
+    #Find The coordinates for each element's nodes
+    for elem in range(0,nElem):
+        
+        nNode=np.ceil(np.multiply(eDof[elem,:],0.5))-1
+        nNode=nNode.astype(int)
+        
+        elemX[elem,:]=nx[nNode[0:8:2]]
+        elemY[elem,:]=ny[nNode[0:8:2]]
+
     
     #Start timer
     tic1 = time.perf_counter()
@@ -51,12 +66,12 @@ def _FE(x,SIMP_penal,eDof,coord,fixDofs,F):
     if Tri:  #Tri Elements
         for elem in range(0,nElem):            
             edofIndex=np.ix_(eDof[elem,:],eDof[elem,:])                        #Finding the indexes from eDof
-            Ke=cfc.plante(ex[elem,:],ey[elem,:],ep,D)                          #Element Stiffness Matrix for Triangular Element
+            Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep,D)                          #Element Stiffness Matrix for Triangular Element
             K[edofIndex] = K[edofIndex] + x[elem]**SIMP_penal*Ke
     else:    #Quad Elements
         for elem in range(0,nElem):            
             edofIndex=np.ix_(eDof[elem,:],eDof[elem,:])                        #Finding the indexes from eDof
-            Ke=cfc.plani4e(ex[elem,:],ey[elem,:],ep,D)                         #Element Stiffness Matrix for Quad Element
+            Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)                         #Element Stiffness Matrix for Quad Element
             K[edofIndex] = K[edofIndex] + x[elem]**SIMP_penal*Ke
             
 

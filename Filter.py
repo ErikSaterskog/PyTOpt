@@ -45,13 +45,16 @@ def Check(eDof,coords,dofs,rmin,x,dc):
     #Find Centers
     for elem in range(0,nElem):
         
-        nNode=np.ceil(np.multiply(eDof[elem,:],0.5))
+        nNode=np.ceil(np.multiply(eDof[elem,:],0.5))-1
         nNode=nNode.astype(int)
         
         elemX[elem,:]=nx[nNode[0:8:2]]
         elemY[elem,:]=ny[nNode[0:8:2]]
         elemCenterX[elem]=np.mean(elemX[elem])
         elemCenterY[elem]=np.mean(elemY[elem])
+    
+    
+    breakpoint()
     
     
     new_dc = np.zeros([nElem,1])
