@@ -12,7 +12,7 @@ def _FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     E=mp[0]
     v=mp[1]
     ptype=ep[0]
-    Timers=True     #Print Timers 
+    Timers=False     #Print Timers 
     
     #Check sizes
     nDof=np.max(eDof)

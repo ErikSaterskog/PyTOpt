@@ -26,7 +26,7 @@ def _Main(g,el_type,force,bmarker):
     volFrac = 0.5
     
     """MESHING"""
-    _mesh = Mesh.Mesh(g,0.06)
+    _mesh = Mesh.Mesh(g,0.04)
     
     if el_type == 2:
         coords, edof, dofs, bdofs = _mesh.tri()
@@ -56,7 +56,7 @@ def _Main(g,el_type,force,bmarker):
 
 
     
-    while change > 0.001:
+    while change > 0.0001:
         
         loop = loop + 1
         xold = x.copy()
