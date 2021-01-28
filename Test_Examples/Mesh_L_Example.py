@@ -44,7 +44,7 @@ g.surface([0, 1, 2, 3,4,5])
 force = [-1000,9,2] #First magnutude, second marker,third direction
 bmarker = 3
 
-Main.mainer(g,el_type,force,bmarker)
+Main._Main(g,el_type,force,bmarker)
 
 
 
