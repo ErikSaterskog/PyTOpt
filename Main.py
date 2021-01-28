@@ -22,11 +22,14 @@ def _Main(g,el_type,force,bmarker):
     change = 2
     loop = 0
     SIMP_penal = 3
-    rMin = 0.1
-    volFrac = 0.5
+    rMin = 0.04
+    volFrac = 0.3
+    meshSize=0.03
+    changeLimit=0.001
+    
     
     """MESHING"""
-    _mesh = Mesh.Mesh(g,0.04)
+    _mesh = Mesh.Mesh(g,meshSize)
     
     if el_type == 2:
         coords, edof, dofs, bdofs = _mesh.tri()
@@ -56,7 +59,7 @@ def _Main(g,el_type,force,bmarker):
 
 
     
-    while change > 0.0001:
+    while change > changeLimit:
         
         loop = loop + 1
         xold = x.copy()
