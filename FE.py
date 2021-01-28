@@ -70,7 +70,7 @@ def _FE(x,SIMP_penal,eDof,coords,fixDofs,F):
             K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke
     else:    #Quad Elements
         for elem in range(0,nElem):            
-            edofIndex=np.ix_(eDof[elem,:],eDof[elem,:])                        #Finding the indexes from eDof
+            edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)                        #Finding the indexes from eDof
             Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)                   #Element Stiffness Matrix for Quad Element
             K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke
             
