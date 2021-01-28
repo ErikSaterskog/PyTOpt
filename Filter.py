@@ -26,7 +26,7 @@ def Check(eDof,coords,dofs,rMin,x,dc):
     nElem=np.size(eDof,0)
     nx=coords[:,0]
     ny=coords[:,1]
-    new_dc=np.zeros(np.size(dc))
+    new_dc=np.zeros([np.size(dc),1])
     
     #Find Elements Coordinates
     if Tri:
@@ -60,13 +60,13 @@ def Check(eDof,coords,dofs,rMin,x,dc):
         yDist=elemCenterY-elemCenterY[elem]
         dist=np.sqrt(xDist**2+yDist**2)     #Calculates the distance from the current element to all others
         for elemOther in range(0,nElem):    #Checks which are inside the radius rMin
-            if dist[elemOther]>rMin:
+            if dist[elemOther]<rMin:
                 H=dist[elemOther]
                 _sum=_sum+H
                 sumHxf = sumHxf + H*x[elemOther]*dc[elemOther]
-        new_dc[elem]=(sumHxf)/(x[elem]*_sum)
+        new_dc[elem][0]=(sumHxf)/(x[elem]*_sum)
 
-            
+
     if Timers:
         toc = time.perf_counter()  
         print('Check Time:')

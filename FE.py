@@ -6,13 +6,12 @@ import calfem.core as cfc
 
 
 
-def _FE(x,SIMP_penal,eDof,coords,fixDofs,F):
+def _FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
 
     #Settings
-    E=210*1e9
-    v=0.3
-    ptype=2         #ptype=1 => plane stress, ptype=2 => plane strain
-    ep=[ptype,1]    #ep[ptype, thickness]  
+    E=mp[0]
+    v=mp[1]
+    ptype=ep[0]
     Timers=True     #Print Timers 
     
     #Check sizes
@@ -66,13 +65,14 @@ def _FE(x,SIMP_penal,eDof,coords,fixDofs,F):
         for elem in range(0,nElem):  
             #breakpoint()
             edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)                        #Finding the indexes from eDof
-            Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep,D)                    #Element Stiffness Matrix for Triangular Element
+            Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)                    #Element Stiffness Matrix for Triangular Element
             K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke
     else:    #Quad Elements
-        for elem in range(0,nElem):            
+        for elem in range(0,nElem):  
             edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)                        #Finding the indexes from eDof
             Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)                   #Element Stiffness Matrix for Quad Element
-            K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke
+            #breakpoint()
+            K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke[0]
             
 
     toc1 = time.perf_counter()

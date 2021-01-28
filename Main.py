@@ -13,8 +13,20 @@ import calfem.core as cfc
 
 def _Main(g,el_type,force,bmarker):
      
+    #Settings
+    E=210*1e9
+    v=0.3
+    ptype=2         #ptype=1 => plane stress, ptype=2 => plane strain
+    ep=[ptype,1,2]    #ep[ptype, thickness, integration rule(only used for QUAD)]  
+    mp=[E,v]
+    change = 2
+    loop = 0
+    SIMP_penal = 3
+    rMin = 0.1
+    volFrac = 0.5
+    
     """MESHING"""
-    _mesh = Mesh.Mesh(g,0.05)
+    _mesh = Mesh.Mesh(g,0.06)
     
     if el_type == 2:
         coords, edof, dofs, bdofs = _mesh.tri()
@@ -24,8 +36,9 @@ def _Main(g,el_type,force,bmarker):
         print("Wrong el_type!")
     
     #cfv.drawMesh(coords, edof, 2, el_type)
-    
-    
+    nElem=np.size(edof,0)
+    x =np.zeros([nElem,1])+0.1
+        
     """ Denote forces and boundary conditions """
     nDofs = np.max(edof)
     f = np.zeros([nDofs,1])
@@ -41,25 +54,16 @@ def _Main(g,el_type,force,bmarker):
     
     """ Optimisation """
 
-    change = 2
-    loop = 0
-    SIMP_penal = 3
-    nElem=np.size(edof,0)
-    x =np.zeros([nElem,1])+0.5
-    rMin = 0.1
+
+    
     while change > 0.001:
+        
         loop = loop + 1
         xold = x.copy()
         
-        U = FE._FE(x,SIMP_penal,edof,coords,bc,f)
+        U = FE._FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)
         
-        #Settings
-        E=210*1e9
-        v=0.3
-        ptype=2         #ptype=1 => plane stress, ptype=2 => plane strain
-        ep=[ptype,1]    #ep[ptype, thickness]  
-        
-        
+
         #Check sizes
         nElem=np.size(edof,0)
         nx=coords[:,0]
@@ -96,7 +100,7 @@ def _Main(g,el_type,force,bmarker):
         dc = xold.copy()      
         if Tri:  #Tri Elements
             for elem in range(0,nElem):  
-                Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep,D)                    #Element Stiffness Matrix for Triangular Element
+                Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)                    #Element Stiffness Matrix for Triangular Element
                 Ue = U[np.ix_(edof[elem,:]-1)]
                 dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                 
@@ -104,13 +108,13 @@ def _Main(g,el_type,force,bmarker):
             for elem in range(0,nElem):            
                 Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)                   #Element Stiffness Matrix for Quad Element
                 Ue = U[np.ix_(edof[elem,:]-1)]
-                dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke[0],Ue))
 
-
+        #breakpoint()
         dc = Filter.Check(edof,coords,dofs,rMin,x,dc)
-        
+        #breakpoint()
         try:
-            x = Opt.Optimisation().OC(nElem,x,0.5,dc)
+            x = Opt.Optimisation().OC(nElem,x,volFrac,dc)
         except:
             print("Optimisation is not yet implemented")
         

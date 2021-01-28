@@ -10,7 +10,7 @@ class Optimisation:
         l1,l2,move=0,1e5,0.2
         while (l2-l1) > 1e-4:
             lmid = 0.5*(l2+l1)
-            FirstMin = np.minimum.reduce([(x+move),np.transpose(np.transpose(x)*(np.sqrt(-dc/lmid)))])
+            FirstMin = np.minimum.reduce([(x+move),x*(np.sqrt(-dc/lmid))])
             SecondMin = np.minimum.reduce([np.ones([nel,1]), FirstMin])
             FirstMax = np.maximum.reduce([(x-move),SecondMin])
             xnew = np.maximum.reduce([0.001*np.ones([nel,1]),FirstMax])

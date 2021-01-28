@@ -12,7 +12,7 @@ import calfem.geometry as cfg
 import calfem.vis as cfv
 import Main
 
-el_type = 2
+el_type = 2   #2-Tri,  3-Quad
 g = cfg.Geometry()
 
 g.point([0,0])          #0
