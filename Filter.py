@@ -6,17 +6,53 @@ import calfem.core as cfc
 
 
 
-def Check(eDof,coords,rmin,x,dc):
+def Check(eDof,coords,dofs,rmin,x,dc):
     
     #Settings
     Timers=True
     tic = time.perf_counter()
     
+    #Check element type
+    if len(eDof[0,:])==6:   #Triangular Element
+        Tri=True
+    elif len(eDof[0,:])==8:
+        Tri=False           #Use Quad Instead
+    else:
+        raise Exception('Unrecognized Element Shape, Check eDof Matrix')
+    
+
     #Initialize 
     nDof=np.max(eDof)
     nElem=np.size(eDof,0)
-    ex=coord[0]
-    ey=coord[1]
+    nx=coords[:,0]
+    ny=coords[:,1]
+    
+    #Find Elements Coordinates
+    if Tri:
+        elemX=np.zeros([nElem,3])
+        elemY=np.zeros([nElem,3])
+    else:
+        elemX=np.zeros([nElem,4])
+        elemY=np.zeros([nElem,4])
+    
+    
+    breakpoint()
+    
+    elemCenterX=np.zeros([nElem,1])
+    elemCenterY=np.zeros([nElem,1])
+    
+    
+    #Find Centers
+    for elem in range(0,nElem):
+        
+        nNode=np.ceil(np.multiply(eDof[elem,:],0.5))
+        nNode=nNode.astype(int)
+        
+        elemX[elem,:]=nx[nNode[0:8:2]]
+        elemY[elem,:]=ny[nNode[0:8:2]]
+        elemCenterX[elem]=np.mean(elemX[elem])
+        elemCenterY[elem]=np.mean(elemY[elem])
+    
     
     new_dc = np.zeros([nElem,1])
     
@@ -60,9 +96,6 @@ def Check(eDof,coords,rmin,x,dc):
         print('Check Time:')
         print(toc-tic)        
     return new_dc
-
-
-
 
 
 
