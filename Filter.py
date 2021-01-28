@@ -37,8 +37,6 @@ def Check(eDof,coords,dofs,rMin,x,dc):
         elemY=np.zeros([nElem,4])
     
     
-    breakpoint()
-    
     elemCenterX=np.zeros([nElem,1])
     elemCenterY=np.zeros([nElem,1])
     
@@ -54,8 +52,6 @@ def Check(eDof,coords,dofs,rMin,x,dc):
         elemCenterX[elem]=np.mean(elemX[elem])
         elemCenterY[elem]=np.mean(elemY[elem])
     
-    
-    breakpoint()
 
     for elem in range(0,nElem):
         _sum=0
@@ -69,8 +65,6 @@ def Check(eDof,coords,dofs,rMin,x,dc):
                 _sum=_sum+H
                 sumHxf = sumHxf + H*x[elemOther]*dc[elemOther]
         new_dc[elem]=(sumHxf)/(x[elem]*_sum)
-
-                    
 
             
     if Timers:

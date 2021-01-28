@@ -6,7 +6,7 @@ import calfem.core as cfc
 
 
 
-def _FE(x,SIMP_penal,eDof,coord,fixDofs,F):
+def _FE(x,SIMP_penal,eDof,coords,fixDofs,F):
 
     #Settings
     E=210*1e9
@@ -18,8 +18,8 @@ def _FE(x,SIMP_penal,eDof,coord,fixDofs,F):
     #Check sizes
     nDof=np.max(eDof)
     nElem=np.size(eDof,0)
-    nx=coord[0]
-    ny=coord[1]
+    nx=coords[:,0]
+    ny=coords[:,1]
     
     
     #Initialize Vecotors and Matrices
