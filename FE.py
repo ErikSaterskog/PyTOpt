@@ -41,7 +41,6 @@ def _FE(x,SIMP_penal,eDof,coord,fixDofs,F):
         raise Exception('Unrecognized Element Shape, Check eDof Matrix')
 
 
-    
     #Find The coordinates for each element's nodes
     for elem in range(0,nElem):
         
@@ -66,12 +65,12 @@ def _FE(x,SIMP_penal,eDof,coord,fixDofs,F):
     if Tri:  #Tri Elements
         for elem in range(0,nElem):            
             edofIndex=np.ix_(eDof[elem,:],eDof[elem,:])                        #Finding the indexes from eDof
-            Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep,D)                          #Element Stiffness Matrix for Triangular Element
+            Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep,D)                    #Element Stiffness Matrix for Triangular Element
             K[edofIndex] = K[edofIndex] + x[elem]**SIMP_penal*Ke
     else:    #Quad Elements
         for elem in range(0,nElem):            
             edofIndex=np.ix_(eDof[elem,:],eDof[elem,:])                        #Finding the indexes from eDof
-            Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)                         #Element Stiffness Matrix for Quad Element
+            Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)                   #Element Stiffness Matrix for Quad Element
             K[edofIndex] = K[edofIndex] + x[elem]**SIMP_penal*Ke
             
 

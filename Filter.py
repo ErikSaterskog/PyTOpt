@@ -6,7 +6,7 @@ import calfem.core as cfc
 
 
 
-def Check(eDof,coords,dofs,rmin,x,dc):
+def Check(eDof,coords,dofs,rMin,x,dc):
     
     #Settings
     Timers=True
@@ -26,6 +26,7 @@ def Check(eDof,coords,dofs,rmin,x,dc):
     nElem=np.size(eDof,0)
     nx=coords[:,0]
     ny=coords[:,1]
+    new_dc=np.zeros(np.size(dc))
     
     #Find Elements Coordinates
     if Tri:
@@ -55,9 +56,35 @@ def Check(eDof,coords,dofs,rmin,x,dc):
     
     
     breakpoint()
+
+    for elem in range(0,nElem):
+        _sum=0
+        xDist=elemCenterX-elemCenterX[elem]
+        yDist=elemCenterY-elemCenterY[elem]
+        dist=np.sqrt(xDist**2+yDist**2)     #Calculates the distance from the current element to all others
+        for elemOther in range(0,nElem):    #Checks which are inside the radius rMin
+            if dist[elemOther]>rMin:
+                H=dist[elemOther]
+                _sumH=_sumH+H
+                sumHxf = sumHxf + H*x[elemOther]*dc[elemOther]
+        new_dc[elem]=(sumHxf)/(x[elem]*_sum)
+                
+                
+                
+                
+                
     
     
-    new_dc = np.zeros([nElem,1])
+                        
+                    
+    #fac = rmin-np.sqrt((i-k)**2+(j-l)**2)
+    #_sum = _sum + max(fac,0)
+    #new_dc[j,i] = new_dc[j,i] + max(fac,0)*x[l,k]*dc[l,k]
+                    
+                    
+    #new_dc[j,i] = new_dc[j,i]/(x[j,i]*_sum)
+    
+    #new_dc = np.zeros([nElem,1])
     
     #Find centers of elements
     
@@ -79,20 +106,11 @@ def Check(eDof,coords,dofs,rmin,x,dc):
     for i in range(0,nelx):
         for j in range(0,nely):
             _sum = 0
-            
-            
             for k in range(int(max([i-np.floor(rmin),0])),int(min([i+np.floor(rmin)+1,nelx]))):
                 for l in range(int(max([j-np.floor(rmin),0])),int(min([j+np.floor(rmin)+1,nely]))):
                     
                     
-                    
-                    
-                    fac = rmin-np.sqrt((i-k)**2+(j-l)**2)
-                    _sum = _sum + max(fac,0)
-                    new_dc[j,i] = new_dc[j,i] + max(fac,0)*x[l,k]*dc[l,k]
-                    
-                    
-            new_dc[j,i] = new_dc[j,i]/(x[j,i]*_sum)
+
             
     if Timers:
         toc = time.perf_counter()  
