@@ -8,6 +8,8 @@ import FE
 import Opt
 import Filter
 import matplotlib.pyplot as plt
+import calfem.core as cfc
+
 
 def _Main(g,el_type,force,bmarker):
      
@@ -38,70 +40,87 @@ def _Main(g,el_type,force,bmarker):
     
     
     """ Optimisation """
-    try:
-        change = 2
-        loop = 0
-        SIMP_penal = 3
+
+    change = 2
+    loop = 0
+    SIMP_penal = 3
+    nElem=np.size(edof,0)
+    x =np.zeros([nElem,1])+0.5
+    x[3] = 0.9 # Tillagd för att Lindemann dividerar med 0. Kommer tas bort när optimeringen är inkluderad.
+    rMin = 1.5
+    while change > 0.01:
+        loop = loop + 1
+        xold = x.copy()
+        
+        U = FE._FE(x,SIMP_penal,edof,coords,bdofs,f)
+        
+        #Settings
+        E=210*1e9
+        v=0.3
+        ptype=2         #ptype=1 => plane stress, ptype=2 => plane strain
+        ep=[ptype,1]    #ep[ptype, thickness]  
+        
+        
+        #Check sizes
         nElem=np.size(edof,0)
-        x =np.zeros([nElem,1])+0.5
-        x[3] = 0.9 # Tillagd för att Lindemann dividerar med 0. Kommer tas bort när optimeringen är inkluderad.
-        while change > 0.01:
-            loop = loop + 1
-            xold = x.copy()
-            
-            U = FE._FE(x,SIMP_penal,edof,coords,bdofs,f)
-            
-            print('FE:')
-            print(toc-tic)
-            
-            
-            tic = time.perf_counter()
-            Ke = lk()
-            c = 0
-            dc = np.zeros([nely,nelx])
-            for ely in range(0,nely):
-                for elx in range(0,nelx):
-                    n1 = (nely+1)*(elx)+ely
-                    n2 = (nely+1)*(elx+1)+ely
-                    Ue = U[[2*n1,2*n1+1, 2*n2,  2*n2+1, 2*n2+2, 2*n2+3, 2*n1+2,  2*n1+3]]
-                    #c = c + x[ely,elx]**penal*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
-                    #c = c + (x[ely,elx]**penal*np.transpose(Ue).dot(Ke.dot(Ue)))
-                    dc[ely,elx] = -penal*x[ely,elx]**(penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
-                    #dc[ely,elx] = -penal*x[ely,elx]**(penal-1)*(np.transpose(Ue).dot(Ke.dot(Ue)))
-            
-            toc = time.perf_counter()
-            print('C+Sens:')
-            print(toc-tic)
+        nx=coords[:,0]
+        ny=coords[:,1]
         
-        
-        
-            tic = time.perf_counter()
-            dc = Check(nelx,nely,rmin,x,dc)
-            toc = time.perf_counter()
-            print('Check:')
-            print(toc-tic)
             
-            tic = time.perf_counter()
-            x = OC(nelx,nely,x,volfrac,dc)
-            toc = time.perf_counter()
-            print('OC:')
-            print(toc-tic)
-            
-            change =np.max(np.max(abs(x-xold)))
-            print('------------')
         
-        
-    except:
-        print("Optimisation is not yet implemented")
+        #Check element type
+        if len(edof[0,:])==6:   #Triangular Element
+            Tri=True
+            elemX=np.zeros([nElem,3])
+            elemY=np.zeros([nElem,3])
+        elif len(edof[0,:])==8:
+            Tri=False           #Use Quad Instead
+            elemX=np.zeros([nElem,4])
+            elemY=np.zeros([nElem,4])
+        else:
+            raise Exception('Unrecognized Element Shape, Check eDof Matrix')
     
-    try: 
-        U =FE._FE(x,SIMP_penal,edof,coords,bdofs,f)
-    except:
-        print("FE is not done yet!")
+    
+        #Find The coordinates for each element's nodes
+        for elem in range(0,nElem):
+            
+            nNode=np.ceil(np.multiply(edof[elem,:],0.5))-1
+            nNode=nNode.astype(int)
+            
+            elemX[elem,:]=nx[nNode[0:8:2]]
+            elemY[elem,:]=ny[nNode[0:8:2]]
+    
+        
+        #Linear Elastic Constitutive Matrix
+        D=cfc.hooke(ptype, E, v)
+                        
+        dc = xold.copy()      
+        if Tri:  #Tri Elements
+            for elem in range(0,nElem):  
+                Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep,D)                    #Element Stiffness Matrix for Triangular Element
+                Ue = U[np.ix_(edof[elem,:]-1)]
+                dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                
+        else:    #Quad Elements
+            for elem in range(0,nElem):            
+                Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)                   #Element Stiffness Matrix for Quad Element
+                Ue = U[np.ix_(edof[elem,:]-1)]
+                dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+
+
+        dc = Filter.Check(edof,coords,dofs,rMin,x,dc)
+        
+        try:
+            x = OC(nelx,nely,x,volfrac,dc)
+        except:
+            print("Optimisation is not yet implemented")
+        
+        change =np.max(np.max(abs(x-xold)))
+
     
     """ Visualisation """
     
-    c = cfv.draw_element_values(U, coords, edof, 2, el_type, 
+    cfv.draw_element_values(x, coords, edof, 2, el_type, 
                       draw_elements=True, draw_undisplaced_mesh=False, 
                       title="Density", magnfac=25.0)
     
