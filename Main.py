@@ -39,13 +39,61 @@ def _Main(g,el_type,force,bmarker):
     
     """ Optimisation """
     try:
-        x = Opt._Opt()
+        change = 2
+        loop = 0
+        SIMP_penal = 3
+        nElem=np.size(edof,0)
+        x =np.zeros([nElem,1])+0.5
+        x[3] = 0.9 # Tillagd för att Lindemann dividerar med 0. Kommer tas bort när optimeringen är inkluderad.
+        while change > 0.01:
+            loop = loop + 1
+            xold = x.copy()
+            
+            U = FE._FE(x,SIMP_penal,edof,coords,bdofs,f)
+            
+            print('FE:')
+            print(toc-tic)
+            
+            
+            tic = time.perf_counter()
+            Ke = lk()
+            c = 0
+            dc = np.zeros([nely,nelx])
+            for ely in range(0,nely):
+                for elx in range(0,nelx):
+                    n1 = (nely+1)*(elx)+ely
+                    n2 = (nely+1)*(elx+1)+ely
+                    Ue = U[[2*n1,2*n1+1, 2*n2,  2*n2+1, 2*n2+2, 2*n2+3, 2*n1+2,  2*n1+3]]
+                    #c = c + x[ely,elx]**penal*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                    #c = c + (x[ely,elx]**penal*np.transpose(Ue).dot(Ke.dot(Ue)))
+                    dc[ely,elx] = -penal*x[ely,elx]**(penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                    #dc[ely,elx] = -penal*x[ely,elx]**(penal-1)*(np.transpose(Ue).dot(Ke.dot(Ue)))
+            
+            toc = time.perf_counter()
+            print('C+Sens:')
+            print(toc-tic)
+        
+        
+        
+            tic = time.perf_counter()
+            dc = Check(nelx,nely,rmin,x,dc)
+            toc = time.perf_counter()
+            print('Check:')
+            print(toc-tic)
+            
+            tic = time.perf_counter()
+            x = OC(nelx,nely,x,volfrac,dc)
+            toc = time.perf_counter()
+            print('OC:')
+            print(toc-tic)
+            
+            change =np.max(np.max(abs(x-xold)))
+            print('------------')
+        
+        
     except:
         print("Optimisation is not yet implemented")
-    SIMP_penal = 3
-    nElem=np.size(edof,0)
-    x =np.zeros([nElem,1])+0.5
-    x[3] = 0.9 # Tillagd för att Lindemann dividerar med 0. Kommer tas bort när optimeringen är inkluderad.
+    
     try: 
         U =FE._FE(x,SIMP_penal,edof,coords,bdofs,f)
     except:
@@ -53,10 +101,10 @@ def _Main(g,el_type,force,bmarker):
     
     """ Visualisation """
     
-    c = cfv.draw_element_values(x, coords, edof, 2, el_type, 
+    c = cfv.draw_element_values(U, coords, edof, 2, el_type, 
                       draw_elements=True, draw_undisplaced_mesh=False, 
                       title="Density", magnfac=25.0)
     
-
+    cfv.showAndWait()
 
     
