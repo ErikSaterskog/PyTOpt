@@ -1,6 +1,4 @@
-"""
-This file will call an example, mesh it and solve the optimisation
-"""
+
 
 import numpy as np
 import calfem.utils as cfu
@@ -24,7 +22,7 @@ def _Main(g,el_type,force,bmarker):
         print("Wrong el_type!")
     
     cfv.drawMesh(coords, edof, 2, el_type)
-    plt.pause(2)
+    
     
     """ Denote forces and boundary conditions """
     nDofs = np.max(edof)
@@ -47,13 +45,18 @@ def _Main(g,el_type,force,bmarker):
     SIMP_penal = 3
     nElem=np.size(edof,0)
     x =np.zeros([nElem,1])+0.5
+    x[3] = 0.9 # Tillagd för att Lindemann dividerar med 0. Kommer tas bort när optimeringen är inkluderad.
     try: 
         U =FE._FE(x,SIMP_penal,edof,coords,bdofs,f)
     except:
         print("FE is not done yet!")
     
-    cfv.draw_element_values(x, coords, edof, 2, el_type, 
-                      draw_elements=True, draw_undisplaced_mesh=True, 
+    """ Visualisation """
+    
+    c = cfv.draw_element_values(x, coords, edof, 2, el_type, 
+                      draw_elements=True, draw_undisplaced_mesh=False, 
                       title="Density", magnfac=25.0)
+    
+
 
     
