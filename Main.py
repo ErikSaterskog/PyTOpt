@@ -45,10 +45,9 @@ def _Main(g,el_type,force,bmarker):
     loop = 0
     SIMP_penal = 3
     nElem=np.size(edof,0)
-    x =np.zeros([nElem,1])+1
-    x[3] = 0.95 # Tillagd för att Lindemann dividerar med 0. Kommer tas bort när optimeringen är inkluderad.
-    rMin = 1.5
-    while change > 0.01:
+    x =np.zeros([nElem,1])+0.5
+    rMin = 0.1
+    while change > 0.001:
         loop = loop + 1
         xold = x.copy()
         
@@ -117,7 +116,11 @@ def _Main(g,el_type,force,bmarker):
         
         change =np.max(np.max(abs(x-xold)))
         print(change)
-    
+        
+        if loop == 500:                                                          # If alternating
+            break
+        
+        
     """ Visualisation """
     
     cfv.draw_element_values(x, coords, edof, 2, el_type,displacements=U,

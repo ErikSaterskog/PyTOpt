@@ -41,8 +41,8 @@ g.spline([5, 0],marker=5)
 
 g.surface([0, 1, 2, 3,4,5])
 
-force = [-1000,9,2] #First magnutude, second marker,third direction
-bmarker = 3
+force = [-1e6,9,2] #First magnutude, second marker,third direction
+bmarker = 4
 
 Main._Main(g,el_type,force,bmarker)
 
