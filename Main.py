@@ -23,7 +23,7 @@ def _Main(g,el_type,force,bmarker):
     else:
         print("Wrong el_type!")
     
-    cfv.drawMesh(coords, edof, 2, el_type)
+    #cfv.drawMesh(coords, edof, 2, el_type)
     
     
     """ Denote forces and boundary conditions """
@@ -45,14 +45,14 @@ def _Main(g,el_type,force,bmarker):
     loop = 0
     SIMP_penal = 3
     nElem=np.size(edof,0)
-    x =np.zeros([nElem,1])+0.5
-    x[3] = 0.9 # Tillagd för att Lindemann dividerar med 0. Kommer tas bort när optimeringen är inkluderad.
+    x =np.zeros([nElem,1])+1
+    x[3] = 0.95 # Tillagd för att Lindemann dividerar med 0. Kommer tas bort när optimeringen är inkluderad.
     rMin = 1.5
     while change > 0.01:
         loop = loop + 1
         xold = x.copy()
         
-        U = FE._FE(x,SIMP_penal,edof,coords,bdofs,f)
+        U = FE._FE(x,SIMP_penal,edof,coords,bc,f)
         
         #Settings
         E=210*1e9
@@ -111,18 +111,18 @@ def _Main(g,el_type,force,bmarker):
         dc = Filter.Check(edof,coords,dofs,rMin,x,dc)
         
         try:
-            x = OC(nelx,nely,x,volfrac,dc)
+            x = Opt.Optimisation().OC(nElem,x,0.5,dc)
         except:
             print("Optimisation is not yet implemented")
         
         change =np.max(np.max(abs(x-xold)))
-
+        print(change)
     
     """ Visualisation """
     
-    cfv.draw_element_values(x, coords, edof, 2, el_type, 
+    cfv.draw_element_values(x, coords, edof, 2, el_type,displacements=U,
                       draw_elements=True, draw_undisplaced_mesh=False, 
-                      title="Density", magnfac=25.0)
+                      title="Density", magnfac=1.0)
     
     cfv.showAndWait()
 

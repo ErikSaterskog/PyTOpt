@@ -83,8 +83,9 @@ def _FE(x,SIMP_penal,eDof,coords,fixDofs,F):
     #Add Boundary Conditions
         
     #fixDofs = np.array(fixDofs)        
-            
-    allDofs = [i for i in range(0,nElem)]
+    
+    
+    allDofs = [i for i in range(0,nDof)]        
     freeDofs = np.setdiff1d(allDofs, fixDofs)
     
     tic2 = time.perf_counter()
