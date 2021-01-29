@@ -98,8 +98,8 @@ def _FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
 
 
     if Timers==True:
-        print('FE, ASSEM:  '+str(toc1-tic1))
-        print('FE, SOLVE:  '+str(toc2-tic2))
+        print('FE, Assem.: '+str(toc1-tic1))
+        print('FE, Solve:  '+str(toc2-tic2))
         
 
     return U

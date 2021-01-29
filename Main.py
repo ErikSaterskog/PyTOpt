@@ -7,6 +7,7 @@ import calfem.vis as cfv
 import FE
 import Opt
 import Filter
+import time
 import matplotlib.pyplot as plt
 import calfem.core as cfc
 from scipy.sparse import csr_matrix
@@ -26,10 +27,12 @@ def _Main(g,el_type,force,bmarker):
     volFrac = 0.3
     meshSize=0.03
     rMin = meshSize*np.sqrt(2)*1
-    changeLimit=0.001
+    changeLimit=0.005
+    
     
     
     """ Meshing """
+    
     _mesh = Mesh.Mesh(g,meshSize)
     
     if el_type == 2:
@@ -40,14 +43,11 @@ def _Main(g,el_type,force,bmarker):
         print("Wrong Element Type!")
     
     
-    nElem=np.size(edof,0)
-    x =np.zeros([nElem,1])+0.1
-        
+
     """ Denote Forces and Boundary Conditions """
     
     nDofs = np.max(edof)
     f = np.zeros([nDofs,1])
-    
     bc = np.array([],'i')
     bcVal = np.array([],'f')
     
@@ -57,14 +57,21 @@ def _Main(g,el_type,force,bmarker):
     cfu.applyforce(bdofs, f, force[1], force[0], force[2])
     
     
-    """ Optimisation """
+    
+    """ Initialization Cont."""
 
+    nElem=np.size(edof,0)
+    x =np.zeros([nElem,1])+0.1
+        
     #Check sizes, Initialize
     nElem=np.size(edof,0)
     nx=coords[:,0]
     ny=coords[:,1]
     elemCenterX=np.zeros([nElem,1])
     elemCenterY=np.zeros([nElem,1])
+    print('Initializing...')
+    print('Number of elements: '+str(nElem))
+    
     
     #Check element type
     if len(edof[0,:])==6:   #Triangular Element
@@ -106,6 +113,11 @@ def _Main(g,el_type,force,bmarker):
             
     #weightMatrix=csr_matrix(weightMatrix)
 
+
+
+
+        """ MAIN LOOP """
+
     while change > changeLimit:
         
         loop = loop + 1
@@ -113,6 +125,8 @@ def _Main(g,el_type,force,bmarker):
         
         U = FE._FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
         dc = xold.copy() 
+        
+        tic=time.perf_counter()
         
         if Tri:  #Tri Elements
             for elem in range(0,nElem):  
@@ -125,6 +139,8 @@ def _Main(g,el_type,force,bmarker):
                 Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)    #!THIS COULD BE PLACED OUTSIDE OF LOOP!           #Element Stiffness Matrix for Quad Element
                 Ue = U[np.ix_(edof[elem,:]-1)]
                 dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke[0],Ue))
+        
+        toc=time.perf_counter()
 
         dc = Filter.Check(x,dc,weightMatrix)
         
@@ -135,11 +151,15 @@ def _Main(g,el_type,force,bmarker):
         
 
         change =np.max(np.max(abs(x-xold)))
+        print('Sens. Anal.:'+str(tic-toc))
         print('Change:     '+str(change))
         print('Iteration:  '+str(loop))
         print('---------------------------')
         if loop == 100:                                                          # If alternating
             break
+        
+        
+        
         
         
     """ Visualisation """
