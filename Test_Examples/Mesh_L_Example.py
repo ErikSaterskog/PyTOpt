@@ -17,9 +17,9 @@ g = cfg.Geometry()
 
 g.point([0,0])                  #0
 g.point([1,0])                  #1
-g.point([1,0.5],marker=9)      #2
-g.point([0.5,0.5])            #3
-g.point([0.5,1])               #4
+g.point([1,0.5],marker=9)       #2
+g.point([0.5,0.5])              #3
+g.point([0.5,1])                #4
 g.point([0,1])                  #5
 
 g.spline([0, 1])

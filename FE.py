@@ -86,11 +86,6 @@ def _FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
 
     allDofs = [i for i in range(0,nDof)]        
     freeDofs = np.setdiff1d(allDofs, fixDofs)
-<<<<<<< HEAD
-=======
-    
->>>>>>> 39dfd60be062a6092b9ad5ca61bb1d90c0b1a308
-
 
     tic2 = time.perf_counter()
     Ue = spsolve(K[np.ix_(freeDofs,freeDofs)],F[np.ix_(freeDofs)])
@@ -103,10 +98,9 @@ def _FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
 
 
     if Timers==True:
-        print('FE, ASSEM:')
-        print(toc1-tic1)
-        print('FE, SOLVE:')
-        print(toc2-tic2)
+        print('FE, ASSEM:  '+str(toc1-tic1))
+        print('FE, SOLVE:  '+str(toc2-tic2))
+        
 
     return U
 
