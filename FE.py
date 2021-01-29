@@ -12,7 +12,7 @@ def _FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     E=mp[0]
     v=mp[1]
     ptype=ep[0]
-    Timers=False     #Print Timers 
+    Timers=True     #Print Timers 
     
     #Check sizes
     nDof=np.max(eDof)
@@ -86,7 +86,6 @@ def _FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
 
     allDofs = [i for i in range(0,nDof)]        
     freeDofs = np.setdiff1d(allDofs, fixDofs)
-    breakpoint()
 
 
     tic2 = time.perf_counter()

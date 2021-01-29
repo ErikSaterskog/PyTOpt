@@ -9,7 +9,7 @@ import calfem.core as cfc
 def Check(eDof,coords,dofs,rMin,x,dc):
     
     #Settings
-    Timers=False
+    Timers=True
     tic = time.perf_counter()
     
     #Check element type
