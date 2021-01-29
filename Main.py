@@ -151,7 +151,7 @@ def _Main(g,el_type,force,bmarker):
         
 
         change =np.max(np.max(abs(x-xold)))
-        print('Sens. Anal.:'+str(tic-toc))
+        print('Sens. Anal.:'+str(toc-tic))
         print('Change:     '+str(change))
         print('Iteration:  '+str(loop))
         print('---------------------------')
