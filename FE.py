@@ -84,10 +84,12 @@ def _FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
         
     #fixDofs = np.array(fixDofs)        
     
-    
+
     allDofs = [i for i in range(0,nDof)]        
     freeDofs = np.setdiff1d(allDofs, fixDofs)
-    
+    breakpoint()
+
+
     tic2 = time.perf_counter()
     Ue = spsolve(K[np.ix_(freeDofs,freeDofs)],F[np.ix_(freeDofs)])
     toc2 = time.perf_counter()

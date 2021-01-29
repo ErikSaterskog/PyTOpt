@@ -23,8 +23,8 @@ def _Main(g,el_type,force,bmarker):
     loop = 0
     SIMP_penal = 3
     volFrac = 0.3
-    meshSize=0.03
-    rMin = meshSize*np.sqrt(2)*1.0      #Modify the last factor, must be larger than 1.0
+    meshSize=0.04
+    rMin = meshSize*np.sqrt(2)*1
     changeLimit=0.001
     
     
@@ -38,7 +38,8 @@ def _Main(g,el_type,force,bmarker):
     else:
         print("Wrong el_type!")
     
-    #cfv.drawMesh(coords, edof, 2, el_type)
+
+    
     nElem=np.size(edof,0)
     x =np.zeros([nElem,1])+0.1
         
@@ -50,7 +51,7 @@ def _Main(g,el_type,force,bmarker):
     bcVal = np.array([],'f')
     
     bc, bcVal = cfu.applybc(bdofs, bc, bcVal, bmarker, value=0.0, dimension=0)
-    
+    bc=bc-1   #Fix a calfem bug
     
     cfu.applyforce(bdofs, f, force[1], force[0], force[2])
     
@@ -113,9 +114,8 @@ def _Main(g,el_type,force,bmarker):
                 Ue = U[np.ix_(edof[elem,:]-1)]
                 dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke[0],Ue))
 
-        #breakpoint()
-        #dc = Filter.Check(edof,coords,dofs,rMin,x,dc)
-        #breakpoint()
+        dc = Filter.Check(edof,coords,dofs,rMin,x,dc)
+        
         try:
             x = Opt.Optimisation().OC(nElem,x,volFrac,dc)
         except:
@@ -124,7 +124,7 @@ def _Main(g,el_type,force,bmarker):
         change =np.max(np.max(abs(x-xold)))
         print(change)
         
-        if loop == 500:                                                          # If alternating
+        if loop == 100:                                                          # If alternating
             break
         
         
@@ -132,7 +132,7 @@ def _Main(g,el_type,force,bmarker):
     
     cfv.draw_element_values(x, coords, edof, 2, el_type,displacements=U,
                       draw_elements=True, draw_undisplaced_mesh=False, 
-                      title="Density", magnfac=10.0)
+                      title="Density", magnfac=1.0)
     
     cfv.showAndWait()
 
