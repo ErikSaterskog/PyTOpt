@@ -86,7 +86,7 @@ def _FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
 
     allDofs = [i for i in range(0,nDof)]        
     freeDofs = np.setdiff1d(allDofs, fixDofs)
-    breakpoint()
+    
 
 
     tic2 = time.perf_counter()
