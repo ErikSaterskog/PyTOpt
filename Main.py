@@ -23,7 +23,7 @@ def _Main(g,el_type,force,bmarker):
     loop = 0
     SIMP_penal = 3
     volFrac = 0.3
-    meshSize=0.04
+    meshSize=0.035
     rMin = meshSize*np.sqrt(2)*1
     changeLimit=0.001
     

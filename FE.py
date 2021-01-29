@@ -20,7 +20,6 @@ def _FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     nx=coords[:,0]
     ny=coords[:,1]
     
-    #breakpoint()
     #Initialize Vecotors and Matrices
     K = np.zeros([nDof,nDof])
     #F = np.zeros([nDof,1])
