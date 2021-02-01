@@ -1,5 +1,9 @@
 import numpy as np
 
+import nlopt 
+ 
+
+
 class Optimisation:
     
     def __init__(self):
@@ -19,4 +23,40 @@ class Optimisation:
             else:
                 l2 = lmid
     
+        return xnew
+
+    def mma(self,nel,x,volfrac,dc):
+        
+        opt = nlopt.opt("NLOPT_LD_MMA", 10) #Choosing optmisation algorithm
+        def f(x, grad):                     #f is the objective function
+            if grad.size > 0:               #grad is kind of the number of elements
+                pass
+        return f
+    
+        opt.set_min_objective(f)
+        lb = 1                              #Placeholders for now
+        ub = 100                            #Placeholders for now
+        opt.set_lower_bounds(lb)
+        opt.set_upper_bounds(ub)
+        
+        
+        # Both fc and h is in the same form as f. 
+        opt.add_inequality_constraint(fc, tol=0)
+        opt.add_equality_constraint(h, tol=0)
+        
+        def c(result, x, grad):
+            if grad.size > 0:
+                pass
+                #...set grad to gradient, in-place...
+                #result[0] = ...value of c_0(x)...
+                #result[1] = ...value of c_1(x)...
+        return c
+        
+        opt.add_inequality_mconstraint(c, tol)
+        opt.add_equality_mconstraint(c, tol)
+        
+        #Later here should stopping criterion be implemented
+        
+        xnew = opt.optimize(x)
+        
         return xnew
