@@ -25,7 +25,7 @@ def _Main(g,el_type,force,bmarker):
     loop = 0
     SIMP_penal = 3
     volFrac = 0.3
-    meshSize=0.015
+    meshSize=0.07
     rMin = meshSize*np.sqrt(2)*1
     changeLimit=0.005
     
@@ -123,7 +123,7 @@ def _Main(g,el_type,force,bmarker):
         loop = loop + 1
         xold = x.copy()
         
-        U = FE._FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
+        U,D = FE._FE_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
         dc = xold.copy() 
         
         tic=time.perf_counter()

@@ -150,7 +150,15 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     else:
         raise Exception('Unrecognized Element Shape, Check eDof Matrix')
 
-    
+    #Find The coordinates for each element's nodes
+    for elem in range(0,nElem):
+        
+        nNode=np.ceil(np.multiply(eDof[elem,:],0.5))-1
+        nNode=nNode.astype(int)
+        
+        elemX[elem,:]=nx[nNode[0:8:2]]
+        elemY[elem,:]=ny[nNode[0:8:2]]
+
     
     
     #check element shape
@@ -159,7 +167,7 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
         
         for elem in range(0,nElem):    #Gissning med linjärt fall
             Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)
-            K=cfc.assem(K,Ke)
+            K=cfc.assem(eDof,K,Ke)
 
 
         while g>TOL:
@@ -171,7 +179,7 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
                 j = j + 1
                 U[freeDofs[j]] = i 
             
-            ed=cfc.extract(eDof,U)
+            ed=cfc.extractEldisp(eDof,U)
 
     
     
@@ -181,7 +189,7 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
                 eps=cfc.plants(elemX,elemY,ep,D,ed) 
                 sig,D=mh._mod_hook(eps,mp)
                 Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)
-                K=cfc.assem(K,Ke)
+                K=cfc.assem(eDof,K,Ke)
         
             g = np.linalg.norm(K*U-F)
             
