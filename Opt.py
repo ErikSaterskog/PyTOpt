@@ -1,5 +1,5 @@
-import numpy as np
 
+import numpy as np
 import nlopt 
  
 
@@ -10,13 +10,13 @@ class Optimisation:
         
         pass
     
-    def OC(self,nel,x,volfrac,dc):
-        l1,l2,move=0,1e5,0.2
+    def OC(self,nel,x,volfrac,dc,step,damping):
+        l1,l2,step,damping=0,1e5,0.2,0.5
         while (l2-l1) > 1e-4:
             lmid = 0.5*(l2+l1)
-            FirstMin = np.minimum.reduce([(x+move),x*(np.sqrt(-dc/lmid))])
+            FirstMin = np.minimum.reduce([(x+step),x*((-dc/lmid)**damping)])
             SecondMin = np.minimum.reduce([np.ones([nel,1]), FirstMin])
-            FirstMax = np.maximum.reduce([(x-move),SecondMin])
+            FirstMax = np.maximum.reduce([(x-step),SecondMin])
             xnew = np.maximum.reduce([0.001*np.ones([nel,1]),FirstMax])
             if (sum(sum(xnew)) - volfrac*nel) > 0:
                 l1 = lmid
