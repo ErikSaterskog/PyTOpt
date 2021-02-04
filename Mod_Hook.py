@@ -6,7 +6,7 @@ Created on Thu Feb  4 09:04:30 2021
 """
 import numpy as np
 
-def Hencky(eps,mp):
+def _mod_hook(eps,mp):
     E = mp[1]
     nu = mp[2]
     G = np.zeros([2,1])

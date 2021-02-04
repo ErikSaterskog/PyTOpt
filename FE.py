@@ -3,6 +3,7 @@ import time
 from scipy.sparse import csc_matrix, linalg, csr_matrix, lil_matrix, coo_matrix
 from scipy.sparse.linalg import spsolve
 import calfem.core as cfc
+import Mod_Hook as mh
 
 
 
@@ -109,6 +110,92 @@ def _FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
 
 
 
+
+
+def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
+    
+    #Settings
+    E=mp[0]
+    v=mp[1]
+    ptype=ep[0]
+    Timers=True     #Print Timers 
+    g=1e4
+    TOL=1
+    
+    #Check sizes
+    nDof=np.max(eDof)
+    nElem=np.size(eDof,0)
+    nx=coords[:,0]
+    ny=coords[:,1]
+    
+    #Initialize Vecotors and Matrices
+    K = np.zeros([nDof,nDof])
+    #F = np.zeros([nDof,1])
+    U = np.zeros([nDof,1])
+    
+    D=cfc.hooke(ptype, E, v)
+    
+    allDofs = [i for i in range(0,nDof)]        
+    freeDofs = np.setdiff1d(allDofs, fixDofs)
+    
+    #Check element type
+    if len(eDof[0,:])==6:   #Triangular Element
+        Tri=True
+        elemX=np.zeros([nElem,3])
+        elemY=np.zeros([nElem,3])
+    elif len(eDof[0,:])==8:
+        Tri=False           #Use Quad Instead
+        elemX=np.zeros([nElem,4])
+        elemY=np.zeros([nElem,4])
+    else:
+        raise Exception('Unrecognized Element Shape, Check eDof Matrix')
+
+    
+    
+    
+    #check element shape
+    if Tri==True:
+    
+        
+        for i in range(0,nElem):    #Gissning med linjärt fall
+            Ke=cfc.plani4e()
+            K=cfc.assem(K,Ke)
+
+
+        while g>TOL:
+    
+            Ue = spsolve(K[np.ix_(freeDofs,freeDofs)],F[np.ix_(freeDofs)])
+            
+            j = -1
+            for i in Ue:
+                j = j + 1
+                U[freeDofs[j]] = i 
+            
+            ed=cfc.extract(eDof,U)
+
+    
+    
+    
+            for i in range(0,nElem):    
+        
+                eps=cfc.plants(elemX,elemY,ep,D,ed) 
+                sig,D=mh._mod_hook(eps,mp)
+                Ke=cfc.plante(elemX,elemY,ep,D)
+                K=cfc.assem(K,Ke)
+        
+            g = np.linalg.norm(K*U-F)
+            
+    else:
+        raise Exception ('QUADS NOT YET IMPLEMENTED')
+
+#
+#
+#
+#
+#
+#
+#
+#
 
 
 
