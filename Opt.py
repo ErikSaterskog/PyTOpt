@@ -10,7 +10,7 @@ class Optimisation:
         
         pass
     
-    def OC(self,nel,x,volfrac,dc,step,damping):
+    def OC(self,nel,x,volfrac,dc):
         l1,l2,step,damping=0,1e5,0.2,0.5
         while (l2-l1) > 1e-4:
             lmid = 0.5*(l2+l1)
