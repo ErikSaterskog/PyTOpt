@@ -157,8 +157,8 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     if Tri==True:
     
         
-        for i in range(0,nElem):    #Gissning med linjärt fall
-            Ke=cfc.plani4e()
+        for elem in range(0,nElem):    #Gissning med linjärt fall
+            Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)
             K=cfc.assem(K,Ke)
 
 
@@ -176,17 +176,19 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     
     
     
-            for i in range(0,nElem):    
+            for elem in range(0,nElem):    
         
                 eps=cfc.plants(elemX,elemY,ep,D,ed) 
                 sig,D=mh._mod_hook(eps,mp)
-                Ke=cfc.plante(elemX,elemY,ep,D)
+                Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)
                 K=cfc.assem(K,Ke)
         
             g = np.linalg.norm(K*U-F)
             
     else:
         raise Exception ('QUADS NOT YET IMPLEMENTED')
+        
+    return U,D
 
 #
 #
