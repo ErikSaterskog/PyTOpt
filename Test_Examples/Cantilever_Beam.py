@@ -29,7 +29,7 @@ g.spline([3, 0],marker=4)
 
 g.surface([0, 1, 2, 3])
 
-force = [-1e8,9,2] #First magnitude, second marker, third direction
+force = [-1e5,9,2] #First magnitude, second marker, third direction
 bmarker = 4
 
 Main._Main(g,el_type,force,bmarker)

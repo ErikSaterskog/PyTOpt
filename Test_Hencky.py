@@ -15,7 +15,7 @@ nu= 0.3
 mp = [E,nu,0]
 
 
-eps11 = np.linspace(0,1e-2,100)
+eps11 = np.linspace(0,0.01,100)
 
 eps = np.zeros([6,100])
 sigma = eps.copy()

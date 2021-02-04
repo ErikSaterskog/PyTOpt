@@ -24,8 +24,8 @@ def _Main(g,el_type,force,bmarker):
     change = 2
     loop = 0
     SIMP_penal = 3
-    volFrac = 0.3
-    meshSize=0.2
+    volFrac = 0.5
+    meshSize=0.03
     rMin = meshSize*np.sqrt(2)*1
     changeLimit=0.005
     
@@ -61,7 +61,7 @@ def _Main(g,el_type,force,bmarker):
     """ Initialization Cont."""
 
     nElem=np.size(edof,0)
-    x =np.zeros([nElem,1])+0.1
+    x =np.zeros([nElem,1])+volFrac
         
     #Check sizes, Initialize
     nElem=np.size(edof,0)
@@ -123,7 +123,7 @@ def _Main(g,el_type,force,bmarker):
         loop = loop + 1
         xold = x.copy()
         
-        U,D = FE._FE_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
+        U = FE._FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
         dc = xold.copy() 
         
         tic=time.perf_counter()
