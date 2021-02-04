@@ -119,8 +119,8 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     v=mp[1]
     ptype=ep[0]
     Timers=True     #Print Timers 
-    g=1e4
-    TOL=1
+    err=1e9
+    TOL=1e6
     
     #Check sizes
     nDof=np.max(eDof)
@@ -134,6 +134,7 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     U = np.zeros([nDof,1])
     
     D=cfc.hooke(ptype, E, v)
+    
     
     allDofs = [i for i in range(0,nDof)]        
     freeDofs = np.setdiff1d(allDofs, fixDofs)
@@ -169,29 +170,31 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
             Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)
             K=cfc.assem(eDof,K,Ke)
 
-
-        while g>TOL:
     
-            Ue = spsolve(K[np.ix_(freeDofs,freeDofs)],F[np.ix_(freeDofs)])
+        Ue = spsolve(K[np.ix_(freeDofs,freeDofs)],F[np.ix_(freeDofs)])
             
-            j = -1
-            for i in Ue:
-                j = j + 1
-                U[freeDofs[j]] = i 
+        j = -1
+        for i in Ue:
+            j = j + 1
+            U[freeDofs[j]] = i
             
+        while err>TOL:
+    
             ed=cfc.extractEldisp(eDof,U)
 
-    
-    
-    
             for elem in range(0,nElem):    
-        
-                eps=cfc.plants(elemX,elemY,ep,D,ed) 
-                sig,D=mh._mod_hook(eps,mp)
-                Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)
+                eps = np.zeros([6,])
+                discard,eps_2D=cfc.plants(elemX[elem,:],elemY[elem,:],ep,D,ed[elem,:]) 
+                eps[0:4] = eps_2D
+                sig,D_new = mh._mod_hook(eps,mp)
+                Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D_new[np.ix_([0,1,3],[0,1,3])])
                 K=cfc.assem(eDof,K,Ke)
-        
-            g = np.linalg.norm(K*U-F)
+            g= np.matmul(K[np.ix_(freeDofs,freeDofs)],U[np.ix_(freeDofs)])-F[np.ix_(freeDofs)]
+            err = np.linalg.norm(g)
+            print(err)
+            
+            U[np.ix_(freeDofs)] = U[np.ix_(freeDofs)] - spsolve(K[np.ix_(freeDofs,freeDofs)],g).reshape(48,1)
+            
             
     else:
         raise Exception ('QUADS NOT YET IMPLEMENTED')

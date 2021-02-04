@@ -7,11 +7,11 @@ Created on Thu Feb  4 09:04:30 2021
 import numpy as np
 
 def _mod_hook(eps,mp):
-    E = mp[1]
-    nu = mp[2]
+    E = mp[0]
+    nu = mp[1]
     G = np.zeros([2,1])
     G[0] = E/(2*(1+nu))
-    G[1] = -G[0].copy()
+    G[1] = -G[0].copy()*0
     K = E/(3*(1-2*nu))
     
     I_v = np.array([1,1,1,0,0,0])
