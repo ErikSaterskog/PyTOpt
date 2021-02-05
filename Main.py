@@ -11,23 +11,21 @@ import time
 import matplotlib.pyplot as plt
 import calfem.core as cfc
 from scipy.sparse import csr_matrix
+import Mod_Hook as mh
+import Plani4s
 
-
-def _Main(g,el_type,force,bmarker):
-     
+def _Main(g,el_type,force,bmarker,settings,mp):
+    
     #Settings
-    E=210*1e9
-    v=0.3
+    E=mp[0]#210*1e9
+    v=mp[1]#0.3
+    Linear = False
     ptype=2         #ptype=1 => plane stress, ptype=2 => plane strain
     ep=[ptype,1,2]    #ep[ptype, thickness, integration rule(only used for QUAD)]  
-    mp=[E,v]
     change = 2
     loop = 0
     SIMP_penal = 3
-    volFrac = 0.5
-    meshSize=0.03
-    rMin = meshSize*np.sqrt(2)*1
-    changeLimit=0.005
+    volFrac,meshSize, rMin, changeLimit = settings
     
     
     
@@ -123,22 +121,55 @@ def _Main(g,el_type,force,bmarker):
         loop = loop + 1
         xold = x.copy()
         
-        U = FE._FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
-        dc = xold.copy() 
+        if Linear == True:
+            U = FE._FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
         
-        tic=time.perf_counter()
         
-        if Tri:  #Tri Elements
-            for elem in range(0,nElem):  
-                Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)   #!THIS COULD BE PLACED OUTSIDE OF LOOP!               #Element Stiffness Matrix for Triangular Element
-                Ue = U[np.ix_(edof[elem,:]-1)]
-                dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+            dc = xold.copy() 
+            
+            tic=time.perf_counter()
+            
+            if Tri:  #Tri Elements
+                for elem in range(0,nElem):  
+                    Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)   #!THIS COULD BE PLACED OUTSIDE OF LOOP!               #Element Stiffness Matrix for Triangular Element
+                    Ue = U[np.ix_(edof[elem,:]-1)]
+                    dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                    
+            else:    #Quad Elements
+                for elem in range(0,nElem):            
+                    Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)    #!THIS COULD BE PLACED OUTSIDE OF LOOP!           #Element Stiffness Matrix for Quad Element
+                    Ue = U[np.ix_(edof[elem,:]-1)]
+                    dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke[0],Ue))
+            
+        else:
+            U = FE._FE_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
+            dc = xold.copy() 
+            
+            tic=time.perf_counter()
+            
+            ed = cfc.extractEldisp(edof, U)
+        
+            if Tri:  #Tri Elements
+                for elem in range(0,nElem):  
+                    eps = np.zeros([6,])
+                    eps_2D=cfc.plants(elemX[elem,:],elemY[elem,:],ep,D,ed[elem,:])[1] 
+                    eps[0:4] = eps_2D
+                    D_new = mh._mod_hook(eps,mp)[1]
+                    Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D_new[np.ix_([0,1,2,3],[0,1,2,3])])
+                    Ue = U[np.ix_(edof[elem,:]-1)]
+                    dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                    
+            else:    #Quad Elements
+                for elem in range(0,nElem):            
+                    eps=Plani4s.plani4s(elemX[elem,:],elemY[elem,:],ep,ed[elem,:]) 
+                    D_new = mh._mod_hook(eps,mp)[1]
+                    Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D_new[np.ix_([0,1,2,3],[0,1,2,3])])[0]
+                    Ue = U[np.ix_(edof[elem,:]-1)]
+                    dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                    
+                    
                 
-        else:    #Quad Elements
-            for elem in range(0,nElem):            
-                Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)    #!THIS COULD BE PLACED OUTSIDE OF LOOP!           #Element Stiffness Matrix for Quad Element
-                Ue = U[np.ix_(edof[elem,:]-1)]
-                dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke[0],Ue))
+        
         
         toc=time.perf_counter()
 

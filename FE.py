@@ -4,6 +4,7 @@ from scipy.sparse import csc_matrix, linalg, csr_matrix, lil_matrix, coo_matrix
 from scipy.sparse.linalg import spsolve
 import calfem.core as cfc
 import Mod_Hook as mh
+import Plani4s
 
 
 
@@ -167,21 +168,51 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
             for elem in range(0,nElem):
                 edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)
                 eps = np.zeros([6,])
-                discard,eps_2D=cfc.plants(elemX[elem,:],elemY[elem,:],ep,D,ed[elem,:]) 
+                eps_2D=cfc.plants(elemX[elem,:],elemY[elem,:],ep,D,ed[elem,:])[1] 
                 eps[0:4] = eps_2D
-                sig,D_new = mh._mod_hook(eps,mp)
+                D_new = mh._mod_hook(eps,mp)[1]
                 Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D_new[np.ix_([0,1,2,3],[0,1,2,3])])
                 K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke
                 
-            g= np.matmul(K[np.ix_(freeDofs,freeDofs)],U[np.ix_(freeDofs)])-F[np.ix_(freeDofs)]
-            err = np.linalg.norm(g)
+            R= np.matmul(K[np.ix_(freeDofs,freeDofs)],U[np.ix_(freeDofs)])-F[np.ix_(freeDofs)]
+            err = np.linalg.norm(R)
             print(err)
             
-            U[np.ix_(freeDofs)] = U[np.ix_(freeDofs)] - spsolve(K[np.ix_(freeDofs,freeDofs)],g).reshape(len(freeDofs),1)
+            U[np.ix_(freeDofs)] = U[np.ix_(freeDofs)] - spsolve(K[np.ix_(freeDofs,freeDofs)],R).reshape(len(freeDofs),1)
             
+    
             
     else:
-        raise Exception ('QUADS NOT YET IMPLEMENTED')
+        for elem in range(0,nElem):    #Gissning med linjärt fall
+            edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1) 
+            Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)[0]
+            K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke
+
+    
+        U[np.ix_(freeDofs)] = spsolve(K[np.ix_(freeDofs,freeDofs)],F[np.ix_(freeDofs)]).reshape(len(freeDofs),1)
+        
+        while err>TOL:
+            K = np.zeros(np.shape(K))
+            ed=cfc.extractEldisp(eDof,U) 
+
+            for elem in range(0,nElem):
+                edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)
+                eps=Plani4s.plani4s(elemX[elem,:],elemY[elem,:],ep,ed[elem,:]) 
+                
+                D_new = mh._mod_hook(eps,mp)[1]
+                Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D_new[np.ix_([0,1,2,3],[0,1,2,3])])[0]
+                K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke
+                
+            R= np.matmul(K[np.ix_(freeDofs,freeDofs)],U[np.ix_(freeDofs)])-F[np.ix_(freeDofs)]
+            err = np.linalg.norm(R)
+            print(err)
+            
+            U[np.ix_(freeDofs)] = U[np.ix_(freeDofs)] - spsolve(K[np.ix_(freeDofs,freeDofs)],R).reshape(len(freeDofs),1)
+            
+        
+        
+        
+        #raise Exception ('QUADS NOT YET IMPLEMENTED')
         
     return U
 
