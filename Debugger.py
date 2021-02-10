@@ -17,7 +17,7 @@ def num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,numElem):
         x[elem]=x[elem]-eps
         U1 = FE._FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)
     
-        x[elem]=x[elem]+eps
+        x[elem]=x[elem]+eps*2
         U2 = FE._FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)
     
 
