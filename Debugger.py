@@ -9,7 +9,7 @@ import numpy as np
 
 def num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,numElem):
     
-    eps=1e-6
+    eps=1e-8
     dc = x.copy() 
     
     for elem in range(0,numElem):
@@ -17,7 +17,7 @@ def num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,numElem):
         x[elem]=x[elem]-eps
         U1 = FE._FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)
     
-        x[elem]=x[elem]+eps*2
+        x[elem]=x[elem]+eps
         U2 = FE._FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)
     
 
