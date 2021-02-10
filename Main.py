@@ -122,6 +122,8 @@ def _Main(g,el_type,force,bmarker,settings,mp):
         loop = loop + 1
         xold = x.copy()
         
+        
+        #"""LINEAR"""
         if Linear == True:
             U = FE._FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
         
@@ -142,6 +144,17 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                     Ue = U[np.ix_(edof[elem,:]-1)]
                     dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke[0],Ue))
             
+            
+            
+            if True and loop==1:
+                dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)
+            
+                plt.plot(range(0,nElem),dc_Num-dc)
+                plt.xlabel('Element')
+                plt.ylabel('dc difference')
+            
+            
+        #"""NON LINEAR"""
         else:
             U = FE._FE_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
             dc = xold.copy() 
@@ -170,14 +183,6 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                     
                     
                 
-            
-            if True and loop==1:
-                dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)
-            
-                plt.plot(range(0,nElem),dc_Num-dc)
-                plt.xlabel('Element')
-                plt.ylabel('dc difference')
-            
         
         toc=time.perf_counter()
 
