@@ -171,12 +171,12 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                     
                 
             
-        if True and loop==1:
-            dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)
+            if True and loop==1:
+                dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)
             
-            plt.plot(range(0,nElem),dc_Num-dc)
-            plt.xlabel('Element')
-            plt.ylabel('dc difference')
+                plt.plot(range(0,nElem),dc_Num-dc)
+                plt.xlabel('Element')
+                plt.ylabel('dc difference')
             
         
         toc=time.perf_counter()
