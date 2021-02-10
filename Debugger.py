@@ -1,6 +1,7 @@
 
 
 import FE
+import numpy as np
 
 
 
@@ -19,10 +20,11 @@ def num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,numElem):
         x[elem]=x[elem]+eps
         U2 = FE._FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)
     
-        G01=f*U1
-        G02=f*U2
+
+        G01=np.matmul(np.transpose(f),U1)
+        G02=np.matmul(np.transpose(f),U2)
         
-        dc[elem]=(G01-G02)/eps
+        dc[elem]=(G02-G01)/eps
     
     return dc
 
