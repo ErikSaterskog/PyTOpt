@@ -126,7 +126,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
             
             #"""LINEAR"""
             if Linear == True:
-                U = FE._FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
+                U = FE.FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
             
             
                 dc = xold.copy() 
