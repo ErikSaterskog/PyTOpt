@@ -34,7 +34,7 @@ class Optimisation:
             x = x.reshape(nElem,1)
             grad = grad.reshape(nElem,1)
             global U
-            U = FE._FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
+            U = FE.FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
             c= 0
             if Tri:  #Tri Elements
                 for elem in range(0,nElem):  
@@ -50,23 +50,24 @@ class Optimisation:
                     c = c + x[elem][0]**(SIMP_penal)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                     grad[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
             
-            grad[:] = np.minimum.reduce([x*10,abs(grad)])*np.sign(grad)
+            #grad[:] = np.minimum.reduce([x*10,abs(grad)])*np.sign(grad)
             grad[:] = Filter.Check(x,grad,weightMatrix)
             grad = grad.reshape(len(x),)
             x = x.reshape(len(x),)
             
             ce = np.array(c[0]).reshape([1,])
-            print(ce)
+            print('G0:'+str(ce[0]))
+            print('------------------------------')
             return ce[0]
         
         def VolCon(x,grad):
-            grad[:] = 0.4**x.copy()
+            grad[:] = 10#0.4**x.copy()
             grad = grad.reshape(nElem,1)
             grad[:] = Filter.Check(x,grad,weightMatrix)
             grad = grad.reshape(len(x),)
             return sum(x)-volFrac*len(x)
         
-        opt = nlopt.opt(nlopt.LD_MMA, len(x)) #Choosing optmisation algorithm
+        opt = nlopt.opt(nlopt.LD_MMA, len(x))           #Choosing optmisation algorithm
         opt.set_min_objective(Objfun)
         lb = np.zeros(np.size(x))+0.001                              #Placeholders for now
         ub = np.ones(np.size(x))                            #Placeholders for now
@@ -75,12 +76,12 @@ class Optimisation:
         
         
         # Both fc and h is in the same form as f. 
-        opt.add_inequality_constraint(VolCon,1e-15)
+        opt.add_inequality_constraint(VolCon,0)
         
         
         #Later here should stopping criterion be implemented
-        opt.set_xtol_rel(1e-8)
-        opt.set_maxeval(70)
+        opt.set_xtol_rel(1e-2)
+        opt.set_maxeval(150)
         x = opt.optimize(x.reshape(len(x),))
         
         return x
