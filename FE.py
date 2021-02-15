@@ -59,22 +59,44 @@ def FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
 
 
 def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
+    """
+    INPUT:
+        x          - element densities, design variables
+        SIMP_penal - Penaltyfactor preventing x to be between 0-1
+        eDof       - Element degrees of freedom
+        coord      - Node coordinates both in x- and y-direction
+        fixDofs    - Degrees of freedom prescribed by boundary condition
+        F          - Forcevector
+        ep         - element parameters
+                        - ptype(if plane strain or plain stress)
+                        - t thickness
+                        - ir intregration rule
+        mp         - Material parameters consisting of Young's modulus and 
+                     Poisson's ratio.
+                     
+                     
+    OUTPUT:
+        U          - Displacement vector
     
+      
+    """
     #Settings
     E=mp[0]
     v=mp[1]
     ptype=ep[0]
-    err=1e9
-    TOL=1e-6
+    err=1e9     # Setting an error, arbritary big.
+    TOL=1e-6    # Setting a resonable low tolerance. 
     
+     # Collecting necessary variables as the K stiffness matrix for example.
     nDof,nElem,K,U,Tri,elemX,elemY=init(eDof,coords)
     
     
-    D=cfc.hooke(ptype, E, v)
+    D=cfc.hooke(ptype, E, v) # The constitutive relations for linear Hookes.
+    # Define all degrees of freedom and free degrees of freedom.
     allDofs = range(nDof)       
     freeDofs = np.setdiff1d(allDofs, fixDofs)
 
-        
+    # The first guess is that the case is linear insteed of stepping load.   
     for elem in range(nElem):    #Gissning med linjärt fall
         edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1) 
         if Tri:
@@ -85,7 +107,11 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
 
     
     U[np.ix_(freeDofs)] = spsolve(K[np.ix_(freeDofs,freeDofs)],F[np.ix_(freeDofs)]).reshape(len(freeDofs),1)
-          
+    
+    #Newton iteration loop until convergens.
+        # Starting by calculating the strain and then define the constitutive 
+        # relation when having a nonlinear material model. Reassemble the nonlinear
+        # stiffness matrix K. Checking the the residual.      
     while err>TOL:
         K = np.zeros(np.shape(K))
         ed=cfc.extractEldisp(eDof,U) 
