@@ -20,7 +20,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     #Settings
     E=mp[0]#210*1e9
     v=mp[1]#0.3
-    Linear = True
+    Linear = False
     Debug = False
     OC = True
     ptype=2         #ptype=1 => plane stress, ptype=2 => plane strain
@@ -86,7 +86,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
         raise Exception('Unrecognized Element Shape, Check eDof Matrix')
     
     #Find The coordinates for each element's nodes
-    for elem in range(0,nElem):
+    for elem in range(nElem):
             
         nNode=np.ceil(np.multiply(edof[elem,:],0.5))-1
         nNode=nNode.astype(int)
@@ -125,7 +125,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
             
             
             #"""LINEAR"""
-            if Linear == True:
+            if Linear:
                 U = FE.FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
             
             
@@ -134,20 +134,20 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                 tic=time.perf_counter()
                 
                 if Tri:  #Tri Elements
-                    for elem in range(0,nElem):  
+                    for elem in range(nElem):  
                         Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)   #!THIS COULD BE PLACED OUTSIDE OF LOOP!               #Element Stiffness Matrix for Triangular Element
                         Ue = U[np.ix_(edof[elem,:]-1)]
                         dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                         
                 else:    #Quad Elements
-                    for elem in range(0,nElem):            
+                    for elem in range(nElem):            
                         Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)    #!THIS COULD BE PLACED OUTSIDE OF LOOP!           #Element Stiffness Matrix for Quad Element
                         Ue = U[np.ix_(edof[elem,:]-1)]
                         dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke[0],Ue))
                 
                 
                 
-                if Debug==True and loop==1:
+                if Debug and loop==1:
                     dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)
                 
                     plt.plot(range(0,nElem),dc_Num-dc)
@@ -165,7 +165,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                 ed = cfc.extractEldisp(edof, U)
             
                 if Tri:  #Tri Elements
-                    for elem in range(0,nElem):  
+                    for elem in range(nElem):  
                         eps = np.zeros([6,])
                         eps_2D=cfc.plants(elemX[elem,:],elemY[elem,:],ep,D,ed[elem,:])[1] 
                         eps[0:4] = eps_2D
@@ -175,7 +175,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                         dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                         
                 else:    #Quad Elements
-                    for elem in range(0,nElem):            
+                    for elem in range(nElem):            
                         eps=Plani4s.plani4s(elemX[elem,:],elemY[elem,:],ep,ed[elem,:]) 
                         D_new = mh._mod_hook(eps,mp)[1]
                         Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D_new[np.ix_([0,1,2,3],[0,1,2,3])])[0]
@@ -206,7 +206,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
         if Linear:
             x = Opt.Optimisation().mma(nElem,SIMP_penal,edof,coords,bc,f,ep,mp,Tri,elemX,elemY,D,weightMatrix,volFrac,x)
             x = x.reshape(nElem,1)
-            U = FE._FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)
+            U = FE.FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)
         else:
             raise Exception('Not implemented yet!')
             

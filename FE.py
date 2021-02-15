@@ -16,40 +16,30 @@ def FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     ptype=ep[0]
     Timers=True     #Print Timers 
     
-    
     nDof,nElem,K,U,Tri,elemX,elemY=init(eDof,coords)
     
+    tic1 = time.perf_counter()       #Start timer
     
-    #Start timer
-    tic1 = time.perf_counter()
-    
-    #Sparse Matrices??
-    #K=csr_matrix(K)
-    #F=csr_matrix(F)
-    
-    #Linear Elastic Constitutive Matrix
-    D=cfc.hooke(ptype, E, v)
+    allDofs = range(nDof)        
+    freeDofs = np.setdiff1d(allDofs, fixDofs)
+    D=cfc.hooke(ptype, E, v)         #Linear Elastic Constitutive Matrix
     
     #ASSEMBLE, should be done using coo_matrix() if possible
     if Tri:  #Tri Elements
-        for elem in range(0,nElem):  
-            edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)                        #Finding the indexes from eDof
-            Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)                    #Element Stiffness Matrix for Triangular Element
+        for elem in range(nElem):  
+            edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)                    #Finding the indexes from eDof
+            Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)               #Element Stiffness Matrix for Triangular Element
             K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke
     else:    #Quad Elements
-        for elem in range(0,nElem):  
-            edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)                        #Finding the indexes from eDof
+        for elem in range(nElem):  
+            edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)                    #Finding the indexes from eDof
             Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)                   #Element Stiffness Matrix for Quad Element
             K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke[0]
             
 
     toc1 = time.perf_counter()
-
-
-    allDofs = range(nDof)        
-    freeDofs = np.setdiff1d(allDofs, fixDofs)
-
     tic2 = time.perf_counter()
+    
     U[np.ix_(freeDofs)] = spsolve(K[np.ix_(freeDofs,freeDofs)],F[np.ix_(freeDofs)]).reshape(len(freeDofs),1)
     toc2 = time.perf_counter()
     
@@ -76,12 +66,11 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     ptype=ep[0]
     err=1e9
     TOL=1e-6
-    Timers=True     #Print Timers 
     
     nDof,nElem,K,U,Tri,elemX,elemY=init(eDof,coords)
     
-    D=cfc.hooke(ptype, E, v)
     
+    D=cfc.hooke(ptype, E, v)
     allDofs = range(nDof)       
     freeDofs = np.setdiff1d(allDofs, fixDofs)
 
