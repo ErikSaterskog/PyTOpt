@@ -16,11 +16,11 @@ g = cfg.Geometry()
 
 g.point([0,0])                 #0
 g.point([1,0])        #1
-g.point([1,0.5],marker=9)               #2               #2
-g.point([1,1])               #2
-g.point([0,1])               #3
-g.point([0,0.6])               #3
-g.point([0,0.4])               #3
+g.point([1,0.4],marker=9)               #2               #2
+g.point([1,0.8])               #2
+g.point([0,0.8])               #3
+g.point([0,0.5])               #3
+g.point([0,0.3])               #3
 
 
 g.spline([0, 1],marker=0)
@@ -43,8 +43,8 @@ nu = 0.3 #Poisson's ratio
 
 mp = [E,nu]
 
-volFrac = 0.2 # Constraint on 50% volume
-meshSize=0.03 # How fine mesh we want. 1 is only one element and 0 is infinity.
+volFrac = 0.4 # Constraint on 50% volume
+meshSize=0.02 # How fine mesh we want. 1 is only one element and 0 is infinity.
 rMin = meshSize*np.sqrt(2)*0.5 # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.005 # How small change between two optmisation we allow before stopping.
 el_type = 2   #2-Tri,  3-Quad

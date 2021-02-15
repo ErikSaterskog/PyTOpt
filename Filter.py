@@ -12,11 +12,6 @@ def Check(x,dc,H):
     Timers=True
     tic = time.perf_counter()
     
-
-    #Initialize 
-    nElem=np.size(x,0)
-    new_dc=np.zeros([np.size(dc),1])
-    
     new_dc=np.transpose((np.sum(np.transpose(x)*H[:,:]*np.transpose(dc), axis=1))/(np.transpose(x[:])*np.sum(H[:,:], axis=1)))
 
     
