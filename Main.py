@@ -20,7 +20,6 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     #Settings
     E=mp[0]#210*1e9
     v=mp[1]#0.3
-    Linear = True
     Debug = False
     OC = True
     ptype=2         #ptype=1 => plane stress, ptype=2 => plane strain
@@ -28,7 +27,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     change = 2
     loop = 0
     SIMP_penal = 3
-    volFrac,meshSize, rMin, changeLimit = settings
+    volFrac,meshSize, rMin, changeLimit,Linear = settings
     
     
     

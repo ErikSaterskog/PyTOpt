@@ -3,6 +3,41 @@
 Created on Wed Jan 27 09:52:07 2021
 
 @author: Daniel
+
+The example start by import the necessary libaries. After that is the geometry constructed.
+Do not change these. 
+
+The marker indicates an ID for the point or line. This ID is later used to 
+define boundary conditions and prescribed forces. Change these if you are sure
+about how they works and when you want a diffrerent problem. 
+
+The force vector is consisting of three values. The first value is the applied
+force magnitude and can be altered by the user. However, the later two should not 
+be touched. As the first of them inicated where the load is applied and the last
+in what direction the force is pointing. A value of 2 indicates in y-direction.
+
+b-marker inidicates what line should be prescirbed.
+
+E and nu are material parameters and can be altered after what material of interest.
+
+VolFrac    - How many procent of the volume should the final solution have contra
+             the original.
+meshsize   - How "large" each element should be. This is a scale value between 0
+             and 1 where 1 means few and large elements and 0 means infinite many
+             elements.
+rMin       - For the filtering, how large radius should the filter take into 
+             account. With a low value the filter will only notice the closest 
+             neighbour for each element. A large value will make the filter take 
+             a large elements into account when filtering each element.
+changeLimit- For OC as optimisation method, what tolerance for the change 
+             between iteration is sufficiant.
+el_type    - 2 means triangular elements and 3 means quad elements.
+Linear     - True or False
+
+
+Then we call on the Main module to start the optimisation.
+
+
 """
 
 
@@ -48,10 +83,10 @@ meshSize=0.02 # How fine mesh we want. 1 is only one element and 0 is infinity.
 rMin = meshSize*np.sqrt(2)*0.5 # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.005 # How small change between two optmisation we allow before stopping.
 el_type = 2   #2-Tri,  3-Quad
+Linear = False
 
 
-
-settings = [volFrac,meshSize,rMin,changeLimit]
+settings = [volFrac,meshSize,rMin,changeLimit,Linear]
 
 
 Main._Main(g,el_type,force,bmarker,settings,mp)
