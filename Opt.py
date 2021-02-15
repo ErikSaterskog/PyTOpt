@@ -63,7 +63,7 @@ class Optimisation:
         def VolCon(x,grad):
             grad[:] = 10#0.4**x.copy()
             grad = grad.reshape(nElem,1)
-            grad[:] = Filter.Check(x,grad,weightMatrix)
+            grad = Filter.Check(x,grad,weightMatrix)
             grad = grad.reshape(len(x),)
             return sum(x)-volFrac*len(x)
         
