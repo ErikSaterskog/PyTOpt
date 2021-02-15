@@ -46,7 +46,7 @@ def FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     toc1 = time.perf_counter()
 
 
-    allDofs = [i for i in range(0,nDof)]        
+    allDofs = range(nDof)        
     freeDofs = np.setdiff1d(allDofs, fixDofs)
 
     tic2 = time.perf_counter()
@@ -82,11 +82,11 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     
     D=cfc.hooke(ptype, E, v)
     
-    allDofs = range(0,nDof)       
+    allDofs = range(nDof)       
     freeDofs = np.setdiff1d(allDofs, fixDofs)
 
         
-    for elem in range(0,nElem):    #Gissning med linjärt fall
+    for elem in range(nElem):    #Gissning med linjärt fall
         edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1) 
         if Tri:
             Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)
@@ -101,7 +101,7 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
         K = np.zeros(np.shape(K))
         ed=cfc.extractEldisp(eDof,U) 
 
-        for elem in range(0,nElem):
+        for elem in range(nElem):
             if Tri:
                 edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)
                 eps = np.zeros([6,])
@@ -155,7 +155,7 @@ def init(eDof,coords):
 
 
     #Find The coordinates for each element's nodes
-    for elem in range(0,nElem):
+    for elem in range(nElem):
         
         nNode=np.ceil(np.multiply(eDof[elem,:],0.5))-1
         nNode=nNode.astype(int)
