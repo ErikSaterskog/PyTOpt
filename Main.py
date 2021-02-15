@@ -213,7 +213,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
             
     """ Visualisation """
     
-    cfv.draw_element_values(x, coords, edof, 2, el_type,displacements=U,
+    cfv.draw_element_values(x, coords, edof, 2, el_type,displacements=None,
                       draw_elements=True, draw_undisplaced_mesh=False, 
                       title="Density", magnfac=1.0)
     
