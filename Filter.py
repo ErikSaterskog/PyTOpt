@@ -17,12 +17,9 @@ def Check(x,dc,H):
     nElem=np.size(x,0)
     new_dc=np.zeros([np.size(dc),1])
     
-    #breakpoint()
-    for elem in range(0,nElem):
-        #breakpoint()
-        new_dc[elem][0]=(np.sum(np.transpose(x)*H[elem,:]*np.transpose(dc)))/(x[elem]*np.sum(H[elem,:]))
-    #new_dc[:][0]=(np.sum(np.transpose(x)*H[:,:]*np.transpose(dc), axis=1))/(x[:]*np.sum(H[:,:], axis=1))
+    new_dc=np.transpose((np.sum(np.transpose(x)*H[:,:]*np.transpose(dc), axis=1))/(np.transpose(x[:])*np.sum(H[:,:], axis=1)))
 
+    
 
     if Timers:
         toc = time.perf_counter()  
