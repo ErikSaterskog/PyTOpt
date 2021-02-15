@@ -22,7 +22,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     v=mp[1]#0.3
     Linear = True
     Debug = False
-    OC = False
+    OC = True
     ptype=2         #ptype=1 => plane stress, ptype=2 => plane strain
     ep=[ptype,1,2]    #ep[ptype, thickness, integration rule(only used for QUAD)]  
     change = 2
@@ -65,7 +65,6 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     x =np.zeros([nElem,1])+volFrac
         
     #Check sizes, Initialize
-    nElem=np.size(edof,0)
     nx=coords[:,0]
     ny=coords[:,1]
     elemCenterX=np.zeros([nElem,1])
