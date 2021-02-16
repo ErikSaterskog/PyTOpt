@@ -91,54 +91,64 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     nDof,nElem,K,U,Tri,elemX,elemY=init(eDof,coords)
     
     
-    D=cfc.hooke(ptype, E, v) # The constitutive relations for linear Hookes.
+    De=cfc.hooke(ptype, E, v) # The constitutive relations for linear Hookes.
+    D = np.zeros([nElem,np.shape(De)[0],np.shape(De)[1]])
     # Define all degrees of freedom and free degrees of freedom.
     allDofs = range(nDof)       
     freeDofs = np.setdiff1d(allDofs, fixDofs)
 
     # The first guess is that the case is linear insteed of stepping load.   
     for elem in range(nElem):    #Gissning med linjärt fall
+        D[elem,:,:] = De
         edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1) 
         if Tri:
-            Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)
+            Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D[elem,:,:])
         else:
-            Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)[0]
+            Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D[elem,:,:])[0]
         K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke
 
     
     U[np.ix_(freeDofs)] = spsolve(K[np.ix_(freeDofs,freeDofs)],F[np.ix_(freeDofs)]).reshape(len(freeDofs),1)
     
+    
+    
     #Newton iteration loop until convergens.
         # Starting by calculating the strain and then define the constitutive 
         # relation when having a nonlinear material model. Reassemble the nonlinear
-        # stiffness matrix K. Checking the the residual.      
+        # stiffness matrix K. Checking the the residual.
+    
+    loop = 1
+    
     while err>TOL:
-        K = np.zeros(np.shape(K))
-        ed=cfc.extractEldisp(eDof,U) 
-
-        for elem in range(nElem):
-            if Tri:
-                edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)
-                eps = np.zeros([6,])
-                eps_2D=cfc.plants(elemX[elem,:],elemY[elem,:],ep,D,ed[elem,:])[1] 
-                eps[0:4] = eps_2D
-                D_new = mh._mod_hook(eps,mp)[1]
-                Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D_new[np.ix_([0,1,2,3],[0,1,2,3])])
-                K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke
-            else:
-                edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)
-                eps=Plani4s.plani4s(elemX[elem,:],elemY[elem,:],ep,ed[elem,:]) 
-                D_new = mh._mod_hook(eps,mp)[1]
-                Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D_new[np.ix_([0,1,2,3],[0,1,2,3])])[0]
-                K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke
-                
+        
+         
+        if loop == 1:
+            ed=cfc.extractEldisp(eDof,U)
+            for elem in range(nElem):
+                if Tri:
+                    edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)
+                    eps = np.zeros([6,])
+                    eps_2D=cfc.plants(elemX[elem,:],elemY[elem,:],ep,np.matrix(D[elem,:,:]),ed[elem,:])[1] 
+                    eps[0:4] = eps_2D
+                    D_new = mh._mod_hook(eps,mp)[1]
+                    Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D_new[np.ix_([0,1,2,3],[0,1,2,3])])
+                    K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke
+                    D[elem,:,:] = D_new[np.ix_([0,1,2,3],[0,1,2,3])]
+                else:
+                    edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)
+                    eps=Plani4s.plani4s(elemX[elem,:],elemY[elem,:],ep,ed[elem,:]) 
+                    D_new = mh._mod_hook(eps,mp)[1]
+                    Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D_new[np.ix_([0,1,2,3],[0,1,2,3])])[0]
+                    K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke
+            loop = 0   
+                    
         R= np.matmul(K[np.ix_(freeDofs,freeDofs)],U[np.ix_(freeDofs)])-F[np.ix_(freeDofs)]
         err = np.linalg.norm(R)
         print(err)
-            
+        
         U[np.ix_(freeDofs)] = U[np.ix_(freeDofs)] - spsolve(K[np.ix_(freeDofs,freeDofs)],R).reshape(len(freeDofs),1)
             
-        
+    
     return U
 
 
