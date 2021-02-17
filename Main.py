@@ -5,7 +5,6 @@ import calfem.utils as cfu
 import Mesh
 import calfem.vis as cfv
 import FE
-import FE_test
 import Opt
 import Filter
 import time
@@ -157,7 +156,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                 
             #"""NON LINEAR"""
             else:
-                U = FE_test._FE_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
+                U = FE._FE_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
                 dc = xold.copy() 
                 
                 tic=time.perf_counter()
