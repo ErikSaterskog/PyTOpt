@@ -25,7 +25,8 @@ def  elem3n(ue, ex, ey, ep, mp):
 
 #Setup shape functions and its derivatives at each gauss point
     N, dNr = shape_functions(eta, xsi, ngp)
-    JT=dNr*[ex,ey]
+
+    JT=np.matmul(dNr,np.transpose([ex,ey]))
 
 # Loop over integration points, add the contributions to Ke, fint and fext
     Ke      = np.zeros([8,8])    #Preallocate Ke
@@ -49,16 +50,16 @@ def  elem3n(ue, ex, ey, ep, mp):
 
     if ptype==2: #Plane strain
         
-        for i in range(1,ngp):
-            indx=[ 2*i-1, 2*i ].T
+        for i in range(0,ngp):
+            indx=np.transpose([ 2*i, 2*i+1 ])
             detJ=np.linalg.det(JT[indx,:])
             if detJ < 1e-10:
                 print('Jacobideterminant equal or less than zero!')
                 
-                dNx=spsolve(JT[indx,:],dNr[indx,:])
+            dNx=spsolve(JT[indx,:],dNr[indx,:])
         
 #       Extract values of B(xsi, eta) at current gauss point
-            B=[[dNx[1,1],0,dNx[1,2],0,dNx[1,3],0],[dNx[2,1],0,dNx[2,2],0,dNx[2,3],0],[dNx[2,1],dNx[1,1],dNx[2,2],dNx[1,2],dNx[2,3],dNx[1,3]]]
+            B=[[dNx[0,0],0,dNx[0,1],0,dNx[0,2],0],[dNx[1,0],0,dNx[1,1],0,dNx[1,2],0],[dNx[1,0],dNx[0,0],dNx[1,1],dNx[0,1],dNx[1,2],dNx[0,2]]]
         
 #If requested, make the bbar correction
             #if bbar
@@ -69,30 +70,31 @@ def  elem3n(ue, ex, ey, ep, mp):
 
 
 #Extract shape function N(xsi, eta) at current gauss point
-            N2=np.zeros([2,8])
-            N2[0,1:2:7] = N[i,:]
-            N2[1,2:2:8] = N[i,:]
+            N2=np.zeros([2,6])
+
+            N2[0,np.ix_([0,2,4])] = N[i,:]
+            N2[0,np.ix_([1,3,5])]  = N[i,:]
         
 #Calculate strain at current gauss point
-            epsilon = np.zeros([6,1])
-            epsilon[1,2,4] = B*ue
+            epsilon = np.zeros([1,6])
+            epsilon[0][np.ix_([0,1,3])] = np.matmul(B,ue)
             
 #Calculate material response at current gauss point
             if matmod==1:              #Elasticity
                 raise Exception('Här ska det implementeras!!')
                 #[sigma, dsde] = elastic(epsilon, mp)
             elif matmod==2:        #Modified Hook plasticity
-                [sigma, dsde] = mh._mod_hook(epsilon, mp)
+                [sigma, dsde] = mh._mod_hook(epsilon[0], mp)    #!!FIXA NOLLAN HÄR!!
             else:
                 raise Exception('Only material model (ep(4) 1 or 2 supported');
                 
                 
             stress[:, i] = sigma   #Save stress for current gauss point
         
-#       Calculate the gauss point's contribution to element stiffness and forces
+#Calculate the gauss point's contribution to element stiffness and forces
             Dm=dsde[np.ix_([1, 2, 4]),np.ix_([1, 2, 4])]                 # Components for plane strain
-            Ke=Ke+B.T*Dm*B*detJ*wp(i)*t                                  # Stiffness contribution
-            fint=fint+B.T*sigma([1,2,4].T)*wp(i)*detJ*t                  # Internal force vector 
+            Ke=Ke+np.transpose(B)*Dm*B*detJ*wp(i)*t                                  # Stiffness contribution
+            fint=fint+np.transpose(B)*sigma(np.ix_([0,1,3]))*wp(i)*detJ*t                  # Internal force vector 
             fext=fext+N2.T*b*detJ*wp(i)*t                                # External force vector
     
     else:
@@ -104,19 +106,22 @@ def  elem3n(ue, ex, ey, ep, mp):
 def gauss_quadrature(ir):
 # Setup gauss quadrature
     if ir==1:
+        gp=np.zeros(2)
         g1=1/3
         w1=1/2
         gp=[ g1, g1 ]
         w= [ w1, w1 ]
     elif ir==2:
+        gp=np.zeros([3,2])
+        w=np.zeros([3,2])
         g1=1/6
         g2=2/3
         w1=1/6
-        gp[:,0]=[g1, g2, g1].T
-        gp[:,1]=[g1, g1, g2].T
+        gp[:,0]=np.transpose([g1, g2, g1])
+        gp[:,1]=np.transpose([g1, g1, g2])
             
-        w[:,0]=[ w1, w1, w1].T
-        w[:,1]=[ w1, w1, w1].T
+        w[:,0]=np.transpose([ w1, w1, w1])
+        w[:,1]=np.transpose([ w1, w1, w1])
             
     elif ir==3:
         raise Exception('NOT YET IMPLEMENTED')
@@ -137,21 +142,22 @@ def gauss_quadrature(ir):
     return wp, xsi, eta
 
 def shape_functions(eta, xsi, ngp):
-    N=np.zeros([np.len(xsi),3])
-    dNr=N.copy()
+
+    N=np.zeros([np.size(xsi),3])
+    dNr=np.zeros([2,3])
     
     r2=ngp*2
     N[:,0]=1-eta-xsi 
     N[:,1]=xsi
     N[:,2]=eta  
 
-    dNr[0:2:r2,1]=-1
-    dNr[0:2:r2,2]=1
-    dNr[0:2:r2,3]=0   
+    dNr[0:2:r2-1,0]=-1
+    dNr[0:2:r2-1,1]=1
+    dNr[0:2:r2-1,2]=0   
     
-    dNr[1:2:r2+1,1]=-1   
-    dNr[1:2:r2+1,2]=0
-    dNr[1:2:r2+1,3]=1
+    dNr[1:2:r2,0]=-1   
+    dNr[1:2:r2,1]=0
+    dNr[1:2:r2,2]=1
     
 
     return N, dNr
