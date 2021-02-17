@@ -1,3 +1,4 @@
+
 import numpy as np
 import time
 from scipy.sparse import csc_matrix, linalg, csr_matrix, lil_matrix, coo_matrix
@@ -5,6 +6,7 @@ from scipy.sparse.linalg import spsolve
 import calfem.core as cfc
 import Mod_Hook as mh
 import Plani4s
+import elem3n
 
 
 
@@ -81,14 +83,13 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     err=1e9     # Setting an error, arbritary big.
     TOL=1e-6    # Setting a resonable low tolerance. 
     
+    ep=[2,1,2,2]   #TEMPORARY TESTING
+    
      # Collecting necessary variables as the K stiffness matrix for example.
     nDof,nElem,K,U,Tri,elemX,elemY=init(eDof,coords)
     
-    
-    De=cfc.hooke(ptype, E, v) # The constitutive relations for linear Hookes.
-    D = np.zeros([nElem,np.shape(De)[0],np.shape(De)[1]])
-    for elem in range(nElem):    #Gissning med linjärt fall
-        D[elem,:,:] = De
+    U = FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp)
+
     
     # Define all degrees of freedom and free degrees of freedom.
     allDofs = range(nDof)       
@@ -98,43 +99,28 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
         # Starting by calculating the strain and then define the constitutive 
         # relation when having a nonlinear material model. Reassemble the nonlinear
         # stiffness matrix K. Checking the the residual.
-    fstep = F.copy()
-    loadstep = 15
-    Fload = np.linspace(0.0001,max(abs(F)),loadstep)
-    #loop = 1
-    for load in range(0,loadstep):
-        fstep[np.where(abs(F)==max(abs(F)))]=Fload[load]*np.sign(F[np.where(abs(F)==max(abs(F)))])
-        err = 1
-        print(load)
-        while err>TOL:
-            K=np.zeros(np.shape(K))
-                
-    #        if loop == 1:
-            ed=cfc.extractEldisp(eDof,U)
-            for elem in range(nElem):
-                if Tri:
-                    edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)
-                    eps = np.zeros([6,])
-                    eps_2D=cfc.plants(elemX[elem,:],elemY[elem,:],ep,np.matrix(D[elem,:,:]),ed[elem,:])[1] 
-                    eps[0:4] = eps_2D
-                    D_new = mh._mod_hook(eps,mp)[1]
-                    Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D_new[np.ix_([0,1,2,3],[0,1,2,3])])
-                    K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke
-                    D[elem,:,:] = D_new[np.ix_([0,1,2,3],[0,1,2,3])]
-                else:
-                    edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)
-                    eps=Plani4s.plani4s(elemX[elem,:],elemY[elem,:],ep,ed[elem,:]) 
-                    D_new = mh._mod_hook(eps,mp)[1]
-                    Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D_new[np.ix_([0,1,2,3],[0,1,2,3])])[0]
-                    K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke
-    #            loop = 0   
-                        
-            R= np.matmul(K[np.ix_(freeDofs,freeDofs)],U[np.ix_(freeDofs)])-fstep[np.ix_(freeDofs)]
-            err = np.linalg.norm(R)
-            #print(err)
+
+    while err>TOL:
+        
+        K=np.zeros(np.shape(K))
+        ed=cfc.extractEldisp(eDof,U)
+        
+        for elem in range(nElem):
+            
+            edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)
+
+            Ke, fint, fext, stress, epsilon=elem3n.elem3n((ed[elem,:]), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
+            
+            K[edofIndex,edofIndex]=K[edofIndex,edofIndex]+Ke
+        
+            R[edof]=R[edof]+fint-fext
+            
+
+        err = np.linalg.norm(R)
+        print(err)
            
             
-            U[np.ix_(freeDofs)] = U[np.ix_(freeDofs)] - spsolve(K[np.ix_(freeDofs,freeDofs)],R).reshape(len(freeDofs),1)
+        U[np.ix_(freeDofs)] = U[np.ix_(freeDofs)] - spsolve(K[np.ix_(freeDofs,freeDofs)],R[freeDofs])
                 
     
     return U
@@ -177,6 +163,18 @@ def init(eDof,coords):
         elemY[elem,:]=ny[nNode[0:8:2]]
         
     return nDof,nElem,K,U,Tri,elemX,elemY
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
