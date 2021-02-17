@@ -1,0 +1,173 @@
+
+
+
+
+import numpy as np
+import Mod_Hook as mh
+from scipy.sparse.linalg import spsolve
+
+
+def  elem3n(ue, ex, ey, ep, mp):
+
+
+    ptype   = ep[1]          # Which analysis type?
+    t       = ep[2]           # Element thickness
+    ir      = ep[3]  
+    ngp=ir*ir              # Integration rule and number of gauss points
+    matmod  = ep[4]
+
+#% If 6th input argument present, assign body load. !IMPLEMENT!
+#if nargin==6,   b=eq;   else   
+    b=np.zeros(2,1)
+
+# Setup gauss quadrature
+    wp, xsi, eta = gauss_quadrature(ir)
+
+#Setup shape functions and its derivatives at each gauss point
+    N, dNr = shape_functions(eta, xsi, ngp)
+    JT=dNr*[ex,ey]
+
+# Loop over integration points, add the contributions to Ke, fint and fext
+    Ke      = np.zeros(8,8)    #Preallocate Ke
+    fint    = np.zeros(8,1)    #Preallocate fint
+    fext    = np.zeros(8,1)    #Preallocate fext
+    stress  = np.zeros(6, ngp) #Preallocate stress
+
+# Plane strain, selectively reduced integration (Abaqus' method)
+    if ptype==3 and ir==2:
+        raise Exception('not yet implemented')
+    #if bbar
+    #    [~, dNr_bb] = shape_functions(0, 0, 1)
+    #    JT_bb=dNr_bb*[ex,ey]
+    #    dNx_bb=spsolve(JT_bb,dNr_bb)
+    #    tmp = zeros(1,8)
+    #    tmp(1:2:end) = dNx_bb(1,:)/3
+    #    tmp(2:2:end) = dNx_bb(2,:)/3
+    #    Bvol0 = [tmp; tmp; 0*tmp]
+    #    ptype=2
+        
+
+    if ptype==2: #Plane strain
+        
+        for i in range(1,ngp):
+            indx=[ 2*i-1, 2*i ].T
+            detJ=np.linalg.det(JT[indx,:])
+            if detJ < 1e-10:
+                print('Jacobideterminant equal or less than zero!')
+                
+                dNx=spsolve(JT[indx,:],dNr[indx,:])
+        
+#       Extract values of B(xsi, eta) at current gauss point
+            B=[[dNx[1,1],0,dNx[1,2],0,dNx[1,3],0],[dNx[2,1],0,dNx[2,2],0,dNx[2,3],0],[dNx[2,1],dNx[1,1],dNx[2,2],dNx[1,2],dNx[2,3],dNx[1,3]]]
+        
+#If requested, make the bbar correction
+            #if bbar
+            #    Bvol = zeros(3,8)
+            #    tmp = (B(1,:)+B(2,:))/3
+            #    Bvol(1:2, :) = [tmp; tmp]
+            #    B = Bvol0 + (B-Bvol)
+
+
+#Extract shape function N(xsi, eta) at current gauss point
+            N2=np.zeros(2,8)
+            N2[0,1:2:7] = N[i,:]
+            N2[1,2:2:8] = N[i,:]
+        
+#Calculate strain at current gauss point
+            epsilon = np.zeros(6,1)
+            epsilon[1,2,4] = B*ue
+            
+#Calculate material response at current gauss point
+            if matmod==1:              #Elasticity
+                raise Exception('Här ska det implementeras!!')
+                #[sigma, dsde] = elastic(epsilon, mp)
+            elif matmod==2:        #Modified Hook plasticity
+                [sigma, dsde] = mh._mod_hook(epsilon, mp)
+            else:
+                raise Exception('Only material model (ep(4) 1 or 2 supported');
+                
+                
+            stress[:, i] = sigma   #Save stress for current gauss point
+        
+#       Calculate the gauss point's contribution to element stiffness and forces
+            Dm=dsde[np.ix_([1, 2, 4]),np.ix_([1, 2, 4])]                  # Components for plane strain
+            Ke=Ke+B.T*Dm*B*detJ*wp(i)*t                # Stiffness contribution
+            fint=fint+B.T*sigma([1,2,4].T)*wp(i)*detJ*t  # Internal force vector 
+            fext=fext+N2.T*b*detJ*wp(i)*t             # External force vector
+    
+    else:
+        raise Exception('Only plane strain ep(1)=ptype=2 allowed (unless ep(2)=2, then ep(1)=3 is allowed)');
+    
+    
+    return Ke, fint, fext, stress,epsilon
+
+def gauss_quadrature(ir):
+# Setup gauss quadrature
+    if ir==1:
+        g1=1/3
+        w1=1/2
+        gp=[ g1, g1 ]
+        w= [ w1, w1 ]
+    elif ir==2:
+        g1=1/6
+        g2=2/3
+        w1=1/6
+        gp[:,0]=[g1, g2, g1].T
+        gp[:,1]=[g1, g1, g2].T
+            
+        w[:,0]=[ w1, w1, w1].T
+        w[:,1]=[ w1, w1, w1].T
+            
+    elif ir==3:
+        raise Exception('NOT YET IMPLEMENTED')
+        #g1=0.774596669241483; g2=0.;
+        #w1=0.555555555555555; w2=0.888888888888888;
+        #gp(:,1)=[-g1;-g2; g1;-g1; g2; g1;-g1; g2; g1];
+        #gp(:,2)=[-g1;-g1;-g1; g2; g2; g2; g1; g1; g1];
+        #w(:,1)=[ w1; w2; w1; w1; w2; w1; w1; w2; w1];
+        #w(:,2)=[ w1; w1; w1; w2; w2; w2; w1; w1; w1];
+    else:
+        raise Exception('Invalid integration rule. ir = 1, 2 or 3')
+
+    
+    wp=w[:,0]*w[:,1]
+    xsi=gp[:,0]
+    eta=gp[:,1]
+
+    return wp, xsi, eta
+
+def shape_functions(eta, xsi, ngp):
+    N=np.zeros(np.len(xsi),3)
+    dNr=N.copy()
+    
+    r2=ngp*2
+    N[:,0]=1-eta-xsi 
+    N[:,1]=xsi
+    N[:,2]=eta  
+
+    dNr[0:2:r2,1]=-1
+    dNr[0:2:r2,2]=1
+    dNr[0:2:r2,3]=0   
+    
+    dNr[1:2:r2+1,1]=-1   
+    dNr[1:2:r2+1,2]=0
+    dNr[1:2:r2+1,3]=1
+    
+
+    return N, dNr
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
