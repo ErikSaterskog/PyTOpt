@@ -83,6 +83,8 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     err=1e9     # Setting an error, arbritary big.
     TOL=1e-6    # Setting a resonable low tolerance. 
     
+    ep=[2,1,2,2]   #TEMPORARY TESTING
+    
      # Collecting necessary variables as the K stiffness matrix for example.
     nDof,nElem,K,U,Tri,elemX,elemY=init(eDof,coords)
     
@@ -98,6 +100,9 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
         # relation when having a nonlinear material model. Reassemble the nonlinear
         # stiffness matrix K. Checking the the residual.
 
+
+
+    
     while err>TOL:
         
         K=np.zeros(np.shape(K))
@@ -106,17 +111,19 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
         for elem in range(nElem):
             
             edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)
-            #breakpoint()
-            Ke, fint, fext, stress, epsilon=elem3n.elem3n((ed[elem,:]), elemX[elem,:], elemY[elem,:], ep, mp)
+
+            Ke, fint, fext, stress, epsilon=elem3n.elem3n((ed[elem,:]), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
             
             K[edofIndex,edofIndex]=K[edofIndex,edofIndex]+Ke
+        
+            R[edof]=R[edof]+fint-fext
             
-        R=fint-fext
+
         err = np.linalg.norm(R)
         print(err)
            
             
-        U[np.ix_(freeDofs)] = U[np.ix_(freeDofs)] - spsolve(K[np.ix_(freeDofs,freeDofs)],R).reshape(len(freeDofs),1)
+        U[np.ix_(freeDofs)] = U[np.ix_(freeDofs)] - spsolve(K[np.ix_(freeDofs,freeDofs)],R[freeDofs])
                 
     
     return U

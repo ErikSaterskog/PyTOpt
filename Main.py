@@ -5,6 +5,7 @@ import calfem.utils as cfu
 import Mesh
 import calfem.vis as cfv
 import FE
+import FE_test
 import Opt
 import Filter
 import time
@@ -156,7 +157,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                 
             #"""NON LINEAR"""
             else:
-                U = FE._FE_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
+                U = FE_test._FE_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
                 dc = xold.copy() 
                 
                 tic=time.perf_counter()
@@ -166,7 +167,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                 if Tri:  #Tri Elements
                     for elem in range(nElem):  
                         eps = np.zeros([6,])
-                        eps_2D=cfc.plants(elemX[elem,:],elemY[elem,:],ep,D,ed[elem,:])[1] 
+                        eps_2D=cfc.plants(elemX[elem,:],elemY[elem,:],ep,D,ed[elem,:])[1]
                         eps[0:4] = eps_2D
                         D_new = mh._mod_hook(eps,mp)[1]
                         Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D_new[np.ix_([0,1,2,3],[0,1,2,3])])
