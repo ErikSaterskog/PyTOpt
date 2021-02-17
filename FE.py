@@ -89,7 +89,7 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     nDof,nElem,K,U,Tri,elemX,elemY=init(eDof,coords)
     
     U = FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp)
-
+    
     
     # Define all degrees of freedom and free degrees of freedom.
     allDofs = range(nDof)       
@@ -99,10 +99,10 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
         # Starting by calculating the strain and then define the constitutive 
         # relation when having a nonlinear material model. Reassemble the nonlinear
         # stiffness matrix K. Checking the the residual.
-
     while err>TOL:
         
         K=np.zeros(np.shape(K))
+        R = np.zeros(np.shape(F))
         ed=cfc.extractEldisp(eDof,U)
         
         for elem in range(nElem):
@@ -111,16 +111,16 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
 
             Ke, fint, fext, stress, epsilon=elem3n.elem3n((ed[elem,:]), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
             
-            K[edofIndex,edofIndex]=K[edofIndex,edofIndex]+Ke
+            K[edofIndex]=K[edofIndex]+Ke
         
-            R[edof]=R[edof]+fint-fext
+            R[np.ix_(eDof[elem,:]-1)]=R[np.ix_(eDof[elem,:]-1)]+fint-fext-F[np.ix_(eDof[elem,:]-1)]
             
 
-        err = np.linalg.norm(R)
-        print(err)
+        err = np.linalg.norm(R[freeDofs])
+        #print(err)
            
             
-        U[np.ix_(freeDofs)] = U[np.ix_(freeDofs)] - spsolve(K[np.ix_(freeDofs,freeDofs)],R[freeDofs])
+        U[np.ix_(freeDofs)] = U[np.ix_(freeDofs)] - spsolve(K[np.ix_(freeDofs,freeDofs)],R[freeDofs]).reshape(len(freeDofs),1)
                 
     
     return U

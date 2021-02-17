@@ -14,6 +14,7 @@ from scipy.sparse import csr_matrix
 import Mod_Hook as mh
 import Plani4s
 import Debugger
+import elem3n
 
 def _Main(g,el_type,force,bmarker,settings,mp):
     
@@ -23,7 +24,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     Debug = False
     OC = True
     ptype=2         #ptype=1 => plane stress, ptype=2 => plane strain
-    ep=[ptype,1,2]    #ep[ptype, thickness, integration rule(only used for QUAD)]  
+    ep=[ptype,1,2,2]    #ep[ptype, thickness, integration rule(only used for QUAD)]  
     change = 2
     loop = 0
     SIMP_penal = 3
@@ -164,12 +165,9 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                 ed = cfc.extractEldisp(edof, U)
             
                 if Tri:  #Tri Elements
-                    for elem in range(nElem):  
-                        eps = np.zeros([6,])
-                        eps_2D=cfc.plants(elemX[elem,:],elemY[elem,:],ep,D,ed[elem,:])[1]
-                        eps[0:4] = eps_2D
-                        D_new = mh._mod_hook(eps,mp)[1]
-                        Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D_new[np.ix_([0,1,2,3],[0,1,2,3])])
+                    for elem in range(nElem):
+                        
+                        Ke, fint, fext, stress, epsilon=elem3n.elem3n((ed[elem,:]), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
                         Ue = U[np.ix_(edof[elem,:]-1)]
                         dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                         

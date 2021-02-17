@@ -22,7 +22,7 @@ def _mod_hook(eps,mp):
     eps_dev = np.matmul(I_sdev,eps)
     
     
-    sigma = np.zeros([1,6])
+    sigma = np.zeros([6,])
     D = np.zeros([6,6])
     Eps_sum = sum(eps_dev*eps_dev)
     
@@ -32,5 +32,5 @@ def _mod_hook(eps,mp):
     sigma = sigma + K*np.matmul(I_v*I_vT,eps)
     D  = D + K*I_v*I_vT
     
-    sigma.shape = (6,)
+    sigma.shape = (6,1)
     return sigma, D
