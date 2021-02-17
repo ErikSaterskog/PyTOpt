@@ -10,15 +10,15 @@ from scipy.sparse.linalg import spsolve
 def  elem3n(ue, ex, ey, ep, mp):
 
 
-    ptype   = ep[1]          # Which analysis type?
-    t       = ep[2]           # Element thickness
-    ir      = ep[3]  
+    ptype   = ep[0]          # Which analysis type?
+    t       = ep[1]           # Element thickness
+    ir      = ep[2]  
     ngp=ir*ir              # Integration rule and number of gauss points
-    matmod  = ep[4]
+    matmod  = ep[3]
 
 #% If 6th input argument present, assign body load. !IMPLEMENT!
 #if nargin==6,   b=eq;   else   
-    b=np.zeros(2,1)
+    b=np.zeros([2,1])
 
 # Setup gauss quadrature
     wp, xsi, eta = gauss_quadrature(ir)
@@ -28,10 +28,10 @@ def  elem3n(ue, ex, ey, ep, mp):
     JT=dNr*[ex,ey]
 
 # Loop over integration points, add the contributions to Ke, fint and fext
-    Ke      = np.zeros(8,8)    #Preallocate Ke
-    fint    = np.zeros(8,1)    #Preallocate fint
-    fext    = np.zeros(8,1)    #Preallocate fext
-    stress  = np.zeros(6, ngp) #Preallocate stress
+    Ke      = np.zeros([8,8])    #Preallocate Ke
+    fint    = np.zeros([8,1])    #Preallocate fint
+    fext    = np.zeros([8,1])    #Preallocate fext
+    stress  = np.zeros([6, ngp]) #Preallocate stress
 
 # Plane strain, selectively reduced integration (Abaqus' method)
     if ptype==3 and ir==2:
@@ -69,12 +69,12 @@ def  elem3n(ue, ex, ey, ep, mp):
 
 
 #Extract shape function N(xsi, eta) at current gauss point
-            N2=np.zeros(2,8)
+            N2=np.zeros([2,8])
             N2[0,1:2:7] = N[i,:]
             N2[1,2:2:8] = N[i,:]
         
 #Calculate strain at current gauss point
-            epsilon = np.zeros(6,1)
+            epsilon = np.zeros([6,1])
             epsilon[1,2,4] = B*ue
             
 #Calculate material response at current gauss point
@@ -90,10 +90,10 @@ def  elem3n(ue, ex, ey, ep, mp):
             stress[:, i] = sigma   #Save stress for current gauss point
         
 #       Calculate the gauss point's contribution to element stiffness and forces
-            Dm=dsde[np.ix_([1, 2, 4]),np.ix_([1, 2, 4])]                  # Components for plane strain
-            Ke=Ke+B.T*Dm*B*detJ*wp(i)*t                # Stiffness contribution
-            fint=fint+B.T*sigma([1,2,4].T)*wp(i)*detJ*t  # Internal force vector 
-            fext=fext+N2.T*b*detJ*wp(i)*t             # External force vector
+            Dm=dsde[np.ix_([1, 2, 4]),np.ix_([1, 2, 4])]                 # Components for plane strain
+            Ke=Ke+B.T*Dm*B*detJ*wp(i)*t                                  # Stiffness contribution
+            fint=fint+B.T*sigma([1,2,4].T)*wp(i)*detJ*t                  # Internal force vector 
+            fext=fext+N2.T*b*detJ*wp(i)*t                                # External force vector
     
     else:
         raise Exception('Only plane strain ep(1)=ptype=2 allowed (unless ep(2)=2, then ep(1)=3 is allowed)');
@@ -137,7 +137,7 @@ def gauss_quadrature(ir):
     return wp, xsi, eta
 
 def shape_functions(eta, xsi, ngp):
-    N=np.zeros(np.len(xsi),3)
+    N=np.zeros([np.len(xsi),3])
     dNr=N.copy()
     
     r2=ngp*2
