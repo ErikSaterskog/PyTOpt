@@ -11,7 +11,6 @@ import elem3n
 
 
 def FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
-
     #Settings
     E=mp[0]
     v=mp[1]
@@ -26,19 +25,30 @@ def FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     freeDofs = np.setdiff1d(allDofs, fixDofs)
     D=cfc.hooke(ptype, E, v)         #Linear Elastic Constitutive Matrix
     
+    
     #ASSEMBLE, should be done using coo_matrix() if possible
     if Tri:  #Tri Elements
         for elem in range(nElem):  
-            edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)                    #Finding the indexes from eDof
+            #edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)                    #Finding the indexes from eDof
+            
+            edofIndex=(eDof[elem,:]-1).tolist() 
             Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)               #Element Stiffness Matrix for Triangular Element
-            K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke
-    else:    #Quad Elements
+            
+            row=edofIndex*6
+            col=np.repeat(edofIndex,6)
+            data=np.reshape(Ke*x[elem][0]**SIMP_penal,np.size(Ke)).tolist()
+
+            K+=coo_matrix((data[0],(row,col)),shape=(nDof,nDof))
+            #K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*K           
+        
+    else:
         for elem in range(nElem):  
             edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)                    #Finding the indexes from eDof
             Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)                   #Element Stiffness Matrix for Quad Element
             K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke[0]
             
-
+    K=K.tocsc()
+    
     toc1 = time.perf_counter()
     tic2 = time.perf_counter()
     
@@ -106,20 +116,14 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
         ed=cfc.extractEldisp(eDof,U)
         
         for elem in range(nElem):
-            
             edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)
-
             Ke, fint, fext, stress, epsilon=elem3n.elem3n((ed[elem,:]), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
-            
             K[edofIndex]=K[edofIndex]+Ke
-        
             R[np.ix_(eDof[elem,:]-1)]=R[np.ix_(eDof[elem,:]-1)]+fint-fext-F[np.ix_(eDof[elem,:]-1)]
             
-
         err = np.linalg.norm(R[freeDofs])
-        #print(err)
+        print(err)
            
-            
         U[np.ix_(freeDofs)] = U[np.ix_(freeDofs)] - spsolve(K[np.ix_(freeDofs,freeDofs)],R[freeDofs]).reshape(len(freeDofs),1)
                 
     
@@ -135,7 +139,8 @@ def init(eDof,coords):
     ny=coords[:,1]
     
     #Initialize Vecotors and Matrices
-    K = np.zeros([nDof,nDof])
+    #K = np.zeros([nDof,nDof])
+    K = coo_matrix((nDof,nDof))
     #F = np.zeros([nDof,1])
     U = np.zeros([nDof,1])
     

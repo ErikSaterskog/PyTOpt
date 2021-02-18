@@ -35,7 +35,6 @@ Linear     - True or False
 
 Then we call on the Main module to start the optimisation.
 
-
 """
 
 
@@ -48,8 +47,8 @@ import Main
 g = cfg.Geometry()
 
 g.point([0,0])                 #0
-g.point([1,0])        #1
-g.point([1,0.4],marker=9)               #2               #2
+g.point([1,0])                 #1
+g.point([1,0.4],marker=9)      #2               #2
 g.point([1,0.8])               #2
 g.point([0,0.8])               #3
 g.point([0,0.5])               #3
@@ -77,11 +76,11 @@ nu = 0.3 #Poisson's ratio
 mp = [E,nu]
 
 volFrac = 0.3 # Constraint on 50% volume
-meshSize=0.1 # The average length of one element. 
+meshSize=0.04 # The average length of one element. 
 rMin = meshSize*np.sqrt(2)*1 # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.01 # How small change between two optmisation we allow before stopping.
 el_type = 2   #2-Tri,  3-Quad
-Linear = False
+Linear = True
 
 
 settings = [volFrac,meshSize,rMin,changeLimit,Linear]

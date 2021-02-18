@@ -16,7 +16,10 @@ class Optimisation:
         l1,l2,step,damping=0,1e5,0.2,0.5
         while (l2-l1) > 1e-4:
             lmid = 0.5*(l2+l1)
-            FirstMin = np.minimum.reduce([(x+step),x*((-dc/lmid)**damping)])
+            
+            #FirstMin = np.minimum.reduce([(x+step),x*((-dc/lmid)**damping)])
+            FirstMin = np.minimum.reduce([(x+step),x*np.array(np.power((-dc/lmid),damping))])
+            
             SecondMin = np.minimum.reduce([np.ones([nel,1]), FirstMin])
             FirstMax = np.maximum.reduce([(x-step),SecondMin])
             xnew = np.maximum.reduce([0.001*np.ones([nel,1]),FirstMax])

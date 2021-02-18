@@ -10,7 +10,7 @@ import Filter
 import time
 import matplotlib.pyplot as plt
 import calfem.core as cfc
-from scipy.sparse import csr_matrix
+from scipy.sparse import csc_matrix, csr_matrix, lil_matrix
 import Mod_Hook as mh
 import Plani4s
 import Debugger
@@ -48,7 +48,11 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     """ Denote Forces and Boundary Conditions """
     
     nDofs = np.max(edof)
+    
     f = np.zeros([nDofs,1])
+    #f = csc_matrix([nDofs,1])
+    
+    
     bc = np.array([],'i')
     bcVal = np.array([],'f')
     
@@ -62,6 +66,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     """ Initialization Cont."""
 
     nElem=np.size(edof,0)
+    
     x =np.zeros([nElem,1])+volFrac
         
     #Check sizes, Initialize
@@ -101,22 +106,25 @@ def _Main(g,el_type,force,bmarker,settings,mp):
 
 
     #Create weighting matrix for Filter
-    weightMatrix=np.zeros([nElem,nElem])
+    #weightMatrix=np.zeros([nElem,nElem])
+    weightMatrix=lil_matrix((nElem,nElem))
 
+    ticH=time.perf_counter()
     for elem in range(0,nElem):
         xDist=elemCenterX-elemCenterX[elem]
         yDist=elemCenterY-elemCenterY[elem]
         dist=np.sqrt(xDist**2+yDist**2)            #Calculates the distance from the current element to all others
-        #for elemOther in range(0,nElem):           #Checks which are inside the radius rMin
-        #breakpoint()
-        weightMatrix[:,elem]=np.maximum(rMin-dist,np.zeros([nElem,1]))[:,0]
+        
+        #weightMatrix[:,elem]=np.maximum(rMin-dist,np.zeros([nElem,1]))[:,0]
+        weightMatrix[:,elem]=np.maximum(rMin-dist,np.zeros([nElem,1]))
             
-    #weightMatrix=csr_matrix(weightMatrix)
+    tocH=time.perf_counter()
+    print('H:'+str(tocH-ticH))
 
 
 
 
-        """ MAIN LOOP """
+    """ MAIN LOOP """
     if OC:
         while change > changeLimit:
             
@@ -144,9 +152,8 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                         Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)    #!THIS COULD BE PLACED OUTSIDE OF LOOP!           #Element Stiffness Matrix for Quad Element
                         Ue = U[np.ix_(edof[elem,:]-1)]
                         dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke[0],Ue))
-                
-                
-                
+
+
                 if Debug and loop==1:
                     dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)
                 
@@ -183,9 +190,9 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                     
             
             toc=time.perf_counter()
-    
+
             dc = Filter.Check(x,dc,weightMatrix)
-            
+
             
             x = Opt.Optimisation().OC(nElem,x,volFrac,dc)
             
