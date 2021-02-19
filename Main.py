@@ -15,6 +15,7 @@ import Mod_Hook as mh
 import Plani4s
 import Debugger
 import elem3n
+import FE_test 
 
 def _Main(g,el_type,force,bmarker,settings,mp):
     
@@ -122,7 +123,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     print('H:'+str(tocH-ticH))
 
 
-
+    FEM = FE_test.FE(edof,coords,mp,bc)
 
     """ MAIN LOOP """
     if OC:
@@ -134,8 +135,8 @@ def _Main(g,el_type,force,bmarker,settings,mp):
             
             #"""LINEAR"""
             if Linear:
-                U = FE.FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
-            
+                #U = FE.FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
+                U = FEM.fe(x,SIMP_penal,f,ep)
             
                 dc = xold.copy() 
                 
@@ -164,18 +165,19 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                 
             #"""NON LINEAR"""
             else:
-                U = FE._FE_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
+                #U = FE._FE_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
+                U = FEM.fe(x,SIMP_penal,f,ep)
                 dc = xold.copy() 
                 
                 tic=time.perf_counter()
                 
-                ed = cfc.extractEldisp(edof, U)
+                #ed = cfc.extractEldisp(edof, U)
             
                 if Tri:  #Tri Elements
                     for elem in range(nElem):
-                        
-                        Ke, fint, fext, stress, epsilon=elem3n.elem3n((ed[elem,:]), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
                         Ue = U[np.ix_(edof[elem,:]-1)]
+                        Ke, fint, fext, stress, epsilon=elem3n.elem3n(Ue.reshape(6,), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
+                        
                         dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                         
                 else:    #Quad Elements
