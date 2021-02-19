@@ -25,28 +25,29 @@ def FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
     freeDofs = np.setdiff1d(allDofs, fixDofs)
     D=cfc.hooke(ptype, E, v)         #Linear Elastic Constitutive Matrix
     
+    row=[]
+    col=[]
+    data=[]
     
     #ASSEMBLE, should be done using coo_matrix() if possible
     if Tri:  #Tri Elements
         for elem in range(nElem):  
-            #edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)                    #Finding the indexes from eDof
             
             edofIndex=(eDof[elem,:]-1).tolist() 
             Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)               #Element Stiffness Matrix for Triangular Element
-            
-            row=edofIndex*6
-            col=np.repeat(edofIndex,6)
-            data=np.reshape(Ke*x[elem][0]**SIMP_penal,np.size(Ke)).tolist()
 
-            K+=coo_matrix((data[0],(row,col)),shape=(nDof,nDof))
-            #K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*K           
-        
+            row.extend(edofIndex*6)
+            col.extend(np.repeat(edofIndex,6))
+            data.extend(np.reshape(Ke*x[elem][0]**SIMP_penal,np.size(Ke)).tolist()[0])
+
     else:
         for elem in range(nElem):  
             edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)                    #Finding the indexes from eDof
             Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)                   #Element Stiffness Matrix for Quad Element
             K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke[0]
-            
+
+
+    K=coo_matrix((data,(row,col)),shape=(nDof,nDof))
     K=K.tocsc()
     
     toc1 = time.perf_counter()
