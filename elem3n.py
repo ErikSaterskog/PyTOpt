@@ -103,7 +103,7 @@ def  elem3n(ue, ex, ey, ep, mp, eq=None):
             stress[:, i] = sigma.reshape(6,)   #Save stress for current gauss point
         
 #Calculate the gauss point's contribution to element stiffness and forces
-            Dm=dsde[np.ix_([1, 2, 4],[1, 2, 4])]                 # Components for plane strain
+            Dm=dsde[np.ix_([0, 1, 3],[0, 1, 3])]                 # Components for plane strain
             Ke=Ke+np.matmul(np.matmul(B.T,Dm),B)*detJ*wp[i]*t                                  # Stiffness contribution
             fint=fint+np.matmul(B.T,sigma[np.ix_([0,1,3])])*wp[i]*detJ*t                  # Internal force vector 
             fext=fext+np.matmul(N2.T,b)*detJ*wp[i]*t                                # External force vector
@@ -128,7 +128,7 @@ def gauss_quadrature(ir):
         g1=1/6
         g2=2/3
         w1=1/6
-        gp[:,0]=np.transpose([g2, g1, g1])
+        gp[:,0]=np.transpose([g1, g2, g1])
         gp[:,1]=np.transpose([g1, g1, g2])
             
         w[:,0]=np.transpose([ w1, w1, w1])
@@ -146,7 +146,7 @@ def gauss_quadrature(ir):
         raise Exception('Invalid integration rule. ir = 1, 2 or 3')
 
     
-    wp=w[:,0]*w[:,1]
+    wp=w[:,0]
     xsi=gp[:,0]
     eta=gp[:,1]
 
@@ -174,16 +174,6 @@ def shape_functions(eta, xsi, ngp):
 
 
     return N, dNr
-
-
-# ue = 0
-# ex = np.array([0,1,0])
-# ey = np.array([0,0,1])
-# ep = [2,1,2,2]
-# mp = [210e9,0.3]
-
-# Ke, fint, fext, stress,epsilon = elem3n(ue, ex, ey, ep, mp, eq=None)
-
 
 
 
