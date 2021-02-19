@@ -193,12 +193,13 @@ def _Main(g,el_type,force,bmarker,settings,mp):
 
             dc = Filter.Check(x,dc,weightMatrix)
 
-            
+            ticOpt=time.perf_counter()
             x = Opt.Optimisation().OC(nElem,x,volFrac,dc)
-            
+            tocOpt=time.perf_counter()
     
             change =np.max(np.max(abs(x-xold)))
             print('Sens. Anal.:'+str(toc-tic))
+            print('Opt:        '+str(tocOpt-ticOpt))
             print('Change:     '+str(change))
             print('Iteration:  '+str(loop))
             print('---------------------------')
