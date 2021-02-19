@@ -12,7 +12,7 @@ import calfem.geometry as cfg
 import calfem.vis as cfv
 import Main
 
-el_type = 3   #2-Tri,  3-Quad
+
 g = cfg.Geometry()
 
 g.point([0,0])                  #0
@@ -31,7 +31,7 @@ g.spline([5, 0])
 
 g.surface([0, 1, 2, 3,4,5])
 
-force = [-5e3,9,2] #First magnitude, second marker,third direction
+force = [-5e5,9,2] #First magnitude, second marker,third direction
 bmarker = 4
 
 E = 210e9 # Young's modulus
@@ -39,15 +39,15 @@ nu = 0.3 #Poisson's ratio
 
 mp = [E,nu]
 
-volFrac = 0.5 # Constraint on 50% volume
-meshSize=0.1 # How fine mesh we want. 1 is only one element and 0 is infinity.
-rMin = meshSize*np.sqrt(2)*1 # How aggressive the filter should be. Smaller -> less aggressive
+volFrac = 0.3 # Constraint on 50% volume
+meshSize=0.05 # How fine mesh we want. 1 is only one element and 0 is infinity.
+rMin = meshSize*np.sqrt(2)*0.8 # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.005 # How small change between two optmisation we allow before stopping.
+el_type = 2   #2-Tri,  3-Quad
+Linear = False
 
 
-
-
-settings = [volFrac,meshSize,rMin,changeLimit]
+settings = [volFrac,meshSize,rMin,changeLimit,Linear]
 
 
 Main._Main(g,el_type,force,bmarker,settings,mp)
