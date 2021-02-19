@@ -57,7 +57,12 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     bc = np.array([],'i')
     bcVal = np.array([],'f')
     
-    bc, bcVal = cfu.applybc(bdofs, bc, bcVal, bmarker, value=0.0, dimension=0)
+    try:
+        for bcmarker in bmarker:
+            bc, bcVal = cfu.applybc(bdofs, bc, bcVal, bcmarker, value=0.0, dimension=0)
+    except:
+        bc, bcVal = cfu.applybc(bdofs, bc, bcVal, bmarker, value=0.0, dimension=0)
+    
     bc=bc-1   #Fix a calfem bug
     
     cfu.applyforce(bdofs, f, force[1], force[0], force[2])
