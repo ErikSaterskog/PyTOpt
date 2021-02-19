@@ -127,8 +127,8 @@ def _FE_NL(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
         for elem in range(nElem):
             edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)
             Ke, fint, fext, stress, epsilon=elem3n.elem3n((ed[elem,:]), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
-            K[edofIndex]=K[edofIndex]+Ke
-            R[np.ix_(eDof[elem,:]-1)]=R[np.ix_(eDof[elem,:]-1)]+fint-fext-F[np.ix_(eDof[elem,:]-1)]
+            K[edofIndex]=K[edofIndex]+Ke*x[elem][0]**SIMP_penal
+            R[np.ix_(eDof[elem,:]-1)]=R[np.ix_(eDof[elem,:]-1)]+fint*x[elem][0]**SIMP_penal-fext-F[np.ix_(eDof[elem,:]-1)]
             
         err = np.linalg.norm(R[freeDofs])
         print(err)
