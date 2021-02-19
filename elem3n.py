@@ -64,8 +64,14 @@ def  elem3n(ue, ex, ey, ep, mp, eq=None):
             dNx=spsolve(JT[indx,:],dNr[indx,:])
         
 #       Extract values of B(xsi, eta) at current gauss point
-            B=np.array([[dNx[0,0],0,dNx[0,1],0,dNx[0,2],0],[dNx[1,0],0,dNx[1,1],0,dNx[1,2],0],[dNx[1,0],dNx[0,0],dNx[1,1],dNx[0,1],dNx[1,2],dNx[0,2]]])
-        
+            #B=np.array([[dNx[0,0],0,dNx[0,1],0,dNx[0,2],0],[dNx[1,0],0,dNx[1,1],0,dNx[1,2],0],[dNx[1,0],dNx[0,0],dNx[1,1],dNx[0,1],dNx[1,2],dNx[0,2]]])
+            
+            B = np.zeros([3,6])
+            
+            B[0,0:ngp*2:2]= dNx[0,:]
+            B[1,1:ngp*2:2]= dNx[1,:]
+            B[2,0:ngp*2:2]= dNx[1,:]
+            B[2,1:ngp*2:2]= dNx[0,:]
 #If requested, make the bbar correction
             #if bbar
             #    Bvol = zeros(3,8)
@@ -122,7 +128,7 @@ def gauss_quadrature(ir):
         g1=1/6
         g2=2/3
         w1=1/6
-        gp[:,0]=np.transpose([g1, g2, g1])
+        gp[:,0]=np.transpose([g2, g1, g1])
         gp[:,1]=np.transpose([g1, g1, g2])
             
         w[:,0]=np.transpose([ w1, w1, w1])
@@ -164,33 +170,19 @@ def shape_functions(eta, xsi, ngp):
     dNr[1:r2+1:2,1]=0
     dNr[1:r2+1:2,2]=1
     
-    # NGP = ir*ir
-    # N = np.zeros([len(xsi),4])
-    # dNr = np.zeros([NGP*2,4])
-    
-    # N[:,0] = (1-xsi)*(1-eta)/4
-    # N[:,1] = (1+xsi)*(1-eta)/4
-    # N[:,2] = (1+xsi)*(1+eta)/4
-    # N[:,3] = (1-xsi)*(1+eta)/4
-
-    # dNr[0:r2:2,0] = -(1-eta)/4
-    # dNr[0:r2:2,1] =  (1-eta)/4
-    # dNr[0:r2:2,2] =  (1+eta)/4
-    # dNr[0:r2:2,3] = -(1+eta)/4
-    
-    # dNr[1:r2+1:2,0] = -(1-xsi)/4
-    # dNr[1:r2+1:2,1] = -(1+xsi)/4
-    # dNr[1:r2+1:2,2] =  (1+xsi)/4
-    # dNr[1:r2+1:2,3] =  (1-xsi)/4
-
+ 
 
 
     return N, dNr
 
 
+# ue = 0
+# ex = np.array([0,1,0])
+# ey = np.array([0,0,1])
+# ep = [2,1,2,2]
+# mp = [210e9,0.3]
 
-
-
+# Ke, fint, fext, stress,epsilon = elem3n(ue, ex, ey, ep, mp, eq=None)
 
 
 
