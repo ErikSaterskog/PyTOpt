@@ -42,9 +42,17 @@ def FE(x,SIMP_penal,eDof,coords,fixDofs,F,ep,mp):
 
     else:
         for elem in range(nElem):  
-            edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)                    #Finding the indexes from eDof
-            Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)                   #Element Stiffness Matrix for Quad Element
-            K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke[0]
+            edofIndex=(eDof[elem,:]-1).tolist() 
+            Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)[0]               #Element Stiffness Matrix for Triangular Element
+
+            row.extend(edofIndex*8)
+            col.extend(np.repeat(edofIndex,8))
+            data.extend(np.reshape(Ke*x[elem][0]**SIMP_penal,np.size(Ke)).tolist()[0])
+            
+            
+            #edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)                    #Finding the indexes from eDof
+            #Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)                   #Element Stiffness Matrix for Quad Element
+            #K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke[0]
 
 
     K=coo_matrix((data,(row,col)),shape=(nDof,nDof))
