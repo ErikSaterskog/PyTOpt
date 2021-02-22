@@ -22,7 +22,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     #Settings
     E=mp[0]#210*1e9
     v=mp[1]#0.3
-    Debug = False
+    Debug = True
     OC = True
     ptype=2         #ptype=1 => plane stress, ptype=2 => plane strain
     ep=[ptype,1,2,2]    #ep[ptype, thickness, integration rule(only used for QUAD)]  
@@ -162,8 +162,8 @@ def _Main(g,el_type,force,bmarker,settings,mp):
 
                 if Debug and loop==1:
                     dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)
-                
-                    plt.plot(range(0,nElem),dc_Num-dc)
+                    breakpoint()
+                    plt.plot(range(0,nElem),dc_Num/dc)
                     plt.xlabel('Element')
                     plt.ylabel('dc difference')
                 
@@ -183,6 +183,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                         Ue = U[np.ix_(edof[elem,:]-1)]
                         Ke, fint, fext, stress, epsilon=elem3n.elem3n(Ue.reshape(6,), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
                         
+                        
                         dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                         
                 else:    #Quad Elements
@@ -194,6 +195,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                         dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                         
                         
+                    #dc= -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(U), np.matmul(K,U))+spsolve(K,fext)*(*SIMP_penal*x**SIMP_penal-1)
                     
             
             toc=time.perf_counter()
