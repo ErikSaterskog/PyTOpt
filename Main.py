@@ -16,6 +16,7 @@ import Plani4s
 import Debugger
 import elem3n
 import FE_test 
+from scipy.sparse.linalg import spsolve
 
 def _Main(g,el_type,force,bmarker,settings,mp):
     
@@ -162,16 +163,16 @@ def _Main(g,el_type,force,bmarker,settings,mp):
 
                 if Debug and loop==1:
                     dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)
-                    breakpoint()
-                    plt.plot(range(0,nElem),dc_Num/dc)
+
+                    plt.plot(range(0,nElem),(1-dc_Num/dc)*100)
                     plt.xlabel('Element')
-                    plt.ylabel('dc difference')
+                    plt.ylabel('Percent Error')
                 
                 
             #"""NON LINEAR"""
             else:
                 #U = FE._FE_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
-                U = FEM.fe(x,SIMP_penal,f,ep)
+                U,K,fint,fext = FEM.fe_nl(x,SIMP_penal,f,ep)
                 dc = xold.copy() 
                 
                 tic=time.perf_counter()
@@ -180,11 +181,9 @@ def _Main(g,el_type,force,bmarker,settings,mp):
             
                 if Tri:  #Tri Elements
                     for elem in range(nElem):
-                        Ue = U[np.ix_(edof[elem,:]-1)]
-                        Ke, fint, fext, stress, epsilon=elem3n.elem3n(Ue.reshape(6,), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
+                        breakpoint()  #här är det fel, vi har blandat ihop element och noder
+                        dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(U), np.matmul(K,U))+spsolve(K,fext)*(fint*SIMP_penal*x**SIMP_penal-1)
                         
-                        
-                        dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                         
                 else:    #Quad Elements
                     for elem in range(nElem):            
@@ -194,9 +193,14 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                         Ue = U[np.ix_(edof[elem,:]-1)]
                         dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                         
-                        
-                    #dc= -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(U), np.matmul(K,U))+spsolve(K,fext)*(*SIMP_penal*x**SIMP_penal-1)
-                    
+           
+                if Debug and loop==1:
+                    dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)
+
+                    plt.plot(range(0,nElem),(1-dc_Num/dc)*100)
+                    plt.xlabel('Element')
+                    plt.ylabel('Percent Error')    
+                
             
             toc=time.perf_counter()
 
@@ -212,7 +216,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
             print('Change:     '+str(change))
             print('Iteration:  '+str(loop))
             print('---------------------------')
-            if loop == 100:                                                          # If alternating
+            if loop == 1000:                                                          # If alternating
                 break
             
         

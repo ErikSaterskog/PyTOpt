@@ -165,13 +165,23 @@ class FE():
             
             K=np.zeros(np.shape(self.K))
             R = np.zeros(np.shape(F))
+            fextGlobal = np.zeros(np.shape(F))
+            fintGlobal = np.zeros(np.shape(F)) 
             ed=cfc.extractEldisp(self.eDof,U)
             
             for elem in range(self.nElem):
-                edofIndex=np.ix_(self.eDof[elem,:]-1,self.eDof[elem,:]-1)
+                edofIndex2D=np.ix_(self.eDof[elem,:]-1,self.eDof[elem,:]-1)
+                edofIndex1D=np.ix_(self.eDof[elem,:]-1)
+                
                 Ke, fint, fext, stress, epsilon=elem3n.elem3n((ed[elem,:]), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
-                K[edofIndex]=K[edofIndex]+Ke*x[elem][0]**SIMP_penal
-                R[np.ix_(self.eDof[elem,:]-1)]=R[np.ix_(self.eDof[elem,:]-1)]+fint*x[elem][0]**SIMP_penal-fext-F[np.ix_(self.eDof[elem,:]-1)]
+                fext+=F[edofIndex1D]
+                
+                K[edofIndex2D]=K[edofIndex2D]+Ke*x[elem][0]**SIMP_penal
+                
+                R[edofIndex1D]=R[edofIndex1D]+fint*x[elem][0]**SIMP_penal-fext
+                
+                fextGlobal[edofIndex1D]+=fext
+                fintGlobal[edofIndex1D]+=fint
                 
             err = np.linalg.norm(R[self.freeDofs])
             print(err)
@@ -179,7 +189,7 @@ class FE():
             U[np.ix_(self.freeDofs)] = U[np.ix_(self.freeDofs)] - spsolve(K[np.ix_(self.freeDofs,self.freeDofs)],R[self.freeDofs]).reshape(len(self.freeDofs),1)
                     
         
-        return U
+        return U,K,fintGlobal,fextGlobal
     
     
 
