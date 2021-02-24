@@ -135,7 +135,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     
 
 
-    FEM = FE_test.FE(edof,coords,mp,bc)
+    FEM = FE._FE(edof,coords,mp,bc)
 
     """ MAIN LOOP """
     if OC:
@@ -173,27 +173,29 @@ def _Main(g,el_type,force,bmarker,settings,mp):
             #"""NON LINEAR"""
             else:
                 #U = FE._FE_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
-                U,K,dr = FEM.fe_nl(x,SIMP_penal,f,ep)
+                U,K,dr,Utang = FEM.fe_nl(x,SIMP_penal,f,ep)
                 
                 
                 tic=time.perf_counter()
                 
+                ed = cfc.extractEldisp(edof, U)
                 
-            
-                if Tri:  #Tri Elements
-                    for elem in range(nElem):
+                dc = -np.matmul(dr,Utang)
+                
+                # if Tri:  #Tri Elements
+                #     for elem in range(nElem):
                         
-                        Ue = U[np.ix_(edof[elem,:]-1)]
-                        Ke, finte, fexte, stress, epsilon=elem3n.elem3n(Ue.reshape(6,), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
-                        KeT = SIMP_penal*x[elem]**(SIMP_penal-1)*Ke
-                        dc[elem] = -np.matmul(Ue.T,dr[:,elem].reshape(6,1))
+                #         Ue = U[np.ix_(edof[elem,:]-1)]#Ue.reshape(6,)
+                #         Ke, finte, fexte, stress, epsilon=elem3n.elem3n(ed[elem,:], elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
+                #         KeT = SIMP_penal*x[elem]**(SIMP_penal-1)*Ke
+                #         dc[elem] = -np.matmul(Ue.T,dr[:,elem].reshape(6,1))
                         
-                else:    #Quad Elements
-                    for elem in range(nElem):            
-                        Ue = U[np.ix_(edof[elem,:]-1)]
-                        Ke, finte, fexte, stress, epsilon=elem4n.elem4n(Ue.reshape(8,), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
-                        KeT = SIMP_penal*x[elem]**(SIMP_penal-1)*Ke
-                        dc[elem] = -np.matmul(Ue.T,dr[:,elem].reshape(8,1))
+                # else:    #Quad Elements
+                #     for elem in range(nElem):            
+                #         Ue = U[np.ix_(edof[elem,:]-1)]
+                #         Ke, finte, fexte, stress, epsilon=elem4n.elem4n(Ue.reshape(8,), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
+                #         KeT = SIMP_penal*x[elem]**(SIMP_penal-1)*Ke
+                #         dc[elem] = -np.matmul(Ue.T,dr[:,elem].reshape(8,1))
                         
            
                 if Debug and loop==1:

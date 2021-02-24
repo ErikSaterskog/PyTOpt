@@ -142,8 +142,8 @@ class _FE():
         ep=[2,1,2,2]   #TEMPORARY TESTING
         
         
-        U = FE.fe(self,x,SIMP_penal,F,ep)
-        
+        U = _FE.fe(self,x,SIMP_penal,F,ep)
+        U_tang = U.copy()
         
         #Newton iteration loop until convergens.
             # Starting by calculating the strain and then define the constitutive 
@@ -155,8 +155,8 @@ class _FE():
             R = np.zeros(np.shape(F))
             fextGlobal = np.zeros(np.shape(F))
             fintGlobal = np.zeros(np.shape(F)) 
-            #ed=cfc.extractEldisp(self.eDof,U)
-            dr = np.zeros([np.size(self.eDof,1),self.nElem])
+            ed=cfc.extractEldisp(self.eDof,U)
+            dr = np.zeros([self.nElem,self.nDof])
             
             
             for elem in range(self.nElem):
@@ -164,7 +164,7 @@ class _FE():
                 edofIndex1D=np.ix_(self.eDof[elem,:]-1)
                 Ue = U[edofIndex1D]
                 if self.Tri:
-                    Ke, fint, fext, stress, epsilon=elem3n.elem3n(Ue.reshape(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
+                    Ke, fint, fext, stress, epsilon=elem3n.elem3n(ed[elem,:], self.elemX[elem,:], self.elemY[elem,:], ep, self.mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
                 else:
                     Ke, fint, fext, stress, epsilon=elem4n.elem4n(Ue.reshape(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
                 
@@ -175,7 +175,7 @@ class _FE():
                 
                 R[edofIndex1D]=R[edofIndex1D]+fint*x[elem][0]**SIMP_penal-fext
                 
-                dr[:,elem] = (SIMP_penal*x[elem][0]**(SIMP_penal-1)*fint).reshape(np.size(self.eDof,1),)
+                dr[elem,edofIndex1D] = (SIMP_penal*x[elem][0]**(SIMP_penal-1)*fint).reshape(np.size(self.eDof,1),)
                 
                 fextGlobal[edofIndex1D]+=fext
                 fintGlobal[edofIndex1D]+=fint
@@ -185,8 +185,9 @@ class _FE():
                
             U[np.ix_(self.freeDofs)] = U[np.ix_(self.freeDofs)] - spsolve(K[np.ix_(self.freeDofs,self.freeDofs)],R[self.freeDofs]).reshape(len(self.freeDofs),1)
                     
+        U_tang[np.ix_(self.freeDofs)] = spsolve(K[np.ix_(self.freeDofs,self.freeDofs)],F[self.freeDofs]).reshape(len(self.freeDofs),1)
         
-        return U,K,dr
+        return U,K,dr,U_tang
     
     
 
