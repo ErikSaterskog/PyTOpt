@@ -17,6 +17,7 @@ import Debugger
 import elem3n
 import FE_test 
 from scipy.sparse.linalg import spsolve
+import elem4n
 
 def _Main(g,el_type,force,bmarker,settings,mp):
     
@@ -66,7 +67,13 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     
     bc=bc-1   #Fix a calfem bug
     
-    cfu.applyforce(bdofs, f, force[1], force[0], force[2])
+    try:
+        for fcmarker in force[1]:
+            cfu.applyforce(bdofs, f, fcmarker, force[0], force[2])
+    except:
+        cfu.applyforce(bdofs, f, force[1], force[0], force[2])
+    
+    
     
     
     
@@ -136,18 +143,17 @@ def _Main(g,el_type,force,bmarker,settings,mp):
             
             loop = loop + 1
             xold = x.copy()
-            
+            dc = xold.copy() 
             
             #"""LINEAR"""
             if Linear:
-                #U = FE.FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
                 U = FEM.fe(x,SIMP_penal,f,ep)
             
-                dc = xold.copy() 
+                
                 
                 tic=time.perf_counter()
                 
-                #Tri Elements
+                
                 for elem in range(nElem):  
                     if Tri:
                         Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)   #!THIS COULD BE PLACED OUTSIDE OF LOOP!               #Element Stiffness Matrix for Triangular Element
@@ -156,12 +162,6 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                     Ue = U[np.ix_(edof[elem,:]-1)]
                     dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                     
-                # else:    #Quad Elements
-                #     for elem in range(nElem):            
-                #         Ue = U[np.ix_(edof[elem,:]-1)]
-                #         dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke[0],Ue))
-
-
                 if Debug and loop==1:
                     dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)
 
@@ -174,27 +174,26 @@ def _Main(g,el_type,force,bmarker,settings,mp):
             else:
                 #U = FE._FE_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
                 U,K,dr = FEM.fe_nl(x,SIMP_penal,f,ep)
-                dc = xold.copy() 
+                
                 
                 tic=time.perf_counter()
                 
-                ed = cfc.extractEldisp(edof, U)
+                
             
                 if Tri:  #Tri Elements
                     for elem in range(nElem):
                         
                         Ue = U[np.ix_(edof[elem,:]-1)]
-                        Ke, finte, fexte, stress, epsilon=elem3n.elem3n((ed[elem,:]), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
+                        Ke, finte, fexte, stress, epsilon=elem3n.elem3n(Ue.reshape(6,), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
                         KeT = SIMP_penal*x[elem]**(SIMP_penal-1)*Ke
                         dc[elem] = -np.matmul(Ue.T,dr[:,elem].reshape(6,1))
                         
                 else:    #Quad Elements
                     for elem in range(nElem):            
-                        eps=Plani4s.plani4s(elemX[elem,:],elemY[elem,:],ep,ed[elem,:]) 
-                        D_new = mh._mod_hook(eps,mp)[1]
-                        Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D_new[np.ix_([0,1,2,3],[0,1,2,3])])[0]
                         Ue = U[np.ix_(edof[elem,:]-1)]
-                        dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                        Ke, finte, fexte, stress, epsilon=elem4n.elem4n(Ue.reshape(8,), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
+                        KeT = SIMP_penal*x[elem]**(SIMP_penal-1)*Ke
+                        dc[elem] = -np.matmul(Ue.T,dr[:,elem].reshape(8,1))
                         
            
                 if Debug and loop==1:

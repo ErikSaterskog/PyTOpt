@@ -15,6 +15,7 @@ import calfem.core as cfc
 import Mod_Hook as mh
 import Plani4s
 import elem3n
+import elem4n
 
 
 class FE():
@@ -62,7 +63,7 @@ class FE():
         allDofs = range(self.nDof)        
         self.freeDofs = np.setdiff1d(allDofs, fixDofs)
         self.eDof = eDof
-        #return nDof,nElem,K,U,Tri,elemX,elemY
+        
     
         
     def fe(self,x,SIMP_penal,F,ep):
@@ -82,30 +83,17 @@ class FE():
         data=[]
         
         #ASSEMBLE, should be done using coo_matrix() if possible
-        if self.Tri:  #Tri Elements
-            for elem in range(self.nElem):  
+        
+        for elem in range(self.nElem):  
                 
-                edofIndex=(self.eDof[elem,:]-1).tolist() 
+            edofIndex=(self.eDof[elem,:]-1).tolist() 
+            if self.Tri:
                 Ke=cfc.plante(self.elemX[elem,:],self.elemY[elem,:],ep[0:2],D)               #Element Stiffness Matrix for Triangular Element
-    
-                row.extend(edofIndex*6)
-                col.extend(np.repeat(edofIndex,6))
-                data.extend(np.reshape(Ke*x[elem][0]**SIMP_penal,np.size(Ke)).tolist()[0])
-    
-        else:
-            for elem in range(self.nElem):  
-                edofIndex=(self.eDof[elem,:]-1).tolist() 
-                Ke=cfc.plani4e(self.elemX[elem,:],self.elemY[elem,:],ep,D)[0]               #Element Stiffness Matrix for Triangular Element
-    
-                row.extend(edofIndex*8)
-                col.extend(np.repeat(edofIndex,8))
-                data.extend(np.reshape(Ke*x[elem][0]**SIMP_penal,np.size(Ke)).tolist()[0])
-                
-                
-                #edofIndex=np.ix_(eDof[elem,:]-1,eDof[elem,:]-1)                    #Finding the indexes from eDof
-                #Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)                   #Element Stiffness Matrix for Quad Element
-                #K[edofIndex] = K[edofIndex] + x[elem][0]**SIMP_penal*Ke[0]
-    
+            else:
+                Ke=cfc.plani4e(self.elemX[elem,:],self.elemY[elem,:],ep,D)[0] 
+            row.extend(edofIndex*len(edofIndex))
+            col.extend(np.repeat(edofIndex,len(edofIndex)))
+            data.extend(np.reshape(Ke*x[elem][0]**SIMP_penal,np.size(Ke)).tolist()[0])
     
         K=coo_matrix((data,(row,col)),shape=(self.nDof,self.nDof))
         K=K.tocsc()
@@ -167,22 +155,27 @@ class FE():
             R = np.zeros(np.shape(F))
             fextGlobal = np.zeros(np.shape(F))
             fintGlobal = np.zeros(np.shape(F)) 
-            ed=cfc.extractEldisp(self.eDof,U)
-            dr = np.zeros([6,self.nElem])
+            #ed=cfc.extractEldisp(self.eDof,U)
+            dr = np.zeros([np.size(self.eDof,1),self.nElem])
             
             
             for elem in range(self.nElem):
                 edofIndex2D=np.ix_(self.eDof[elem,:]-1,self.eDof[elem,:]-1)
                 edofIndex1D=np.ix_(self.eDof[elem,:]-1)
+                Ue = U[edofIndex1D]
+                if self.Tri:
+                    Ke, fint, fext, stress, epsilon=elem3n.elem3n(Ue.reshape(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
+                else:
+                    Ke, fint, fext, stress, epsilon=elem4n.elem4n(Ue.reshape(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
                 
-                Ke, fint, fext, stress, epsilon=elem3n.elem3n((ed[elem,:]), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
+                
                 fext+=F[edofIndex1D]
                 
                 K[edofIndex2D]=K[edofIndex2D]+Ke*x[elem][0]**SIMP_penal
                 
                 R[edofIndex1D]=R[edofIndex1D]+fint*x[elem][0]**SIMP_penal-fext
                 
-                dr[:,elem] = (SIMP_penal*x[elem][0]**(SIMP_penal-1)*fint).reshape(6,)
+                dr[:,elem] = (SIMP_penal*x[elem][0]**(SIMP_penal-1)*fint).reshape(np.size(self.eDof,1),)
                 
                 fextGlobal[edofIndex1D]+=fext
                 fintGlobal[edofIndex1D]+=fint
