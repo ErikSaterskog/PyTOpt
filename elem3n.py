@@ -5,7 +5,7 @@
 import numpy as np
 import Mod_Hook as mh
 from scipy.sparse.linalg import spsolve
-
+import elastic as el
 
 def  elem3n(ue, ex, ey, ep, mp, eq=None):
 
@@ -92,8 +92,7 @@ def  elem3n(ue, ex, ey, ep, mp, eq=None):
             
 #Calculate material response at current gauss point
             if matmod==1:              #Elasticity
-                raise Exception('Här ska det implementeras!!')
-                #[sigma, dsde] = elastic(epsilon, mp)
+                [sigma, dsde] = el._elastic(epsilon, mp)
             elif matmod==2:        #Modified Hook plasticity
                 [sigma, dsde] = mh._mod_hook(epsilon, mp)    #!!FIXA NOLLAN HÄR!!
             else:

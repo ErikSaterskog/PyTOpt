@@ -1,23 +1,17 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Jan 27 09:52:07 2021
-
 The example start by import the necessary libaries. After that is the geometry constructed.
 Do not change these. 
-
 The marker indicates an ID for the point or line. This ID is later used to 
 define boundary conditions and prescribed forces. Change these if you are sure
 about how they works and when you want a diffrerent problem. 
-
 The force vector is consisting of three values. The first value is the applied
 force magnitude and can be altered by the user. However, the later two should not 
 be touched. As the first of them inicated where the load is applied and the last
 in what direction the force is pointing. A value of 2 indicates in y-direction.
-
 b-marker inidicates what line should be prescirbed.
-
 E and nu are material parameters and can be altered after what material of interest.
-
 VolFrac    - How many procent of the volume should the final solution have contra
              the original.
 meshsize   - How "large" each element should be. This is a scale value between 0
@@ -31,10 +25,7 @@ changeLimit- For OC as optimisation method, what tolerance for the change
              between iteration is sufficiant.
 el_type    - 2 means triangular elements and 3 means quad elements.
 Linear     - True or False
-
-
 Then we call on the Main module to start the optimisation.
-
 """
 
 
@@ -43,6 +34,7 @@ import numpy as np
 import calfem.geometry as cfg
 import calfem.vis as cfv
 import Main
+import Main_test
 
 g = cfg.Geometry()
 
@@ -76,24 +68,13 @@ nu = 0.3 #Poisson's ratio
 mp = [E,nu]
 
 volFrac = 0.3 # Constraint on 50% volume
-meshSize=0.04 # The average length of one element. 
-rMin = meshSize*np.sqrt(2)*1 # How aggressive the filter should be. Smaller -> less aggressive
+meshSize=0.015 # The average length of one element. 
+rMin = meshSize*np.sqrt(2)*0.5 # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.01 # How small change between two optmisation we allow before stopping.
 el_type = 2   #2-Tri,  3-Quad
-Linear = True
+ep=[2,1,2,1]    #ep[ptype, thickness, integration rule(only used for QUAD),linear(1)/nonlinear(2)]  
+
+settings = [volFrac,meshSize,rMin,changeLimit]
 
 
-settings = [volFrac,meshSize,rMin,changeLimit,Linear]
-
-
-Main._Main(g,el_type,force,bmarker,settings,mp)
-
-
-
-
-
-
-
-
-
-
+Main_test._Main(g,el_type,force,bmarker,settings,mp,ep)
