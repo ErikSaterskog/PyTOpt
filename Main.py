@@ -23,7 +23,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     #Settings
     E=mp[0]#210*1e9
     v=mp[1]#0.3
-    Debug = True
+    Debug = False
     OC = True
     ptype=2         #ptype=1 => plane stress, ptype=2 => plane strain
     ep=[ptype,1,2,2]    #ep[ptype, thickness, integration rule(only used for QUAD)]  
@@ -122,11 +122,10 @@ def _Main(g,el_type,force,bmarker,settings,mp):
         yDist=elemCenterY-elemCenterY[elem]
         dist=np.sqrt(xDist**2+yDist**2)            #Calculates the distance from the current element to all others
         
-        #weightMatrix[:,elem]=np.maximum(rMin-dist,np.zeros([nElem,1]))[:,0]
         weightMatrix[:,elem]=np.maximum(rMin-dist,np.zeros([nElem,1]))
             
     tocH=time.perf_counter()
-    print('H:'+str(tocH-ticH))
+    
 
 
     FEM = FE_test.FE(edof,coords,mp,bc)
@@ -148,17 +147,19 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                 
                 tic=time.perf_counter()
                 
-                if Tri:  #Tri Elements
-                    for elem in range(nElem):  
+                #Tri Elements
+                for elem in range(nElem):  
+                    if Tri:
                         Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)   #!THIS COULD BE PLACED OUTSIDE OF LOOP!               #Element Stiffness Matrix for Triangular Element
-                        Ue = U[np.ix_(edof[elem,:]-1)]
-                        dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
-                        
-                else:    #Quad Elements
-                    for elem in range(nElem):            
-                        Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)    #!THIS COULD BE PLACED OUTSIDE OF LOOP!           #Element Stiffness Matrix for Quad Element
-                        Ue = U[np.ix_(edof[elem,:]-1)]
-                        dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke[0],Ue))
+                    else:
+                        Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)[0]    #!THIS COULD BE PLACED OUTSIDE OF LOOP!           #Element Stiffness Matrix for Quad Element
+                    Ue = U[np.ix_(edof[elem,:]-1)]
+                    dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                    
+                # else:    #Quad Elements
+                #     for elem in range(nElem):            
+                #         Ue = U[np.ix_(edof[elem,:]-1)]
+                #         dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke[0],Ue))
 
 
                 if Debug and loop==1:
@@ -172,18 +173,20 @@ def _Main(g,el_type,force,bmarker,settings,mp):
             #"""NON LINEAR"""
             else:
                 #U = FE._FE_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
-                U,K,fint,fext = FEM.fe_nl(x,SIMP_penal,f,ep)
+                U,K,dr = FEM.fe_nl(x,SIMP_penal,f,ep)
                 dc = xold.copy() 
                 
                 tic=time.perf_counter()
                 
-                #ed = cfc.extractEldisp(edof, U)
+                ed = cfc.extractEldisp(edof, U)
             
                 if Tri:  #Tri Elements
                     for elem in range(nElem):
-                        breakpoint()  #här är det fel, vi har blandat ihop element och noder
-                        dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(U), np.matmul(K,U))+spsolve(K,fext)*(fint*SIMP_penal*x**SIMP_penal-1)
                         
+                        Ue = U[np.ix_(edof[elem,:]-1)]
+                        Ke, finte, fexte, stress, epsilon=elem3n.elem3n((ed[elem,:]), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
+                        KeT = SIMP_penal*x[elem]**(SIMP_penal-1)*Ke
+                        dc[elem] = -np.matmul(Ue.T,dr[:,elem].reshape(6,1))
                         
                 else:    #Quad Elements
                     for elem in range(nElem):            
@@ -211,12 +214,13 @@ def _Main(g,el_type,force,bmarker,settings,mp):
             tocOpt=time.perf_counter()
     
             change =np.max(np.max(abs(x-xold)))
+            print('H:'+str(tocH-ticH))
             print('Sens. Anal.:'+str(toc-tic))
             print('Opt:        '+str(tocOpt-ticOpt))
             print('Change:     '+str(change))
             print('Iteration:  '+str(loop))
             print('---------------------------')
-            if loop == 1000:                                                          # If alternating
+            if loop == 100:                                                          # If alternating
                 break
             
         

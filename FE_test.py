@@ -168,6 +168,8 @@ class FE():
             fextGlobal = np.zeros(np.shape(F))
             fintGlobal = np.zeros(np.shape(F)) 
             ed=cfc.extractEldisp(self.eDof,U)
+            dr = np.zeros([6,self.nElem])
+            
             
             for elem in range(self.nElem):
                 edofIndex2D=np.ix_(self.eDof[elem,:]-1,self.eDof[elem,:]-1)
@@ -180,6 +182,8 @@ class FE():
                 
                 R[edofIndex1D]=R[edofIndex1D]+fint*x[elem][0]**SIMP_penal-fext
                 
+                dr[:,elem] = (SIMP_penal*x[elem][0]**(SIMP_penal-1)*fint).reshape(6,)
+                
                 fextGlobal[edofIndex1D]+=fext
                 fintGlobal[edofIndex1D]+=fint
                 
@@ -189,7 +193,7 @@ class FE():
             U[np.ix_(self.freeDofs)] = U[np.ix_(self.freeDofs)] - spsolve(K[np.ix_(self.freeDofs,self.freeDofs)],R[self.freeDofs]).reshape(len(self.freeDofs),1)
                     
         
-        return U,K,fintGlobal,fextGlobal
+        return U,K,dr
     
     
 
