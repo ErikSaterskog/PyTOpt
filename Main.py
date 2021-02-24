@@ -24,7 +24,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     #Settings
     E=mp[0]#210*1e9
     v=mp[1]#0.3
-    Debug = False
+    Debug = True
     OC = True
     ptype=2         #ptype=1 => plane stress, ptype=2 => plane strain
     ep=[ptype,1,2,2]    #ep[ptype, thickness, integration rule(only used for QUAD)]  
@@ -197,7 +197,7 @@ def _Main(g,el_type,force,bmarker,settings,mp):
                         
            
                 if Debug and loop==1:
-                    dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)
+                    dc_Num=Debugger.num_Sens_Anal_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)
 
                     plt.plot(range(0,nElem),(1-dc_Num/dc)*100)
                     plt.xlabel('Element')
