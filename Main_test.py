@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Feb 24 12:06:02 2021
 
-@author: Daniel
-"""
 import numpy as np
 import calfem.utils as cfu
 import Mesh
@@ -158,14 +153,14 @@ def _Main(g,el_type,force,bmarker,settings,mp,ep):
             dc = xold.copy() 
             
         
-            U,dr,Utang = FEM.fe_nl(x,SIMP_penal,f,ep,materialmodel)
+            U,dR,lambdaF = FEM.fe_nl(x,SIMP_penal,f,ep,materialmodel)
                         
             tic=time.perf_counter()
             
             for elem in range(nElem):
                 
-                Ue = Utang[np.ix_(edof[elem,:]-1)]
-                dc[elem] = np.matmul(Ue.T,dr[elem,:].reshape(np.size(edof,1),1))
+                lambdaFe = lambdaF[np.ix_(edof[elem,:]-1)]
+                dc[elem] = np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
        
             if Debug and loop==1:
                 dc_Num=Debugger.num_Sens_Anal_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)

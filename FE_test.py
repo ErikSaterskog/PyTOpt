@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Feb 19 14:52:55 2021
-
-@author: Daniel
-"""
-
 
 
 import numpy as np
@@ -138,13 +131,16 @@ class _FE():
         TOL=1e-11*max(abs(F))    # Setting a resonable low tolerance. 
         
         U = _FE.fe(self,x,SIMP_penal,F,ep,fun)
-        U_tang = U.copy()
-        newtonIt = 0
-        num = 0
-        for elem in range(self.nElem):
-            if np.isin(5,self.eDof[elem,:]):
-                num +=1
+        lambdaF = U.copy()
+        fextGlobal = U.copy()
+        fintGlobal = U.copy()
+        fextGlobal+=F
         
+        index1D=np.ix_(self.freeDofs)
+        index2D=np.ix_(self.freeDofs,self.freeDofs)
+        
+        newtonIt = 0
+
         
         #Newton iteration loop until convergens.
         while err>TOL:
@@ -152,47 +148,44 @@ class _FE():
             col=[]
             data=[]
             newtonIt +=1
-            #K=np.zeros(np.shape(self.K))
             R = np.zeros(np.shape(F)) 
-            FINT = R.copy()
-            R_test = R.copy()
-            dr = np.zeros([self.nElem,np.size(self.eDof,1)])
-            
+            dR = np.zeros([self.nElem,np.size(self.eDof,1)])
             
             for elem in range(self.nElem):
-                edofIndex=(self.eDof[elem,:]-1).tolist()
-                edofIndex2D=np.ix_(self.eDof[elem,:]-1,self.eDof[elem,:]-1)
+                
+                edofIndexList=(self.eDof[elem,:]-1).tolist()
                 edofIndex1D=np.ix_(self.eDof[elem,:]-1)
+                
                 Ue = U[edofIndex1D]
                 
-                Ke, fint, fext, stress, epsilon=fun(Ue.reshape(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
-                
+                Ke, fint, fext, stress, epsilon=fun(Ue.reshape(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp) 
                 Ke=np.matrix(Ke)
-                fext+=F[edofIndex1D]/num
-                #K[edofIndex2D]=K[edofIndex2D]+Ke*x[elem][0]**SIMP_penal
-                 
-                R[edofIndex1D]=R[edofIndex1D]+fint*x[elem][0]**SIMP_penal-fext
                 
-                dr[elem,:] = (SIMP_penal*x[elem][0]**(SIMP_penal-1)*fint).reshape(np.size(self.eDof,1),)
+                fextGlobal[edofIndex1D]+=fext
+                fintGlobal[edofIndex1D]+=fint*x[elem][0]**SIMP_penal
+                dR[elem,:] = (SIMP_penal*x[elem][0]**(SIMP_penal-1)*fint).reshape(np.size(self.eDof,1),)
                 
-                row.extend(edofIndex*len(edofIndex))
-                col.extend(np.repeat(edofIndex,len(edofIndex)))
+                row.extend(edofIndexList*len(edofIndexList))
+                col.extend(np.repeat(edofIndexList,len(edofIndexList)))
                 data.extend(np.reshape(Ke*x[elem][0]**SIMP_penal,np.size(Ke)).tolist()[0])
     
+            
             K=coo_matrix((data,(row,col)),shape=(self.nDof,self.nDof))
             K=K.tocsc()
-                
+              
+            R=fintGlobal-fextGlobal
             err = np.linalg.norm(R[self.freeDofs])
+
             
-               
-            U[np.ix_(self.freeDofs)] = U[np.ix_(self.freeDofs)] - spsolve(K[np.ix_(self.freeDofs,self.freeDofs)],R[self.freeDofs]).reshape(len(self.freeDofs),1)
+            U[index1D] = U[index1D] - spsolve(K[index2D],R[self.freeDofs]).reshape(len(self.freeDofs),1)
                     
-        U_tang[np.ix_(self.freeDofs)] = -spsolve(K[np.ix_(self.freeDofs,self.freeDofs)],F[self.freeDofs]).reshape(len(self.freeDofs),1)
-        print('---------------------------')
-        print('NewtonIterations:' + str(newtonIt))
+
+        lambdaF[index1D] = -spsolve(K[index2D],F[self.freeDofs]).reshape(len(self.freeDofs),1)
+              
+        
+        print('N.iters:    ' + str(newtonIt))
         print('Final error:' + str(err))
-        print('---------------------------')
-        return U,dr,U_tang
+        return U,dR,lambdaF
     
     
 
