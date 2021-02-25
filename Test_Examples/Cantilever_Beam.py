@@ -58,7 +58,7 @@ g.spline([6, 0],marker=6)
 
 g.surface([0, 1, 2, 3, 4,5,6])
 
-force = [-5e4,9,2] #First magnitude, second marker, third direction
+force = [-1e5,9,2] #First magnitude, second marker, third direction
 bmarker = 5
 
 
@@ -68,11 +68,11 @@ nu = 0.3 #Poisson's ratio
 mp = [E,nu]
 
 volFrac = 0.3 # Constraint on 50% volume
-meshSize=0.09 # The average length of one element. 
+meshSize=0.1 # The average length of one element. 
 rMin = meshSize*np.sqrt(2)*0.5 # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.01 # How small change between two optmisation we allow before stopping.
-el_type = 3   #2-Tri,  3-Quad
-ep=[2,1,2,1]    #ep[ptype, thickness, integration rule(only used for QUAD),linear(1)/nonlinear(2)]  
+el_type = 2   #2-Tri,  3-Quad
+ep=[2,1,2,2]    #ep[ptype, thickness, integration rule(only used for QUAD),linear(1)/nonlinear(2)]  
 SIMP_penal = 3
 
 

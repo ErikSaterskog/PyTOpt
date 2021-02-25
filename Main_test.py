@@ -53,10 +53,10 @@ def _Main(g,el_type,force,bmarker,settings,mp,ep):
     
     if el_type == 2:
         coords, edof, dofs, bdofs = _mesh.tri()
-        materialmodel = MMS.Tri
+        elementType = MMS.Tri
     elif el_type ==3:
         coords, edof, dofs, bdofs = _mesh.quad()
-        materialmodel = MMS.Quad
+        elementType = MMS.Quad
     else:
         print("Wrong Element Type!")
     
@@ -153,7 +153,7 @@ def _Main(g,el_type,force,bmarker,settings,mp,ep):
             dc = xold.copy() 
             
         
-            U,dR,lambdaF = FEM.fe_nl(x,SIMP_penal,f,ep,materialmodel)
+            U,dR,lambdaF = FEM.fe_nl(x,SIMP_penal,f,ep,elementType)
                         
             tic=time.perf_counter()
             

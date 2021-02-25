@@ -62,8 +62,8 @@ class _FE():
         
     def fe(self,x,SIMP_penal,F,ep,fun):
         #Settings
-        
-        ep[3]=1
+        epLin=ep.copy()
+        epLin[3]=1
         Timers=True     #Print Timers 
         
         tic1 = time.perf_counter()       #Start timer
@@ -79,7 +79,7 @@ class _FE():
             edofIndex=(self.eDof[elem,:]-1).tolist() 
             edofIndex2D=np.ix_(self.eDof[elem,:]-1,self.eDof[elem,:]-1)
             
-            Ke, fint, fext, stress, epsilon=fun(np.zeros(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
+            Ke, fint, fext, stress, epsilon=fun(np.zeros(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], epLin, self.mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
             
             Ke=np.matrix(Ke)               
             row.extend(edofIndex*len(edofIndex))
@@ -131,6 +131,8 @@ class _FE():
         TOL=1e-11*max(abs(F))    # Setting a resonable low tolerance. 
         
         U = _FE.fe(self,x,SIMP_penal,F,ep,fun)
+        
+
         lambdaF = U.copy()
         fextGlobal = U.copy()
         fintGlobal = U.copy()
