@@ -74,9 +74,10 @@ changeLimit=0.01 # How small change between two optmisation we allow before stop
 el_type = 2   #2-Tri,  3-Quad
 ep=[2,1,2,2]    #ep[ptype, thickness, integration rule(only used for QUAD),linear(1)/nonlinear(2)]  
 SIMP_penal = 3
+method='OC'
+Debug=True
 
-
-settings = [volFrac,meshSize,rMin,changeLimit,SIMP_penal]
+settings = [volFrac,meshSize, rMin, changeLimit,SIMP_penal,method,Debug]
 
 
 Main_test._Main(g,el_type,force,bmarker,settings,mp,ep)
