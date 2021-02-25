@@ -8,7 +8,7 @@ Created on Wed Feb 24 12:33:02 2021
 
 import numpy as np
 
-def _elastic(eps,mp):
+def elastic(eps,mp):
     E = mp[0]
     nu = mp[1]
     G = E/(2*(1+nu))

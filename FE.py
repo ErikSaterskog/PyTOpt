@@ -12,7 +12,7 @@ import elem4n
 import MaterialModelSelection as MMS
 
 
-class _FE():
+class FE():
     
     
     def __init__(self,eDof,coords,mp,fixDofs):
@@ -130,7 +130,7 @@ class _FE():
         err=1e9                  # Setting an error, arbritary big.
         TOL=1e-11*max(abs(F))    # Setting a resonable low tolerance. 
         
-        U = _FE.fe(self,x,SIMP_penal,F,ep,fun)
+        U = FE.fe(self,x,SIMP_penal,F,ep,fun)
         
 
         lambdaF = U.copy()

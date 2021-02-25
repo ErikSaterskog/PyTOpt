@@ -92,9 +92,9 @@ def  elem3n(ue, ex, ey, ep, mp, eq=None):
             
 #Calculate material response at current gauss point
             if matmod==1:              #Elasticity
-                [sigma, dsde] = el._elastic(epsilon, mp)
+                [sigma, dsde] = el.elastic(epsilon, mp)
             elif matmod==2:        #Modified Hook plasticity
-                [sigma, dsde] = mh._mod_hook(epsilon, mp)
+                [sigma, dsde] = mh.mod_hook(epsilon, mp)
             else:
                 raise Exception('Only material model (ep(4) 1 or 2 supported');
                 

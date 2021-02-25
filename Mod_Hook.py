@@ -1,7 +1,7 @@
 
 import numpy as np
 
-def _mod_hook(eps,mp):
+def mod_hook(eps,mp):
     E = mp[0]
     nu = mp[1]
     G = np.zeros([2,1])

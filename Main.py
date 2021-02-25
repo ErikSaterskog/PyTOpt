@@ -14,12 +14,11 @@ import Mod_Hook as mh
 import Plani4s
 import Debugger
 import elem3n
-import FE_test 
 from scipy.sparse.linalg import spsolve
 import elem4n
 import MaterialModelSelection as MMS
 
-def _Main(g,el_type,force,bmarker,settings,mp,ep):
+def Main(g,el_type,force,bmarker,settings,mp,ep):
     
     #Initiating
     change = 2
@@ -45,13 +44,13 @@ def _Main(g,el_type,force,bmarker,settings,mp,ep):
     
     """ Meshing """
     
-    _mesh = Mesh.Mesh(g,meshSize)
+    mesh = Mesh.Mesh(g,meshSize)
     
     if el_type == 2:
-        coords, edof, dofs, bdofs = _mesh.tri()
+        coords, edof, dofs, bdofs = mesh.tri()
         elementType = MMS.Tri
     elif el_type ==3:
-        coords, edof, dofs, bdofs = _mesh.quad()
+        coords, edof, dofs, bdofs = mesh.quad()
         elementType = MMS.Quad
     else:
         print("Wrong Element Type!")
@@ -138,7 +137,7 @@ def _Main(g,el_type,force,bmarker,settings,mp,ep):
     print('H:'+str(tocH-ticH))
 
 
-    FEM = FE_test._FE(edof,coords,mp,bc)
+    FEM = FE.FE(edof,coords,mp,bc)
 
     """ MAIN LOOP """
     if method == 'OC':
@@ -159,7 +158,7 @@ def _Main(g,el_type,force,bmarker,settings,mp,ep):
                 dc[elem] = np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
        
             if Debug and loop==1:
-                dc_Num=Debugger.num_Sens_Anal_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)
+                dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem,elementType)
 
                 plt.plot(range(0,nElem),(1-dc_Num/dc)*100)
                 plt.xlabel('Element')

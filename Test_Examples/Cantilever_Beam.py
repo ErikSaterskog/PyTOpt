@@ -34,7 +34,6 @@ import numpy as np
 import calfem.geometry as cfg
 import calfem.vis as cfv
 import Main
-import Main_test
 
 g = cfg.Geometry()
 
@@ -80,4 +79,4 @@ Debug=True
 settings = [volFrac,meshSize, rMin, changeLimit,SIMP_penal,method,Debug]
 
 
-Main_test._Main(g,el_type,force,bmarker,settings,mp,ep)
+Main.Main(g,el_type,force,bmarker,settings,mp,ep)
