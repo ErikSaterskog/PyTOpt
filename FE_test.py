@@ -140,6 +140,11 @@ class _FE():
         U = _FE.fe(self,x,SIMP_penal,F,ep,fun)
         U_tang = U.copy()
         newtonIt = 0
+        num = 0
+        for elem in range(self.nElem):
+            if np.isin(5,self.eDof[elem,:]):
+                num +=1
+        
         
         #Newton iteration loop until convergens.
         while err>TOL:
@@ -149,6 +154,8 @@ class _FE():
             newtonIt +=1
             #K=np.zeros(np.shape(self.K))
             R = np.zeros(np.shape(F)) 
+            FINT = R.copy()
+            R_test = R.copy()
             dr = np.zeros([self.nElem,np.size(self.eDof,1)])
             
             
@@ -161,10 +168,9 @@ class _FE():
                 Ke, fint, fext, stress, epsilon=fun(Ue.reshape(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
                 
                 Ke=np.matrix(Ke)
-                fext+=F[edofIndex1D]
-                
+                fext+=F[edofIndex1D]/num
                 #K[edofIndex2D]=K[edofIndex2D]+Ke*x[elem][0]**SIMP_penal
-                
+                 
                 R[edofIndex1D]=R[edofIndex1D]+fint*x[elem][0]**SIMP_penal-fext
                 
                 dr[elem,:] = (SIMP_penal*x[elem][0]**(SIMP_penal-1)*fint).reshape(np.size(self.eDof,1),)

@@ -26,16 +26,31 @@ import MaterialModelSelection as MMS
 
 def _Main(g,el_type,force,bmarker,settings,mp,ep):
     
-    #Settings
-    E=mp[0]#210*1e9
-    v=mp[1]#0.3
+    
     Debug = False
     OC = True
+    
+    #Initiating
     change = 2
     loop = 0
-    SIMP_penal = 3
-    volFrac,meshSize, rMin, changeLimit = settings
     
+    
+    #Settings
+    E=mp[0]
+    v=mp[1]
+    try:
+        volFrac,meshSize, rMin, changeLimit,SIMP_penal,method,Debug = settings
+    except:
+        try:
+            volFrac,meshSize, rMin, changeLimit,SIMP_penal,method = settings
+            Debug = False
+        except:
+            try:
+                volFrac,meshSize, rMin, changeLimit,SIMP_penal = settings
+                Debug = False
+                method ='OC'
+            except:
+                raise Exception('Too few inputet settings. Requires a least 5 inputs.')
     
     """ Meshing """
     
@@ -57,7 +72,6 @@ def _Main(g,el_type,force,bmarker,settings,mp,ep):
     nDofs = np.max(edof)
     
     f = np.zeros([nDofs,1])
-    #f = csc_matrix([nDofs,1])
     
     
     bc = np.array([],'i')
@@ -95,11 +109,9 @@ def _Main(g,el_type,force,bmarker,settings,mp,ep):
     
     #Check element type
     if len(edof[0,:])==6:   #Triangular Element
-        Tri=True
         elemX=np.zeros([nElem,3])
         elemY=np.zeros([nElem,3])
-    elif len(edof[0,:])==8:
-        Tri=False           #Use Quad Instead
+    elif len(edof[0,:])==8: #Quad Element
         elemX=np.zeros([nElem,4])
         elemY=np.zeros([nElem,4])
     else:
@@ -121,7 +133,6 @@ def _Main(g,el_type,force,bmarker,settings,mp,ep):
 
 
     #Create weighting matrix for Filter
-    #weightMatrix=np.zeros([nElem,nElem])
     weightMatrix=lil_matrix((nElem,nElem))
 
     ticH=time.perf_counter()
@@ -139,7 +150,7 @@ def _Main(g,el_type,force,bmarker,settings,mp,ep):
     FEM = FE_test._FE(edof,coords,mp,bc)
 
     """ MAIN LOOP """
-    if OC:
+    if method == 'OC':
         while change > changeLimit:
             
             loop = loop + 1
