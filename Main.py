@@ -1,5 +1,4 @@
 
-
 import numpy as np
 import calfem.utils as cfu
 import Mesh
@@ -18,22 +17,31 @@ import elem3n
 import FE_test 
 from scipy.sparse.linalg import spsolve
 import elem4n
+import MaterialModelSelection as MMS
 
-def _Main(g,el_type,force,bmarker,settings,mp):
+def _Main(g,el_type,force,bmarker,settings,mp,ep):
     
-    #Settings
-    E=mp[0]#210*1e9
-    v=mp[1]#0.3
-    Debug = False
-    OC = True
-    ptype=2         #ptype=1 => plane stress, ptype=2 => plane strain
-    ep=[ptype,1,2,2]    #ep[ptype, thickness, integration rule(only used for QUAD)]  
+    #Initiating
     change = 2
     loop = 0
-    SIMP_penal = 3
-    volFrac,meshSize, rMin, changeLimit,Linear = settings
     
     
+    #Settings
+    E=mp[0]
+    v=mp[1]
+    try:
+        volFrac,meshSize, rMin, changeLimit,SIMP_penal,method,Debug = settings
+    except:
+        try:
+            volFrac,meshSize, rMin, changeLimit,SIMP_penal,method = settings
+            Debug = False
+        except:
+            try:
+                volFrac,meshSize, rMin, changeLimit,SIMP_penal = settings
+                Debug = False
+                method ='OC'
+            except:
+                raise Exception('Too few inputet settings. Requires a least 5 inputs.')
     
     """ Meshing """
     
@@ -41,8 +49,10 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     
     if el_type == 2:
         coords, edof, dofs, bdofs = _mesh.tri()
+        elementType = MMS.Tri
     elif el_type ==3:
         coords, edof, dofs, bdofs = _mesh.quad()
+        elementType = MMS.Quad
     else:
         print("Wrong Element Type!")
     
@@ -53,7 +63,6 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     nDofs = np.max(edof)
     
     f = np.zeros([nDofs,1])
-    #f = csc_matrix([nDofs,1])
     
     
     bc = np.array([],'i')
@@ -74,9 +83,6 @@ def _Main(g,el_type,force,bmarker,settings,mp):
         cfu.applyforce(bdofs, f, force[1], force[0], force[2])
     
     
-    
-    
-    
     """ Initialization Cont."""
 
     nElem=np.size(edof,0)
@@ -94,11 +100,9 @@ def _Main(g,el_type,force,bmarker,settings,mp):
     
     #Check element type
     if len(edof[0,:])==6:   #Triangular Element
-        Tri=True
         elemX=np.zeros([nElem,3])
         elemY=np.zeros([nElem,3])
-    elif len(edof[0,:])==8:
-        Tri=False           #Use Quad Instead
+    elif len(edof[0,:])==8: #Quad Element
         elemX=np.zeros([nElem,4])
         elemY=np.zeros([nElem,4])
     else:
@@ -116,11 +120,10 @@ def _Main(g,el_type,force,bmarker,settings,mp):
         elemCenterY[elem]=np.mean(elemY[elem])
 
     #Linear Elastic Constitutive Matrix
-    D=cfc.hooke(ptype, E, v)
+    D=cfc.hooke(ep[0], E, v)
 
 
     #Create weighting matrix for Filter
-    #weightMatrix=np.zeros([nElem,nElem])
     weightMatrix=lil_matrix((nElem,nElem))
 
     ticH=time.perf_counter()
@@ -132,77 +135,36 @@ def _Main(g,el_type,force,bmarker,settings,mp):
         weightMatrix[:,elem]=np.maximum(rMin-dist,np.zeros([nElem,1]))
             
     tocH=time.perf_counter()
-    
+    print('H:'+str(tocH-ticH))
 
 
-    FEM = FE._FE(edof,coords,mp,bc)
+    FEM = FE_test._FE(edof,coords,mp,bc)
 
     """ MAIN LOOP """
-    if OC:
+    if method == 'OC':
         while change > changeLimit:
             
             loop = loop + 1
             xold = x.copy()
             dc = xold.copy() 
             
-            #"""LINEAR"""
-            if Linear:
-                U = FEM.fe(x,SIMP_penal,f,ep)
+        
+            U,dR,lambdaF = FEM.fe_nl(x,SIMP_penal,f,ep,elementType)
+                        
+            tic=time.perf_counter()
             
+            for elem in range(nElem):
                 
-                
-                tic=time.perf_counter()
-                
-                
-                for elem in range(nElem):  
-                    if Tri:
-                        Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)   #!THIS COULD BE PLACED OUTSIDE OF LOOP!               #Element Stiffness Matrix for Triangular Element
-                    else:
-                        Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)[0]    #!THIS COULD BE PLACED OUTSIDE OF LOOP!           #Element Stiffness Matrix for Quad Element
-                    Ue = U[np.ix_(edof[elem,:]-1)]
-                    dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
-                    
-                if Debug and loop==1:
-                    dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)
+                lambdaFe = lambdaF[np.ix_(edof[elem,:]-1)]
+                dc[elem] = np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
+       
+            if Debug and loop==1:
+                dc_Num=Debugger.num_Sens_Anal_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)
 
-                    plt.plot(range(0,nElem),(1-dc_Num/dc)*100)
-                    plt.xlabel('Element')
-                    plt.ylabel('Percent Error')
-                
-                
-            #"""NON LINEAR"""
-            else:
-                #U = FE._FE_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
-                U,K,dr,Utang = FEM.fe_nl(x,SIMP_penal,f,ep)
-                
-                
-                tic=time.perf_counter()
-                
-                ed = cfc.extractEldisp(edof, U)
-                
-                #dc = -np.matmul(dr,Utang)
-                
-                if Tri:  #Tri Elements
-                    for elem in range(nElem):
-                        
-                        Ue = Utang[np.ix_(edof[elem,:]-1)]#Ue.reshape(6,)
-                        dc[elem] = -np.matmul(Ue.T,dr[elem,:].reshape(6,1))
-                        
-                else:    #Quad Elements
-                    for elem in range(nElem):            
-                        Ue = U[np.ix_(edof[elem,:]-1)]
-                        Ke, finte, fexte, stress, epsilon=elem4n.elem4n(Ue.reshape(8,), elemX[elem,:], elemY[elem,:], ep, mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
-                        KeT = SIMP_penal*x[elem]**(SIMP_penal-1)*Ke
-                        dc[elem] = -np.matmul(Ue.T,dr[:,elem].reshape(8,1))
-                        
-           
-                if Debug and loop==1:
-                    dc_Num=Debugger.num_Sens_Anal_NL(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem)
-
-                    plt.plot(range(0,nElem),(1-dc_Num/dc)*100)
-                    plt.xlabel('Element')
-                    plt.ylabel('Percent Error')    
-                
+                plt.plot(range(0,nElem),(1-dc_Num/dc)*100)
+                plt.xlabel('Element')
+                plt.ylabel('Percent Error')    
+            
             
             toc=time.perf_counter()
 
@@ -213,18 +175,18 @@ def _Main(g,el_type,force,bmarker,settings,mp):
             tocOpt=time.perf_counter()
     
             change =np.max(np.max(abs(x-xold)))
-            print('H:'+str(tocH-ticH))
+            
             print('Sens. Anal.:'+str(toc-tic))
             print('Opt:        '+str(tocOpt-ticOpt))
             print('Change:     '+str(change))
             print('Iteration:  '+str(loop))
             print('---------------------------')
-            if loop == 100:                                                          # If alternating
+            if loop == 1:                                                          # If alternating
                 break
             
         
     else:
-        if Linear:
+        if ep[3]==1:
             x = Opt.Optimisation().mma(nElem,SIMP_penal,edof,coords,bc,f,ep,mp,Tri,elemX,elemY,D,weightMatrix,volFrac,x)
             x = x.reshape(nElem,1)
             U = FE.FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)
