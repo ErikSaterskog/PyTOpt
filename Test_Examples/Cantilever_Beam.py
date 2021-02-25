@@ -67,7 +67,7 @@ nu = 0.3 #Poisson's ratio
 
 mp = [E,nu]
 
-volFrac = 0.3 # Constraint on 50% volume
+volFrac = 0.3 # Constraint on volume
 meshSize=0.1 # The average length of one element. 
 rMin = meshSize*np.sqrt(2)*0.5 # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.01 # How small change between two optmisation we allow before stopping.

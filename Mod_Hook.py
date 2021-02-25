@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Feb  4 09:04:30 2021
 
-@author: Daniel
-"""
 import numpy as np
 
 def _mod_hook(eps,mp):

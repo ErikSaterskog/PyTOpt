@@ -1,9 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Jan 27 09:51:30 2021
 
-@author: Daniel
-"""
+
 import numpy as np
 import calfem.mesh as cfm
 

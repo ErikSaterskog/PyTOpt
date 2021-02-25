@@ -2,8 +2,6 @@
 """
 Created on Thu Feb  4 09:29:40 2021
 
-@author: Daniel
-
 This script shows the different between the modified nonlinear materialmodel
 and ordinary linear hookes law.
 

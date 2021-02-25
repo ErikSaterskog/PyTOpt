@@ -134,9 +134,6 @@ class _FE():
         
 
         lambdaF = U.copy()
-        fextGlobal = U.copy()
-        fintGlobal = U.copy()
-        fextGlobal+=F
         
         index1D=np.ix_(self.freeDofs)
         index2D=np.ix_(self.freeDofs,self.freeDofs)
@@ -152,6 +149,8 @@ class _FE():
             newtonIt +=1
             R = np.zeros(np.shape(F)) 
             dR = np.zeros([self.nElem,np.size(self.eDof,1)])
+            fextGlobal = F.copy()
+            fintGlobal = np.zeros(U.shape)
             
             for elem in range(self.nElem):
                 

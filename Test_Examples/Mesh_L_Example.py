@@ -40,8 +40,8 @@ nu = 0.3 #Poisson's ratio
 mp = [E,nu]
 
 volFrac = 0.3 # Constraint on 50% volume
-meshSize=0.05 # How fine mesh we want. 1 is only one element and 0 is infinity.
-rMin = meshSize*np.sqrt(2)*0.8 # How aggressive the filter should be. Smaller -> less aggressive
+meshSize=0.1 # How fine mesh we want. 1 is only one element and 0 is infinity.
+rMin = meshSize*0.7 # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.005 # How small change between two optmisation we allow before stopping.
 el_type = 2   #2-Tri,  3-Quad
 Linear = False
