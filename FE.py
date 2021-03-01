@@ -88,7 +88,7 @@ class FE():
             #ticedof = time.perf_counter()
             
             #part 3
-            3ticedof = time.perf_counter()
+            #ticedof = time.perf_counter()
             Ke=np.matrix(Ke)               
             #ticedof = time.perf_counter()
             
