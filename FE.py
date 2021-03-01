@@ -76,18 +76,36 @@ class FE():
         
         for elem in range(self.nElem):  
                 
+            #part 1
+            #ticedof1 = time.perf_counter()
             edofIndex=(self.eDof[elem,:]-1).tolist() 
             edofIndex2D=np.ix_(self.eDof[elem,:]-1,self.eDof[elem,:]-1)
+            #ticedof2 = time.perf_counter()
             
+            #part 2
+            #ticedof = time.perf_counter()
             Ke, fint, fext, stress, epsilon=fun(np.zeros(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], epLin, self.mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
+            #ticedof = time.perf_counter()
             
+            #part 3
+            #ticedof = time.perf_counter()
             Ke=np.matrix(Ke)               
+            #ticedof = time.perf_counter()
+            
+            #part 4
+            #ticedof = time.perf_counter()
             row.extend(edofIndex*len(edofIndex))
             col.extend(np.repeat(edofIndex,len(edofIndex)))
             data.extend(np.reshape(Ke*x[elem][0]**SIMP_penal,np.size(Ke)).tolist()[0])
-    
+            #ticedof = time.perf_counter()
+        
+        #part 5
+        3ticedof = time.perf_counter()
         K=coo_matrix((data,(row,col)),shape=(self.nDof,self.nDof))
         K=K.tocsc()
+        #ticedof = time.perf_counter()
+        
+        
         
         toc1 = time.perf_counter()
         tic2 = time.perf_counter()
@@ -140,6 +158,9 @@ class FE():
         
         newtonIt = 0
 
+        if ep[3]==1:  #Check if linear.
+            return U,[],[]
+            
         
         #Newton iteration loop until convergens.
         while err>TOL:

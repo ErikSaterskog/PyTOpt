@@ -153,9 +153,20 @@ def Main(g,el_type,force,bmarker,settings,mp,ep):
             tic=time.perf_counter()
             
             for elem in range(nElem):
-                
-                lambdaFe = lambdaF[np.ix_(edof[elem,:]-1)]
-                dc[elem] = np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
+                if ep[3]==1:
+                    
+                    if el_type==2:
+                        Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)   #!THIS COULD BE PLACED OUTSIDE OF LOOP!               #Element Stiffness Matrix for Triangular Element
+                    else:
+                        Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)[0]    #!THIS COULD BE PLACED OUTSIDE OF LOOP!           #Element Stiffness Matrix for Quad Element
+                        
+                        
+                    Ue = U[np.ix_(edof[elem,:]-1)]
+                    dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                    
+                else:
+                    lambdaFe = lambdaF[np.ix_(edof[elem,:]-1)]
+                    dc[elem] = np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
        
             if Debug and loop==1:
                 dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem,elementType)
@@ -180,7 +191,7 @@ def Main(g,el_type,force,bmarker,settings,mp,ep):
             print('Change:     '+str(change))
             print('Iteration:  '+str(loop))
             print('---------------------------')
-            if loop == 1:                                                          # If alternating
+            if loop == 100:                                                          # If alternating
                 break
             
         
