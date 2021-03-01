@@ -1,8 +1,9 @@
 
-
+import numpy as np
 import elem3n
 import elem4n
 import calfem.core as cfc
+import Plan4is as P4
 
 def Tri(ue,ex,ey,ep,mp,eq=None):
     return elem3n.elem3n(ue, ex, ey, ep, mp, eq=None)
@@ -10,8 +11,16 @@ def Tri(ue,ex,ey,ep,mp,eq=None):
 def Quad(ue,ex,ey,ep,mp,eq=None):
     return elem4n.elem4n(ue, ex, ey, ep, mp, eq=None)
 
-def LinTri(ex,ey,ep,D,eq=None):
-    return cfc.plante(ex, ey, ep, D, eq=None)
+def LinTri(ue,ex,ey,ep,mp,eq=None):
+    D = cfc.hookes(ep[0],mp[0],mp[1])
+    Ke,fe = cfc.plante(ex, ey, ep[:2], D, eq=None)
+    sig,eps = cfc.plants(ex, ey, ep, D, ue) 
+    fint = np.matmul(Ke,ue)
+    return Ke,fint,fe,sig,eps
 
-def LinQuad(ex, ey, ep, D, eq=None):
-    return cfc.plani4e(ex, ey, ep, D, eq=None)
+def LinQuad(ue,ex,ey,ep,mp,eq=None):
+    D = cfc.hookes(ep[0],mp[0],mp[1])
+    Ke,fe = cfc.plani4e(ex, ey, ep, D, eq=None)
+    sig,eps = P4.plani4s(ex,ey,ep,ue)
+    fint = np.matmul(Ke,ue)
+    return Ke,fint,fe,sig,eps
