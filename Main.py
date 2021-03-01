@@ -48,10 +48,16 @@ def Main(g,el_type,force,bmarker,settings,mp,ep):
     
     if el_type == 2:
         coords, edof, dofs, bdofs = mesh.tri()
-        elementType = MMS.Tri
+        if ep[3]==1:
+            elementType = MMS.LinTri
+        else:
+            elementType = MMS.Tri    
     elif el_type ==3:
         coords, edof, dofs, bdofs = mesh.quad()
-        elementType = MMS.Quad
+        if ep[3]==1:
+            elementType = MMS.LinQuad
+        else:
+            elementType = MMS.Quad
     else:
         print("Wrong Element Type!")
     
@@ -159,7 +165,6 @@ def Main(g,el_type,force,bmarker,settings,mp,ep):
                         Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)   #!THIS COULD BE PLACED OUTSIDE OF LOOP!               #Element Stiffness Matrix for Triangular Element
                     else:
                         Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)[0]    #!THIS COULD BE PLACED OUTSIDE OF LOOP!           #Element Stiffness Matrix for Quad Element
-                        
                         
                     Ue = U[np.ix_(edof[elem,:]-1)]
                     dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
