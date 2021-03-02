@@ -154,7 +154,7 @@ def Main(g,el_type,force,bmarker,settings,mp,ep):
             dc = xold.copy() 
             
         
-            U,dR,lambdaF = FEM.fe_nl(x,SIMP_penal,f,ep,elementType)
+            U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementType)
                         
             tic=time.perf_counter()
             
@@ -196,7 +196,7 @@ def Main(g,el_type,force,bmarker,settings,mp,ep):
             print('Change:     '+str(change))
             print('Iteration:  '+str(loop))
             print('---------------------------')
-            if loop == 100:                                                          # If alternating
+            if loop == 50:                                                          # If alternating
                 break
             
         
@@ -213,7 +213,7 @@ def Main(g,el_type,force,bmarker,settings,mp,ep):
     
     cfv.draw_element_values(x, coords, edof, 2, el_type,displacements=None,
                       draw_elements=True, draw_undisplaced_mesh=False, 
-                      title="Density", magnfac=1.0)
+                      title="Density", magnfac=1.0,clim=(0,1))
     
     cfv.showAndWait()
 

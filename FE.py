@@ -157,7 +157,7 @@ class FE():
         index2D=np.ix_(self.freeDofs,self.freeDofs)
         
         newtonIt = 0
-
+        sig_VM = np.zeros(np.shape(x))
         if ep[3]==1:  #Check if linear.
             return U,[],[]
             
@@ -190,6 +190,8 @@ class FE():
                 row.extend(edofIndexList*len(edofIndexList))
                 col.extend(np.repeat(edofIndexList,len(edofIndexList)))
                 data.extend(np.reshape(Ke*x[elem][0]**SIMP_penal,np.size(Ke)).tolist()[0])
+                
+                sig_VM[elem]= np.sqrt(((stress[0]-stress[1])**2+(stress[1]-stress[2])**2+(stress[2]-stress[0])**2)/2+3*(stress[3]**2+stress[4]**2+stress[5]**2))
     
             
             K=coo_matrix((data,(row,col)),shape=(self.nDof,self.nDof))
@@ -207,7 +209,7 @@ class FE():
         
         print('N.iters:    ' + str(newtonIt))
         print('Final error:' + str(err))
-        return U,dR,lambdaF
+        return U,dR,lambdaF,sig_VM
     
     
 

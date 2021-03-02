@@ -111,7 +111,7 @@ def  elem3n(ue, ex, ey, ep, mp, eq=None):
         raise Exception('Only plane strain ep(1)=ptype=2 allowed (unless ep(2)=2, then ep(1)=3 is allowed)');
     
     
-    return Ke, fint, fext, stress,epsilon
+    return Ke, fint, fext, stress[:,0],epsilon
 
 def gauss_quadrature(ir):
 # Setup gauss quadrature
