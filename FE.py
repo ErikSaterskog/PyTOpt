@@ -159,7 +159,7 @@ class FE():
         newtonIt = 0
         sig_VM = np.zeros(np.shape(x))
         if ep[3]==1:  #Check if linear.
-            return U,[],[]
+            return U,[],[],[]
             
         
         #Newton iteration loop until convergens.
