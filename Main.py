@@ -92,7 +92,7 @@ def Main(g,el_type,force,bmarker,settings,mp,ep):
 
     nElem=np.size(edof,0)
     
-    x =np.zeros([nElem,1])+volFrac
+    x =np.zeros([nElem,1])+1#volFrac
         
     #Check sizes, Initialize
     nx=coords[:,0]
