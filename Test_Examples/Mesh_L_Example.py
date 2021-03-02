@@ -40,17 +40,22 @@ nu = 0.3 #Poisson's ratio
 mp = [E,nu]
 
 volFrac = 0.3 # Constraint on 50% volume
-meshSize=0.1 # How fine mesh we want. 1 is only one element and 0 is infinity.
-rMin = meshSize*0.7 # How aggressive the filter should be. Smaller -> less aggressive
-changeLimit=0.005 # How small change between two optmisation we allow before stopping.
+meshSize=0.1 # The average length of one element. 
+rMin = meshSize*np.sqrt(2)*0.5 # How aggressive the filter should be. Smaller -> less aggressive
+changeLimit=0.01 # How small change between two optmisation we allow before stopping.
 el_type = 2   #2-Tri,  3-Quad
-Linear = False
 
 
-settings = [volFrac,meshSize,rMin,changeLimit,Linear]
+ep=[2,1,2,2]    #ep[ptype, thickness, integration rule(only used for QUAD),linear(1)/nonlinear(2)]  
+SIMP_penal = 3
+method='OC'
+Debug=False
 
 
-Main._Main(g,el_type,force,bmarker,settings,mp)
+settings = [volFrac,meshSize, rMin, changeLimit,SIMP_penal,method,Debug]
+
+
+Main.Main(g,el_type,force,bmarker,settings,mp,ep)
 
 
 
