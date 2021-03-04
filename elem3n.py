@@ -6,6 +6,7 @@ import numpy as np
 import Mod_Hook as mh
 from scipy.sparse.linalg import spsolve
 import elastic as el
+import sickmaterial as sick
 
 def  elem3n(ue, ex, ey, ep, mp, eq=None):
 
@@ -95,6 +96,8 @@ def  elem3n(ue, ex, ey, ep, mp, eq=None):
                 [sigma, dsde] = el.elastic(epsilon, mp)
             elif matmod==2:        #Modified Hook plasticity
                 [sigma, dsde] = mh.mod_hook(epsilon, mp)
+            elif matmod ==3:
+                [sigma, dsde] = sick.sick(epsilon,mp)
             else:
                 raise Exception('Only material model (ep(4) 1 or 2 supported');
                 
