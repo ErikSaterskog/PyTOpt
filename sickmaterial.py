@@ -6,54 +6,36 @@ Created on Tue Mar  2 15:23:12 2021
 """
 
 import numpy as np
-import calfem.core as cfc
+#import calfem.core as cfc
 
 def sick(eps,mp):
     
-    E_max       = mp[0]
-    E_min       = E_max*7/6
-    nu_max      = 0.3
-    nu_min      = 0.3
-    lame_max    = E_max*nu_max/((1+nu_max)*(1-2*nu_max))
-    lame_min    = E_min*nu_min/((1+nu_min)*(1-2*nu_min))
-    my_max      = E_max/(2*(1+nu_max)) 
-    my_min      = E_min/(2*(1+nu_min))
-    sig=np.zeros([3,])
+    E_ten      = mp[0]
+    E_com       = E_ten*7
+    nu_ten      = 0.3
+    nu_com      = 0.3
+    # lame_max    = E_max*nu_max/((1+nu_max)*(1-2*nu_max))
+    # lame_min    = E_min*nu_min/((1+nu_min)*(1-2*nu_min))
+    # my_max      = E_max/(2*(1+nu_max)) 
+    # my_min      = E_min/(2*(1+nu_min))
+    # sig=np.zeros([3,])
     
     epsilon = np.matrix([[eps[0],eps[3]/2,eps[5]/2],[eps[3]/2,eps[1],eps[4]/2],[eps[5]/2,eps[4]/2,eps[2]]])
     
     lamd,nor  = np.linalg.eig(epsilon)
+    eps_h = sum(eps[:2])/3
+    if eps_h>0.0005: 
+        print('ten')
+        D = E_ten/((1+nu_ten)*(1-2*nu_ten))*np.array([[1-nu_ten,nu_ten,nu_ten,0],[nu_ten,1-nu_ten,nu_ten,0],[nu_ten,nu_ten,1-nu_ten,0],[0,0,0,(1-2*nu_ten)/2]])
+        
+    else:
+        print('Comp')
+        D = E_com/((1+nu_com)*(1-2*nu_com))*np.array([[1-nu_com,nu_com,nu_com,0],[nu_com,1-nu_com,nu_com,0],[nu_com,nu_com,1-nu_com,0],[0,0,0,(1-2*nu_com)/2]])
     
-    if lamd[0]+nu_max*lamd[1]>0 and lamd[1]+nu_max*lamd[0]>0:
+    #sig = D_1*epskvot + D_2*epsrest Detta ska implementeras kanske
         
-        D = E_max/((1+nu_max)*(1-2*nu_max))*np.array([[1-nu_max,nu_max,nu_max,0],[nu_max,1-nu_max,nu_max,0],[nu_max,nu_max,1-nu_max,0],[0,0,0,(1-2*nu_max)/2]])
-        
-    elif lamd[0]+nu_min*lamd[1]<=0 and lamd[1]+nu_min*lamd[0]<=0:
-        
-        D = E_min/((1+nu_min)*(1-2*nu_min))*np.array([[1-nu_min,nu_min,nu_min,0],[nu_min,1-nu_min,nu_min,0],[nu_min,nu_min,1-nu_min,0],[0,0,0,(1-2*nu_min)/2]])
-        
-    elif lamd[0]+nu_min*lamd[1]>0 and lamd[1]+nu_max*lamd[0]<=0:
-        
-        D = E_max/((1+nu_max)*(1-2*nu_max))*np.array([[1-nu_min,nu_min,nu_min,0],[nu_min,1-nu_min,nu_min,0],[nu_min,nu_min,1-nu_min,0],[0,0,0,(1-2*nu_min)/2]])
-        
-    elif lamd[0]+nu_max*lamd[1]<=0 and lamd[1]+nu_min*lamd[0]>0:
-        
-        D = E_min/((1+nu_min)*(1-2*nu_min))*np.array([[1-nu_max,nu_max,nu_max,0],[nu_max,1-nu_max,nu_max,0],[nu_max,nu_max,1-nu_max,0],[0,0,0,(1-2*nu_max)/2]])
-        
-    
-    for i in range(0,3):
-        lam = np.ma.array(lamd, mask=False)
-        lam.mask[i] = True
-        if lamd[i]>0:
-                
-            sig[i] = lamd[i]*(2*my_max+lame_max)+lame_max*lam.sum()
-        else:
-            sig[i] = lamd[i]*(2*my_min+lame_min)+lame_min*lam.sum()
-        
-    sigma_mat = sig[0]*nor[:,0]*nor[:,0].T +sig[1]*nor[:,1]*nor[:,1].T+sig[2]*nor[:,2]*nor[:,2].T
-    sigma = np.array([sigma_mat[0,0],sigma_mat[1,1],sigma_mat[2,2],sigma_mat[0,1],sigma_mat[1,2],sigma_mat[0,2]])        
-    
-    
+    sigma = np.zeros(np.shape(eps))
+    sigma[:4] = np.matmul(D,eps[:4])
     return sigma.reshape(6,1), D
 
 
