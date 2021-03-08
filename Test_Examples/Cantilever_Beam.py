@@ -33,6 +33,7 @@ Then we call on the Main module to start the optimisation.
 import numpy as np
 import calfem.geometry as cfg
 import calfem.vis as cfv
+import elastic as el
 import Main
 
 g = cfg.Geometry()
@@ -67,16 +68,34 @@ nu = 0.3 #Poisson's ratio
 mp = [E,nu]
 
 volFrac = 0.3 # Constraint on volume
-meshSize=0.1 # The average length of one element. 
-rMin = meshSize*np.sqrt(2)*0.5 # How aggressive the filter should be. Smaller -> less aggressive
+meshSize=0.03 # The average length of one element. 
+rMin = meshSize*0.7 # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.01 # How small change between two optmisation we allow before stopping.
-el_type = 2   #2-Tri,  3-Quad
+el_type = 3   #2-Tri,  3-Quad
 ep=[2,1,2,2]    #ep[ptype, thickness, integration rule(only used for QUAD),linear(1)/nonlinear(2)]  
 SIMP_penal = 3
 method='OC'
-Debug=True
+Debug=False
 
-settings = [volFrac,meshSize, rMin, changeLimit,SIMP_penal,method,Debug]
+settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 
 
-Main.Main(g,el_type,force,bmarker,settings,mp,ep)
+#sick.sick(epsilon,mp)
+#mh.mod_hook(epsilon, mp)
+materialFun=el.elastic
+
+Main.Main(g, el_type, force, bmarker, settings, mp, ep, materialFun)
+
+
+
+
+
+
+
+
+
+
+
+
+
+

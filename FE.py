@@ -60,7 +60,7 @@ class FE():
         
     
         
-    def fe(self,x,SIMP_penal,F,ep,fun):
+    def fe(self,x,SIMP_penal,F,ep,elementFun,materialFun):
         #Settings
         epLin=ep.copy()
         epLin[3]=1
@@ -84,7 +84,7 @@ class FE():
             
             #part 2
             #ticedof = time.perf_counter()
-            Ke, fint, fext, stress, epsilon=fun(np.zeros(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], epLin, self.mp) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
+            Ke, fint, fext, stress, epsilon=elementFun(np.zeros(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], epLin, self.mp, materialFun) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
             #ticedof = time.perf_counter()
             
             #part 3
@@ -122,7 +122,7 @@ class FE():
         return self.U
     
     
-    def fe_nl(self,x,SIMP_penal,F,ep,fun):
+    def fe_nl(self,x,SIMP_penal,F,ep,elementFun, materialFun):
         """
         INPUT:
             x          - element densities, design variables
@@ -148,7 +148,7 @@ class FE():
         err=1e9                  # Setting an error, arbritary big.
         TOL=1e-11*max(abs(F))    # Setting a resonable low tolerance. 
         
-        U = FE.fe(self,x,SIMP_penal,F,ep,fun)
+        U = FE.fe(self, x, SIMP_penal, F, ep, elementFun, materialFun)
         
 
         lambdaF = U.copy()
@@ -180,7 +180,7 @@ class FE():
                 
                 Ue = U[edofIndex1D]
                 
-                Ke, fint, fext, stress, epsilon=fun(Ue.reshape(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp) 
+                Ke, fint, fext, stress, epsilon=elementFun(Ue.reshape(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp, materialFun) 
                 Ke=np.matrix(Ke)
                 
                 fextGlobal[edofIndex1D]+=fext

@@ -5,11 +5,11 @@ import elem4n
 import calfem.core as cfc
 import Plani4s as P4
 
-def Tri(ue,ex,ey,ep,mp,eq=None):
-    return elem3n.elem3n(ue, ex, ey, ep, mp, eq=None)
+def Tri(ue,ex,ey,ep,mp, materialFun, eq=None):
+    return elem3n.elem3n(ue, ex, ey, ep, mp, materialFun, eq=None)
 
-def Quad(ue,ex,ey,ep,mp,eq=None):
-    return elem4n.elem4n(ue, ex, ey, ep, mp, eq=None)
+def Quad(ue,ex,ey,ep,mp, materialFun, eq=None):
+    return elem4n.elem4n(ue, ex, ey, ep, mp, materialFun, eq=None)
 
 def LinTri(ue,ex,ey,ep,mp,eq=None):
     D = cfc.hooke(ep[0],mp[0],mp[1])

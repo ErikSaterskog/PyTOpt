@@ -18,7 +18,7 @@ from scipy.sparse.linalg import spsolve
 import elem4n
 import MaterialModelSelection as MMS
 
-def Main(g,el_type,force,bmarker,settings,mp,ep):
+def Main(g,el_type,force,bmarker,settings,mp,ep, materialFun):
     
     #Initiating
     change = 2
@@ -49,15 +49,15 @@ def Main(g,el_type,force,bmarker,settings,mp,ep):
     if el_type == 2:
         coords, edof, dofs, bdofs = mesh.tri()
         if ep[3]==1:
-            elementType = MMS.LinTri
+            elementFun = MMS.LinTri
         else:
-            elementType = MMS.Tri    
+            elementFun = MMS.Tri    
     elif el_type ==3:
         coords, edof, dofs, bdofs = mesh.quad()
         if ep[3]==1:
-            elementType = MMS.LinQuad
+            elementFun = MMS.LinQuad
         else:
-            elementType = MMS.Quad
+            elementFun = MMS.Quad
     else:
         print("Wrong Element Type!")
     
@@ -154,7 +154,7 @@ def Main(g,el_type,force,bmarker,settings,mp,ep):
             dc = xold.copy() 
             
         
-            U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementType)
+            U,dR,lambdaF,sig_VM = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun)
                         
             tic=time.perf_counter()
             
@@ -202,7 +202,7 @@ def Main(g,el_type,force,bmarker,settings,mp,ep):
         
     else:
         if ep[3]==1:
-            x = Opt.Optimisation().mma(nElem,SIMP_penal,edof,coords,bc,f,ep,mp,Tri,elemX,elemY,D,weightMatrix,volFrac,x)
+            x = Opt.Optimisation().mma(nElem,SIMP_penal,edof,coords,bc,f,ep,mp,1,elemX,elemY,D,weightMatrix,volFrac,x)
             x = x.reshape(nElem,1)
             U = FE.FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)
         else:

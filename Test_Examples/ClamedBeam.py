@@ -37,6 +37,7 @@ import numpy as np
 import calfem.geometry as cfg
 import calfem.vis as cfv
 import Main
+import elastic as el
 
 g = cfg.Geometry()
 
@@ -71,13 +72,25 @@ changeLimit=0.01 # How small change between two optmisation we allow before stop
 el_type = 2   #2-Tri,  3-Quad
 
 
-ep=[2,1,2,2]    #ep[ptype, thickness, integration rule(only used for QUAD),linear(1)/nonlinear(2)]  
+ep=[2,1,2,1]    #ep[ptype, thickness, integration rule(only used for QUAD),linear(1)/nonlinear(2)]  
 SIMP_penal = 3
 method='OC'
 Debug=False
 
-settings = [volFrac,meshSize, rMin, changeLimit,SIMP_penal,method,Debug]
+settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 
 
-Main.Main(g,el_type,force,bmarker,settings,mp,ep)
+#sick.sick(epsilon,mp)
+#mh.mod_hook(epsilon, mp)
+materialFun=el.elastic
+
+Main.Main(g, el_type, force, bmarker, settings, mp, ep, materialFun)
+
+
+
+
+
+
+
+
 

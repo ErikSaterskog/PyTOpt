@@ -54,7 +54,7 @@ def shape_functions(xsi,eta,ir):
     return N,dNr   
     
 
-def elem4n(ue, ex, ey, ep, mp, eq=None):
+def elem4n(ue, ex, ey, ep, mp, materialFun, eq=None):
     
     ptype   = ep[0]          # Which analysis type?
     t       = ep[1]           # Element thickness
@@ -108,13 +108,8 @@ def elem4n(ue, ex, ey, ep, mp, eq=None):
             epsilon[np.ix_([0,1,3])] = np.matmul(B,ue)
             
         #Calculate material response at current gauss point
-            if matmod==1:              #Elasticity
-                [sigma, dsde] = el.elastic(epsilon, mp)
-            elif matmod==2:        #Modified Hook plasticity
-                [sigma, dsde] = mh.mod_hook(epsilon, mp)    #!!FIXA NOLLAN HÄR!!
-            else:
-                raise Exception('Only material model (ep(4) 1 or 2 supported');
-                
+            [sigma, dsde] = materialFun(epsilon, mp)
+
                 
             stress[:, i] = sigma.reshape(6,)   #Save stress for current gauss point
         
