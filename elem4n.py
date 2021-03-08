@@ -114,7 +114,7 @@ def elem4n(ue, ex, ey, ep, mp, materialFun, eq=None):
             stress[:, i] = sigma.reshape(6,)   #Save stress for current gauss point
         
 #Calculate the gauss point's contribution to element stiffness and forces
-            Dm=dsde[np.ix_([1, 2, 4],[1, 2, 4])]                 # Components for plane strain
+            Dm=dsde[np.ix_([0, 1, 3],[0, 1, 3])]                 # Components for plane strain
             Ke=Ke+np.matmul(np.matmul(B.T,Dm),B)*detJ*wp[i]*t                                  # Stiffness contribution
             fint=fint+np.matmul(B.T,sigma[np.ix_([0,1,3])])*wp[i]*detJ*t                  # Internal force vector 
             fext=fext+np.matmul(N2.T,b)*detJ*wp[i]*t                                # External force vector

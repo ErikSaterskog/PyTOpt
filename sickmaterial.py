@@ -6,36 +6,61 @@ Created on Tue Mar  2 15:23:12 2021
 """
 
 import numpy as np
-#import calfem.core as cfc
+import calfem.core as cfc
 
-def sick(eps,mp):
+def mat(eps,mp):
     
     E_ten      = mp[0]
-    E_com       = E_ten*7
+    E_com       = mp[0]
     nu_ten      = 0.3
     nu_com      = 0.3
-    # lame_max    = E_max*nu_max/((1+nu_max)*(1-2*nu_max))
-    # lame_min    = E_min*nu_min/((1+nu_min)*(1-2*nu_min))
-    # my_max      = E_max/(2*(1+nu_max)) 
-    # my_min      = E_min/(2*(1+nu_min))
-    # sig=np.zeros([3,])
+    low_lim=0.0005
+    high_lim=0.0025
+    sig_y = 220e6
+    G = E_com/(2*(1+nu_com))
+    K_com = E_com/(3*(1-2*nu_com))
+    K_ten = E_ten/(3*(1-2*nu_ten))
     
-    epsilon = np.matrix([[eps[0],eps[3]/2,eps[5]/2],[eps[3]/2,eps[1],eps[4]/2],[eps[5]/2,eps[4]/2,eps[2]]])
-    
-    lamd,nor  = np.linalg.eig(epsilon)
     eps_h = sum(eps[:2])/3
-    if eps_h>0.0005: 
-        print('ten')
-        D = E_ten/((1+nu_ten)*(1-2*nu_ten))*np.array([[1-nu_ten,nu_ten,nu_ten,0],[nu_ten,1-nu_ten,nu_ten,0],[nu_ten,nu_ten,1-nu_ten,0],[0,0,0,(1-2*nu_ten)/2]])
-        
-    else:
-        print('Comp')
-        D = E_com/((1+nu_com)*(1-2*nu_com))*np.array([[1-nu_com,nu_com,nu_com,0],[nu_com,1-nu_com,nu_com,0],[nu_com,nu_com,1-nu_com,0],[0,0,0,(1-2*nu_com)/2]])
     
-    #sig = D_1*epskvot + D_2*epsrest Detta ska implementeras kanske
+    I_v = np.array([1,1,1,0,0,0])
+    I_vT = np.array([[1],[1],[1],[0],[0],[0]])
+    I_s = np.diag([1,1,1,0.5,0.5,0.5])
+    I_sdev = (I_s - 1/3*I_v*I_vT)
+    
+    eps_dev = np.matmul(I_sdev,eps)
+    eps_vM = np.sqrt(2/3)*np.sqrt(np.matmul(eps.T,np.matmul(I_sdev,eps)))
+    
+    eps_h = sum(eps[:2])/3
+
         
-    sigma = np.zeros(np.shape(eps))
-    sigma[:4] = np.matmul(D,eps[:4])
+    if eps_h >= sig_y/(3*G): 
+        print('Comp')
+        Gstar = sig_y/(3*eps_h)
+        #eps_hy = np.zeros(np.shape(eps))
+        #eps_hy[np.where(eps>0)] = sig_y/(3*G)
+        sigma_ten = 2*Gstar*eps_dev + K_ten*np.matmul(I_v*I_vT,eps)*(sig_y/(3*G*eps_h))
+        sigma_com = eps*0
+        D = 2*Gstar*I_sdev - 4*Gstar/(3*eps_h**2)*np.matmul(eps_dev.reshape(6,1),eps_dev.reshape(1,6)) + K_ten*I_v*I_vT*(sig_y/(3*G*eps_h))
+    else:
+        print('ten')
+        ten_quote = 0
+        sigma_com = 2*G*eps_dev + K_ten*np.matmul(I_v*I_vT,eps)
+        sigma_ten = eps*0
+        D = Dfun(E_com,nu_com)
+
+
+    sigma = sigma_com + sigma_ten
+    
     return sigma.reshape(6,1), D
+
+
+
+
+
+def Dfun(E,nu):
+    return E/((1+nu)*(1-2*nu))*np.array([[1-nu,nu,nu,0],[nu,1-nu,nu,0],[nu,nu,1-nu,0],[0,0,0,(1-2*nu)/2]])
+
+
 
 
