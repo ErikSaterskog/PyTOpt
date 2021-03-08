@@ -30,37 +30,33 @@ class Optimisation:
     
         return xnew
 
-    def mma(self,nElem,SIMP_penal,edof,f,ep,elemX,elemY,D,weightMatrix,volFrac,x,elementType,el_type,FEM):
+    def mma(self,nElem,SIMP_penal,edof,f,ep,elemX,elemY,D,weightMatrix,volFrac,x,elementType,el_type,FEM,materialFun):
         
         def Objfun(x,grad):
             
-            c = 0 
+            
             x = x.reshape(nElem,1)
-            #dc = np.zeros(np.shape(x))
             grad = grad.reshape(nElem,1)
             global U
-            U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementType)
-                        
+            U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementType,materialFun)
+            c = np.matmul(f.T,U)            
             for elem in range(nElem):
                 if ep[3]==1:
                     
                     if el_type==2:
-                        Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)   #!THIS COULD BE PLACED OUTSIDE OF LOOP!               #Element Stiffness Matrix for Triangular Element
+                        Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D) 
                     else:
-                        Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)[0]    #!THIS COULD BE PLACED OUTSIDE OF LOOP!           #Element Stiffness Matrix for Quad Element
+                        Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)[0]   
                         
                     Ue = U[np.ix_(edof[elem,:]-1)]
-                    c = c + x[elem][0]**(SIMP_penal)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                    
                     grad[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                     
                 else:
                     lambdaFe = lambdaF[np.ix_(edof[elem,:]-1)]
-                    fe = f[np.ix_(edof[elem,:]-1)]
-                    Ue = U[np.ix_(edof[elem,:]-1)]
-                    c = c + fe.T*Ue
                     grad[elem] = np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
-       
-            #grad[:] = np.minimum.reduce([x*10,abs(grad)])*np.sign(grad)
+            
+            
             grad[:] = Filter.Check(x,grad,weightMatrix)
             grad = grad.reshape(len(x),)
             x = x.reshape(len(x),)
@@ -81,8 +77,8 @@ class Optimisation:
         
         opt = nlopt.opt(nlopt.LD_MMA, len(x))           #Choosing optmisation algorithm
         opt.set_min_objective(Objfun)
-        lb = np.zeros(np.size(x))+0.001                              #Placeholders for now
-        ub = np.ones(np.size(x))                            #Placeholders for now
+        lb = np.zeros(np.size(x))+0.001                    
+        ub = np.ones(np.size(x))                           
         opt.set_lower_bounds(lb)
         opt.set_upper_bounds(ub)
         

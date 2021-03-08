@@ -174,7 +174,7 @@ def Main(g,el_type,force,bmarker,settings,mp,ep, materialFun):
                     dc[elem] = np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
        
             if Debug and loop==1:
-                dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem,elementType)
+                dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem,elementFun)
 
                 plt.plot(range(0,nElem),(1-dc_Num/dc)*100)
                 plt.xlabel('Element')
@@ -201,12 +201,11 @@ def Main(g,el_type,force,bmarker,settings,mp,ep, materialFun):
             
         
     else:
-        if ep[3]==1:
-            x = Opt.Optimisation().mma(nElem,SIMP_penal,edof,f,ep,elemX,elemY,D,weightMatrix,volFrac,x,elementFun,el_type,FEM)
-            x = x.reshape(nElem,1)
-            U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementFun)
-        else:
-            raise Exception('Not implemented yet!')
+        
+        x = Opt.Optimisation().mma(nElem,SIMP_penal,edof,f,ep,elemX,elemY,D,weightMatrix,volFrac,x,elementFun,el_type,FEM,materialFun)
+        x = x.reshape(nElem,1)
+        U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementFun,materialFun)
+        #raise Exception('Not implemented yet!')
             
             
     """ Visualisation """
