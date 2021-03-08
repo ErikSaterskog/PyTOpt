@@ -30,29 +30,36 @@ class Optimisation:
     
         return xnew
 
-    def mma(self,nElem,SIMP_penal,edof,coords,bc,f,ep,mp,Tri,elemX,elemY,D,weightMatrix,volFrac,x):
+    def mma(self,nElem,SIMP_penal,edof,f,ep,elemX,elemY,D,weightMatrix,volFrac,x,elementType,el_type,FEM):
         
         def Objfun(x,grad):
-        
+            
+            c = 0 
             x = x.reshape(nElem,1)
+            #dc = np.zeros(np.shape(x))
             grad = grad.reshape(nElem,1)
             global U
-            U = FE.FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)  #FEA
-            c= 0
-            if Tri:  #Tri Elements
-                for elem in range(0,nElem):  
-                    Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)   #!THIS COULD BE PLACED OUTSIDE OF LOOP!               #Element Stiffness Matrix for Triangular Element
+            U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementType)
+                        
+            for elem in range(nElem):
+                if ep[3]==1:
+                    
+                    if el_type==2:
+                        Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)   #!THIS COULD BE PLACED OUTSIDE OF LOOP!               #Element Stiffness Matrix for Triangular Element
+                    else:
+                        Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)[0]    #!THIS COULD BE PLACED OUTSIDE OF LOOP!           #Element Stiffness Matrix for Quad Element
+                        
                     Ue = U[np.ix_(edof[elem,:]-1)]
                     c = c + x[elem][0]**(SIMP_penal)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                     grad[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                     
-            else:    #Quad Elements
-                for elem in range(0,nElem):            
-                    Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)[0]    #!THIS COULD BE PLACED OUTSIDE OF LOOP!           #Element Stiffness Matrix for Quad Element
+                else:
+                    lambdaFe = lambdaF[np.ix_(edof[elem,:]-1)]
+                    fe = f[np.ix_(edof[elem,:]-1)]
                     Ue = U[np.ix_(edof[elem,:]-1)]
-                    c = c + x[elem][0]**(SIMP_penal)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
-                    grad[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
-            
+                    c = c + fe.T*Ue
+                    grad[elem] = np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
+       
             #grad[:] = np.minimum.reduce([x*10,abs(grad)])*np.sign(grad)
             grad[:] = Filter.Check(x,grad,weightMatrix)
             grad = grad.reshape(len(x),)
@@ -64,10 +71,12 @@ class Optimisation:
             return ce[0]
         
         def VolCon(x,grad):
-            grad[:] = 10#0.4**x.copy()
+            grad[:] = 4**x.copy()
+            x = x.reshape(nElem,1)
             grad = grad.reshape(nElem,1)
-            grad = Filter.Check(x,grad,weightMatrix)
+            grad[:] = Filter.Check(x,grad,weightMatrix)
             grad = grad.reshape(len(x),)
+            x = x.reshape(len(x),)
             return sum(x)-volFrac*len(x)
         
         opt = nlopt.opt(nlopt.LD_MMA, len(x))           #Choosing optmisation algorithm

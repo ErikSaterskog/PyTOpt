@@ -202,9 +202,9 @@ def Main(g,el_type,force,bmarker,settings,mp,ep, materialFun):
         
     else:
         if ep[3]==1:
-            x = Opt.Optimisation().mma(nElem,SIMP_penal,edof,coords,bc,f,ep,mp,1,elemX,elemY,D,weightMatrix,volFrac,x)
+            x = Opt.Optimisation().mma(nElem,SIMP_penal,edof,f,ep,elemX,elemY,D,weightMatrix,volFrac,x,elementFun,el_type,FEM)
             x = x.reshape(nElem,1)
-            U = FE.FE(x,SIMP_penal,edof,coords,bc,f,ep,mp)
+            U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementFun)
         else:
             raise Exception('Not implemented yet!')
             
