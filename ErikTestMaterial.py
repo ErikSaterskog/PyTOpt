@@ -28,9 +28,12 @@ def mat(eps,mp):
     else:# eps_h > low_lim and eps_h < high_lim:
         #ten
         print('ten')
-        ten_quote=np.min([((eps_h-low_lim)/(high_lim-low_lim)),1])
+        #ten_quote=np.min([((eps_h-low_lim)/(high_lim-low_lim)),1])
+        x=4500*(eps_h-low_lim)
+        ten_quote=1-np.exp(-x+4)/(1+np.exp(-x+4))
+        print(ten_quote)
+        #breakpoint()
 
-        
         
     comp_quote=1-ten_quote
     D=D_com*comp_quote + D_ten*ten_quote 
