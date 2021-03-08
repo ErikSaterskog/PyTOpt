@@ -15,25 +15,31 @@ import numpy as np
 import matplotlib.pyplot as plt
 import Mod_Hook as MH
 import calfem.core as cfc
+import ErikTestMaterial as etm
 
 E = 210e9
 nu= 0.3
 
 mp = [E,nu,0]
+numEval=1000
 
-D_lin = cfc.hooke(2,E,nu)
+#D_lin = cfc.hooke(2,E,nu)
 
-eps11 = np.linspace(0,0.01,1000)
+eps11 = np.linspace(-0.001,0.02,numEval)
 
-eps = np.zeros([6,1000])
+eps = np.zeros([6,numEval])
 sigma = eps.copy()
-sig_Lin = eps.copy()
+#sig_Lin = eps.copy()
 eps[0,:] = eps11
-for i in range(1,1000):
-    sigma[:,i],D = MH._mod_hook(eps[:,i],mp)
-    sig_Lin[0,i] = D_lin[0,0] * eps[0,i]
+for i in range(1,numEval):
+    #sigma[:,i],D = MH.mod_hook(eps[:,i],mp)
+    sigma_temp,D = etm.mat(eps[:,i],mp)
+    
+    sigma[:,i]=sigma_temp.reshape(6)
+    
+    #sig_Lin[0,i] = D_lin[0,0] * eps[0,i]
 
 plt.figure()
-plt.plot(eps[0,:],sigma[0,:])
+plt.plot(eps[0,1:],sigma[0,1:])
 
-plt.plot(eps[0,:],sig_Lin[0,:])
+#plt.plot(eps[0,:],sig_Lin[0,:])

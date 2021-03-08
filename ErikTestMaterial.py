@@ -11,12 +11,9 @@ def mat(eps,mp):
     nu_ten      = 0.3
     nu_com      = 0.3
     low_lim=0.0001
-    #high_lim=0.0025
     
     eps_h = sum(eps[:2])/3
     
-    
-
     D_ten=Dfun(E_ten,nu_ten)
     D_com=Dfun(E_com,nu_com) 
 
