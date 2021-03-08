@@ -10,17 +10,20 @@ def mat(eps,mp):
     E_com       = E_ten*3
     nu_ten      = 0.3
     nu_com      = 0.3
-    low_lim=0.0001
+    
+    low_lim=0.002
+    
     
     eps_h = sum(eps[:2])/3
     
     D_ten=Dfun(E_ten,nu_ten)
     D_com=Dfun(E_com,nu_com) 
 
-    x=2500*(eps_h-low_lim)
-    ten_quote=1-np.exp(-x+4)/(1+np.exp(-x+4))
-
+    x=1200*(eps_h-low_lim)
+    
+    ten_quote=1-np.exp(-x)/(1+np.exp(-x))
     comp_quote=1-ten_quote
+    
     D=D_com*comp_quote + D_ten*ten_quote 
     sigma[:4] = np.matmul(D,eps[:4])
     
