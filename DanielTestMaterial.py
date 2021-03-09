@@ -6,18 +6,25 @@ Created on Tue Mar  2 15:23:12 2021
 """
 
 import numpy as np
-import calfem.core as cfc
+
+def head(eps,mp):
+    
+    sig = mat(eps,mp)
+    
+    D = numD(eps,sig,mp)
+    
+    return sig.reshape(6,1),D
 
 def mat(eps,mp):
     
    
-    E       = mp[0]
-    nu      = 0.3
-    low_lim=0.0005
-    high_lim=0.0025
-    sig_y = 220e5
-    G = E/(2*(1+nu))
-    K = E/(3*(1-2*nu))
+    E1,E2       = mp[0]
+    nu1,nu2      = mp[1]
+    eps_y = mp[2]
+    G1 = E1/(2*(1+nu1))
+    K1 = E1/(3*(1-2*nu1))
+    G2 = E2/(2*(1+nu2))
+    K2 = E2/(3*(1-2*nu2))
     
     eps_h = sum(eps[:2])/3
     
@@ -26,27 +33,23 @@ def mat(eps,mp):
     I_s = np.diag([1,1,1,0.5,0.5,0.5])
     I_sdev = (I_s - 1/3*I_v*I_vT)
     
-    eps_dev = np.matmul(I_sdev,eps)
-    eps_vM = np.sqrt(2/3)*np.sqrt(np.matmul(eps.T,np.matmul(I_sdev,eps)))
-    
-        
-    if eps_h >= sig_y/(3*G): 
-        Gstar = sig_y/(3*eps_h)
-        Estar = 2*Gstar*(1+nu)
-        Kstar = Estar/(3*(1-2*nu))
-        sigma = 2*Gstar*eps_dev + Kstar*np.matmul(I_v*I_vT,eps)
-        D = numD(eps,eps_dev,Gstar,Kstar,I_v,I_vT,I_sdev)
-        #D = Dfun(Estar,nu)
-        #D = 2*Gstar*I_sdev - 4*sig_y/(9*eps_h**3)*np.matmul(eps_dev.reshape(6,1),eps_dev.reshape(1,6)) + Kstar*I_v*I_vT
+       
+    if eps_h >= eps_y: 
+        k = min([eps_h/eps_y-1,1])
+        eps1 = eps*(1-k)
+        eps2 = eps*k
+        eps_dev1 = np.matmul(I_sdev,eps1)
+        eps_dev2 = np.matmul(I_sdev,eps2)
     else:
-        sigma = 2*G*eps_dev + K*np.matmul(I_v*I_vT,eps)
-        D = Dfun(E,nu)
-        #D1 = numD(eps,eps_dev,G,K,I_v,I_vT,I_sdev)
-
-
+        k = 0
+        eps1 = eps*(1-k)
+        eps2 = eps*k
+        eps_dev1 = np.matmul(I_sdev,eps1)
+        eps_dev2 = np.matmul(I_sdev,eps2)
+        
+    sigma = 2*G1*eps_dev1 + K1*np.matmul(I_v*I_vT,eps1) + 2*G2*eps_dev2 + K2*np.matmul(I_v*I_vT,eps2)
     
-    
-    return sigma.reshape(6,1), D
+    return sigma
 
 
 
@@ -55,17 +58,15 @@ def mat(eps,mp):
 def Dfun(E,nu):
     return E/((1+nu)*(1-2*nu))*np.array([[1-nu,nu,nu,0],[nu,1-nu,nu,0],[nu,nu,1-nu,0],[0,0,0,(1-2*nu)/2]])
 
-def numD(eps,eps_dev,Gstar,Kstar,I_v,I_vT,I_sdev):
+def numD(eps,sig,mp):
     delta = 1e-7
-    sig1 = 2*Gstar*eps_dev + Kstar*np.matmul(I_v*I_vT,eps)
     D = np.zeros([6,6])
     for i in range(0,6):
         eps2 = eps.copy()
         eps2[i] = eps[i] + delta
-        eps_dev2 =  np.matmul(I_sdev,eps2)
-        sig2 = 2*Gstar*eps_dev2 + Kstar*np.matmul(I_v*I_vT,eps2)
+        sig2 = mat(eps2,mp)
         
-        D[i,:] = -(sig1-sig2)/delta
+        D[i,:] = (sig2-sig)/delta
     return D
     
 
