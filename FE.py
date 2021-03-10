@@ -199,7 +199,7 @@ class FE():
               
             R=fintGlobal-fextGlobal
             err = np.linalg.norm(R[self.freeDofs])
-
+            print(err)
             
             U[index1D] = U[index1D] - spsolve(K[index2D],R[self.freeDofs]).reshape(len(self.freeDofs),1)
                     

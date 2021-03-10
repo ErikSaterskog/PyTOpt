@@ -25,12 +25,12 @@ rMin       - For the filtering, how large radius should the filter take into
              a large elements into account when filtering each element.
 changeLimit- For OC as optimisation method, what tolerance for the change 
              between iteration is sufficiant.
-el_type    - 2 means triangular elements and 3 means quad elements.
 ep         -
              ptype     - 2 for plain strain
              t         - thickness 
              ir        - Integration rule
-             non/-liner- if 1 linear if 2 nonlinear
+             linear    - True if linear, else false
+             el_type    - 2 means triangular elements and 3 means quad elements.
 method     - 
              OC - Optimal Criterion methon
              MMA - Method of moving asymptotes
@@ -49,7 +49,7 @@ import calfem.geometry as cfg
 import calfem.vis as cfv
 import elastic as el
 import Main
-import DanielTestMaterial as dm
+import TestMaterial as tm
 
 g = cfg.Geometry()
 
@@ -62,13 +62,13 @@ g.point([0,0.5])               #3
 g.point([0,0.3])               #3
 
 
-g.spline([0, 1],marker=0)
-g.spline([1, 2],marker=1)
-g.spline([2, 3],marker=2)
-g.spline([3, 4],marker=3)
-g.spline([4, 5],marker=4)
-g.spline([5, 6],marker=5)
-g.spline([6, 0],marker=6)
+g.line([0, 1],marker=0)
+g.line([1, 2],marker=1)
+g.line([2, 3],marker=2)
+g.line([3, 4],marker=3)
+g.line([4, 5],marker=4)
+g.line([5, 6],marker=5)
+g.line([6, 0],marker=6)
 
 
 g.surface([0, 1, 2, 3, 4,5,6])
@@ -77,8 +77,8 @@ force = [-4e5,9,2] #First magnitude, second marker, third direction
 bmarker = 5
 
 
-E = [210e9,110e9] # Young's modulus
-nu = [0.3,0.3] #Poisson's ratio
+E = 210e9 # Young's modulus
+nu = 0.3 #Poisson's ratio
 eps_y = 7e-5
 
 
@@ -88,8 +88,7 @@ volFrac = 0.3 # Constraint on volume
 meshSize=0.05 # The average length of one element. 
 rMin = meshSize*0.7 # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.01 # How small change between two optmisation we allow before stopping.
-el_type = 2   #2-Tri,  3-Quad
-ep=[2,1,2,2]    #ep[ptype, thickness, integration rule(only used for QUAD),linear(1)/nonlinear(2)]  
+ep=[2,1,2,True,2]    #ep[ptype, thickness, integration rule(only used for QUAD),linear(1)/nonlinear(2),2-Tri,  3-Quad]  
 SIMP_penal = 3
 method='OC'
 Debug=False
@@ -100,9 +99,9 @@ settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 #sick.sick(epsilon,mp)
 #mh.mod_hook(epsilon, mp)
 #materialFun=el.elastic
-materialFun = dm.head
+materialFun = tm.head
 
-Main.Main(g, el_type, force, bmarker, settings, mp, ep, materialFun)
+Main.Main(g, force, bmarker, settings, mp, ep, materialFun)
 
 
 

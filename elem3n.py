@@ -3,10 +3,7 @@
 
 
 import numpy as np
-import Mod_Hook as mh
 from scipy.sparse.linalg import spsolve
-import elastic as el
-import sickmaterial as sick
 
 def  elem3n(ue, ex, ey, ep, mp, materialFun, eq=None):
 

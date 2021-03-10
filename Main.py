@@ -37,7 +37,7 @@ from scipy.sparse import lil_matrix
 import Debugger
 import MaterialModelSelection as MMS
 
-def Main(g,el_type,force,bmarker,settings,mp,ep, materialFun):
+def Main(g,force,bmarker,settings,mp,ep, materialFun):
     
     #Initiating
     change = 2
@@ -47,6 +47,8 @@ def Main(g,el_type,force,bmarker,settings,mp,ep, materialFun):
     #Settings
     E=mp[0]
     v=mp[1]
+    el_type=ep[4]
+    
     try:
         volFrac,meshSize, rMin, changeLimit,SIMP_penal,method,Debug = settings
     except:
@@ -67,13 +69,13 @@ def Main(g,el_type,force,bmarker,settings,mp,ep, materialFun):
     
     if el_type == 2:
         coords, edof, dofs, bdofs = mesh.tri()
-        if ep[3]==1:
+        if ep[3]:
             elementFun = MMS.LinTri
         else:
             elementFun = MMS.Tri    
-    elif el_type ==3:
+    elif el_type == 3:
         coords, edof, dofs, bdofs = mesh.quad()
-        if ep[3]==1:
+        if ep[3]:
             elementFun = MMS.LinQuad
         else:
             elementFun = MMS.Quad
