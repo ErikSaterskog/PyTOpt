@@ -1,13 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Feb  5 09:16:26 2021
 
-@author: Daniel
-
-
-Addition to the missing plani4s in CALFEM-Python
-
-"""
 
 import numpy as np
 import numpy.linalg

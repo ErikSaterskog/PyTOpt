@@ -48,7 +48,7 @@ Then we call on the Main module to start the optimisation.
 import numpy as np
 import calfem.geometry as cfg
 import calfem.vis as cfv
-import Main
+import PyTOpt
 import elastic as el
 import TestMaterial as tm
 
@@ -98,7 +98,7 @@ settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 #materialFun=el.elastic
 materialFun = tm.head
 
-Main.Main(g, force, bmarker, settings, mp, ep, materialFun)
+PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun)
 
 
 

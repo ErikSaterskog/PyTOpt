@@ -1,7 +1,7 @@
 
 import calfem.geometry as cfg
 import elastic as el
-import Main
+import PyTOpt
 
 g = cfg.Geometry()
 
@@ -39,7 +39,7 @@ settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 
 materialFun=el.elastic
 
-Main.Main(g, force, bmarker, settings, mp, ep, materialFun)
+PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun)
 
 
 

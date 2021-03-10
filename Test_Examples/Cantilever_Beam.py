@@ -48,7 +48,7 @@ import numpy as np
 import calfem.geometry as cfg
 import calfem.vis as cfv
 import elastic as el
-import Main
+import PyTOpt
 import TestMaterial as tm
 
 g = cfg.Geometry()
@@ -101,7 +101,7 @@ settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 #materialFun=el.elastic
 materialFun = tm.head
 
-Main.Main(g, force, bmarker, settings, mp, ep, materialFun)
+PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun)
 
 
 
