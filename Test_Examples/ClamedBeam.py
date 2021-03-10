@@ -4,7 +4,7 @@ Created on Fri Feb 19 16:04:08 2021
 
 @author: Daniel
 
-The example start by import the necessary libaries. After that is the geometry constructed.
+The example starts by importing the necessary libaries. After that is the geometry constructed.
 Do not change these. 
 The marker indicates an ID for the point or line. This ID is later used to 
 define boundary conditions and prescribed forces. Change these if you are sure
@@ -27,7 +27,19 @@ rMin       - For the filtering, how large radius should the filter take into
 changeLimit- For OC as optimisation method, what tolerance for the change 
              between iteration is sufficiant.
 el_type    - 2 means triangular elements and 3 means quad elements.
-Linear     - True or False
+ep         -
+             ptype     - 2 for plain strain
+             t         - thickness 
+             ir        - Integration rule
+             non/-liner- if 1 linear if 2 nonlinear
+method     - 
+             OC - Optimal Criterion methon
+             MMA - Method of moving asymptotes
+debug      - True/False if the sensitivity should be checked numerically.
+materialFun- Determine which material model that should be used. The user can 
+             add ones own material model as long as the input is a strain
+             and a material parametervector 
+
 Then we call on the Main module to start the optimisation.
 """
 
@@ -38,6 +50,8 @@ import calfem.geometry as cfg
 import calfem.vis as cfv
 import Main
 import elastic as el
+import DanielTestMaterial as dm
+
 
 g = cfg.Geometry()
 
@@ -60,19 +74,19 @@ force = [-4e7,9,2] #First magnitude, second marker, third direction
 bmarker = [1,4]
 
 
-E = 210e9 # Young's modulus
-nu = 0.3 #Poisson's ratio
+E = [210e9, 90e9] # Young's modulus
+nu = [0.3,0.3] #Poisson's ratio
 
-mp = [E,nu]
+mp = [E,nu,1e-4]
 
-volFrac = 0.3 # Constraint on 50% volume
-meshSize=0.1 # The average length of one element. 
+volFrac = 0.8 # Constraint on 50% volume
+meshSize=0.05 # The average length of one element. 
 rMin = meshSize*np.sqrt(2)*0.5 # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.01 # How small change between two optmisation we allow before stopping.
 el_type = 2   #2-Tri,  3-Quad
 
 
-ep=[2,1,2,1]    #ep[ptype, thickness, integration rule(only used for QUAD),linear(1)/nonlinear(2)]  
+ep=[2,1,2,2]    #ep[ptype, thickness, integration rule(only used for QUAD),linear(1)/nonlinear(2)]  
 SIMP_penal = 3
 method='OC'
 Debug=False
@@ -82,7 +96,8 @@ settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 
 #sick.sick(epsilon,mp)
 #mh.mod_hook(epsilon, mp)
-materialFun=el.elastic
+#materialFun=el.elastic
+materialFun = dm.head
 
 Main.Main(g, el_type, force, bmarker, settings, mp, ep, materialFun)
 

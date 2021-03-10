@@ -1,4 +1,28 @@
+"""
+This the main-module and is called by the user with the inputs
+g           - Geometry object
+el_type     - 2 if triangles, 3 if quad elements
+force       - A vector with the magnitude and position of the prescribed forces.
+bmarker     - A vector with the boundaries and prescribed displacements.
+settings    - Includes settings for restrictions on the optimisation and the filtering.
+                volfrac     - How much material is allowed
+                meshSize    - How big the average element should be.
+                rMin        - In how large radius the element should accknowledge other elements in the filter
+                changeLimit - A tolerance for the optimisation
+                SIMP_penal  - A penalty factor forcing elementdensity towards zero or one
+                method      - Which optimisation method should be used.
+                Debug       - A option to check the sensitivity analysis against numerical sensitivity.
+mp          - Material parameters
+ep          - Element parameters
+                ptype       - 2 if plain strain
+                t           - Thickness
+                ir          - Integration rule
+                non/lin     - 1 if linear analysis, 2 if nonlinear analysis
+materialFun - A material model with strain and mp as input and stress and consitutive matrix as output.
 
+The module ends by plotting the result of 
+
+"""
 import numpy as np
 import calfem.utils as cfu
 import Mesh
@@ -9,13 +33,8 @@ import Filter
 import time
 import matplotlib.pyplot as plt
 import calfem.core as cfc
-from scipy.sparse import csc_matrix, csr_matrix, lil_matrix
-import Mod_Hook as mh
-import Plani4s
+from scipy.sparse import lil_matrix
 import Debugger
-import elem3n
-from scipy.sparse.linalg import spsolve
-import elem4n
 import MaterialModelSelection as MMS
 
 def Main(g,el_type,force,bmarker,settings,mp,ep, materialFun):
@@ -92,7 +111,7 @@ def Main(g,el_type,force,bmarker,settings,mp,ep, materialFun):
 
     nElem=np.size(edof,0)
     
-    x =np.zeros([nElem,1])+1#volFrac
+    x =np.zeros([nElem,1])+volFrac
         
     #Check sizes, Initialize
     nx=coords[:,0]
@@ -196,7 +215,7 @@ def Main(g,el_type,force,bmarker,settings,mp,ep, materialFun):
             print('Change:     '+str(change))
             print('Iteration:  '+str(loop))
             print('---------------------------')
-            if loop == 50:                                                          # If alternating
+            if loop == 20:                                                          # If alternating
                 break
             
         
