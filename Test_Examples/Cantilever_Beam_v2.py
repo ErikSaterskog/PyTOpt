@@ -26,9 +26,7 @@ rMin       - For the filtering, how large radius should the filter take into
 changeLimit- For OC as optimisation method, what tolerance for the change 
              between iteration is sufficiant.
 ep         -
-             ptype     - 2 for plain strain
              t         - thickness 
-             ir        - Integration rule
              linear    - True if linear, else false
              el_type    - 2 means triangular elements and 3 means quad elements.
 method     - 
@@ -54,9 +52,9 @@ import TestMaterial as tm
 g = cfg.Geometry()
 
 g.point([0,0])                 #0
-g.point([1,0])                 #1
-g.point([1,0.4],marker=9)      #2               
-g.point([1,0.8])               #3
+g.point([2,0])                 #1
+g.point([2,0.4],marker=9)      #2               
+g.point([2,0.8])               #3
 g.point([0,0.8])               #4
 
 
@@ -76,17 +74,17 @@ bmarker = 4
 
 E = 210e9 # Young's modulus
 nu = 0.3 #Poisson's ratio
-eps_y = 7e-5
+eps_y = 7e-6
 
 
 mp = [E,nu,eps_y]
 
-volFrac = 0.3 # Constraint on volume
-meshSize=0.05 # The average length of one element. 
+volFrac = 0.5 # Constraint on volume
+meshSize=0.12 # The average length of one element. 
 rMin = meshSize*0.7 # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.01 # How small change between two optmisation we allow before stopping.
-ep=[2,1,2,True,2]    #ep[ptype, thickness, integration rule(only used for QUAD),linear(1)/nonlinear(2),2-Tri,  3-Quad]  
-SIMP_penal = 2
+ep=[1,True,2]    #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
+SIMP_penal = 3
 method='OC'
 Debug=False
 

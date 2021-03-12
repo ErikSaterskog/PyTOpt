@@ -32,7 +32,7 @@ E = 210e9
 nu = 0.3 
 mp = [E,nu]
 
-ep=[2,1,2,True,2]
+ep=[1,True,2]    #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
 
 settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 

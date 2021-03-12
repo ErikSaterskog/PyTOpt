@@ -26,9 +26,7 @@ rMin       - For the filtering, how large radius should the filter take into
 changeLimit- For OC as optimisation method, what tolerance for the change 
              between iteration is sufficiant.
 ep         -
-             ptype     - 2 for plain strain
              t         - thickness 
-             ir        - Integration rule
              linear    - True if linear, else false
              el_type    - 2 means triangular elements and 3 means quad elements.
 method     - 
@@ -88,7 +86,7 @@ volFrac = 0.3 # Constraint on volume
 meshSize=0.05 # The average length of one element. 
 rMin = meshSize*0.7 # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.01 # How small change between two optmisation we allow before stopping.
-ep=[2,1,2,True,2]    #ep[ptype, thickness, integration rule(only used for QUAD),linear(1)/nonlinear(2),2-Tri,  3-Quad]  
+ep=[1,True,2]    #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
 SIMP_penal = 3
 method='OC'
 Debug=False

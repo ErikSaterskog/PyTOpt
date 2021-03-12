@@ -47,7 +47,10 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
     #Settings
     E=mp[0]
     v=mp[1]
-    el_type=ep[4]
+    el_type=ep[2]
+    ptype=2
+    intRule=2
+    ep=[ptype, ep[0], intRule, ep[1], ep[2]]
     
     try:
         volFrac,meshSize, rMin, changeLimit,SIMP_penal,method,Debug = settings
@@ -180,7 +183,7 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
             tic=time.perf_counter()
             
             for elem in range(nElem):
-                if ep[3]==1:
+                if ep[3]:
                     
                     if el_type==2:
                         Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)   #!THIS COULD BE PLACED OUTSIDE OF LOOP!               #Element Stiffness Matrix for Triangular Element
