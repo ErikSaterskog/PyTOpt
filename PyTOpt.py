@@ -36,6 +36,7 @@ import calfem.core as cfc
 from scipy.sparse import lil_matrix
 import Debugger
 import MaterialModelSelection as MMS
+import json
 
 def Main(g,force,bmarker,settings,mp,ep, materialFun):
     
@@ -43,7 +44,7 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
     change = 2
     loop = 0
     ticGlobal=time.perf_counter()
-    
+    save=True
     
     
     #Settings
@@ -240,10 +241,31 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
     timeMin=(tocGlobal-ticGlobal)/60
     print('Total computation time: '+str(int(timeMin))+'m '+str(round(np.mod(timeMin,1)*60,1))+'s')
     
+
+    if save:
+        data = {'x': x.tolist(),'coords': coords.tolist(),'edof': edof.tolist(), 'el_type': el_type}
+        with open('Saved_Results/myfile.json', 'w') as outfile:
+            json.dump(data, outfile, indent=4)
+    
     cfv.draw_element_values(x, coords, edof, 2, el_type,displacements=None,
                       draw_elements=True, draw_undisplaced_mesh=False, 
                       title="Density", magnfac=1.0,clim=(0,1))
     
     cfv.showAndWait()
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
