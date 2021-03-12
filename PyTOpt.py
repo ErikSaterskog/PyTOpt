@@ -42,6 +42,8 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
     #Initiating
     change = 2
     loop = 0
+    ticGlobal=time.perf_counter()
+    
     
     
     #Settings
@@ -233,6 +235,10 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
             
             
     """ Visualisation """
+    
+    tocGlobal=time.perf_counter()
+    timeMin=(tocGlobal-ticGlobal)/60
+    print('Total computation time: '+str(int(timeMin))+'m '+str(round(np.mod(timeMin,1)*60,1))+'s')
     
     cfv.draw_element_values(x, coords, edof, 2, el_type,displacements=None,
                       draw_elements=True, draw_undisplaced_mesh=False, 
