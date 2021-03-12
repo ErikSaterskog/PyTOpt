@@ -1,5 +1,22 @@
+"""
+
+PyTOpts FEM module
+
+Contains an initiation of a FEM simulation and two solvers, a linear and a nonlinear.
+
+The initiation of the FEM simulation determine the number degrees of freedom,
+number of elements, the freedofs and the position of each element. All this is 
+independet of the type of solver. 
+
+The linear solver starts by determine the stiffness matrix K according to the material model.
+With this and the global external forces is the displacement calculated.
+
+The nonlinear solver uses the Newton-Raphson iteration method. It calculates the
+internal forcevector and checks the differens with the external force vector. 
+The resultant will influence the next guess of the displacements.
 
 
+"""
 import numpy as np
 import time
 from scipy.sparse import csc_matrix, linalg, csr_matrix, lil_matrix, coo_matrix
