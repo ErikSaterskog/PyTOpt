@@ -33,18 +33,14 @@ def mat(eps,mp):
     
        
     if eps_h >= eps_y:
-        k = max([min([1-eps_y/eps_h,1]),0])
-        eps1 = eps*(1-k)
-        eps2 = eps*k
-        eps_dev1 = np.matmul(I_sdev,eps1)
-        eps_dev2 = np.matmul(I_sdev,eps2)
-            
+        k = max([min([1-eps_y/eps_h,1]),0])            
     else:
         k = 0
-        eps1 = eps*(1-k)
-        eps2 = eps*k
-        eps_dev1 = np.matmul(I_sdev,eps1)
-        eps_dev2 = np.matmul(I_sdev,eps2)
+        
+    eps1 = eps*(1-k)
+    eps2 = eps*k
+    eps_dev1 = np.matmul(I_sdev,eps1)
+    eps_dev2 = np.matmul(I_sdev,eps2)
         
         
     sigma = 2*G1*eps_dev1 + K1*np.matmul(I_v*I_vT,eps1) + 2*G2*eps_dev2 + K2*np.matmul(I_v*I_vT,eps2)
