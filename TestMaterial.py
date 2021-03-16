@@ -16,7 +16,7 @@ def mat(eps,mp):
     nu1      = mp[1]
     eps_y    = mp[2]
     
-    E2 = E1*0.6
+    E2 = E1*0.4
     nu2 = nu1
     
     G1 = E1/(2*(1+nu1))
@@ -31,11 +31,17 @@ def mat(eps,mp):
     I_s = np.diag([1,1,1,0.5,0.5,0.5])
     I_sdev = (I_s - 1/3*I_v*I_vT)
     
-       
+    dkdeps = np.zeros([1,6])   
     if eps_h >= eps_y:
-        k = 1-eps_y/eps_h           
+        k = 1-eps_y/eps_h
+        for i in [0,1,3]:
+            if abs(eps[i])>1e-20: 
+                dkdeps[0,i] = eps_y/(eps_h*3*eps[i])
+            else:
+                dkdeps[0,i] = 0
     else:
         k = 0
+        
         
     eps1 = eps*(1-k)
     eps2 = eps*k
@@ -45,7 +51,10 @@ def mat(eps,mp):
         
     sigma = 2*G1*eps_dev1 + K1*np.matmul(I_v*I_vT,eps1) + 2*G2*eps_dev2 + K2*np.matmul(I_v*I_vT,eps2)
 
-    D = (2*G1*I_sdev + K1*I_v*I_vT)*(1-k) + (2*G1*I_sdev + K1*I_v*I_vT)*k
+    #D = (2*G1*I_sdev + K1*I_v*I_vT)*(1-k) + (2*G1*I_sdev + K1*I_v*I_vT)*k
+    
+    D = (2*G1*I_sdev + K1*I_v*I_vT)*(1-k+eps.reshape(6,1)*dkdeps) + (2*G1*I_sdev + K1*I_v*I_vT)*(k-eps.reshape(6,1)*dkdeps)
+    
     
     return sigma, D
 
