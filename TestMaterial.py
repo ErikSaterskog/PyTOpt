@@ -3,9 +3,9 @@ import numpy as np
 
 def head(eps,mp):
     
-    sig = mat(eps,mp)
+    sig, D = mat(eps,mp)
     
-    D = numD(eps,sig,mp)
+    #D = numD(eps,sig,mp)
     
     return sig.reshape(6,1),D
 
@@ -16,7 +16,7 @@ def mat(eps,mp):
     nu1      = mp[1]
     eps_y    = mp[2]
     
-    E2 = E1*0.7
+    E2 = E1*0.6
     nu2 = nu1
     
     G1 = E1/(2*(1+nu1))
@@ -33,7 +33,7 @@ def mat(eps,mp):
     
        
     if eps_h >= eps_y:
-        k = max([min([1-eps_y/eps_h,1]),0])            
+        k = 1-eps_y/eps_h           
     else:
         k = 0
         
@@ -44,8 +44,10 @@ def mat(eps,mp):
         
         
     sigma = 2*G1*eps_dev1 + K1*np.matmul(I_v*I_vT,eps1) + 2*G2*eps_dev2 + K2*np.matmul(I_v*I_vT,eps2)
+
+    D = (2*G1*I_sdev + K1*I_v*I_vT)*(1-k) + (2*G1*I_sdev + K1*I_v*I_vT)*k
     
-    return sigma
+    return sigma, D
 
 
 
