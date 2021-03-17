@@ -224,9 +224,16 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
             print('Change:     '+str(change))
             print('Iteration:  '+str(loop))
             print('---------------------------')
-            if loop == 20:                                                          # If alternating
+            if loop == 50:                                                          # If alternating
                 break
             
+            if loop % 5 == 0: 
+                fig, ax = plt.subplots()
+                for j in range(0,nElem):
+                    ax.fill(elemX[j,:], elemY[j,:], color = [1,1,1]*(1-x[j]))
+                    ax.axis('equal')
+                plt.pause(1) 
+                
         
     else:
         
@@ -254,17 +261,9 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
     fig, ax = plt.subplots()
     for j in range(0,nElem):
         ax.fill(elemX[j,:], elemY[j,:], color = [1,1,1]*(1-x[j]))
+        ax.axis('equal')
     plt.show()    
-    
-    #cfv.draw_element_values(x, coords, edof, 2, el_type,displacements=None,
-    #                  draw_elements=True, draw_undisplaced_mesh=False, 
-    #                  title="Density", magnfac=1.0,clim=(0,1))
-    
-   
-    #cfv.showAndWait()
 
-    
-    
     
     
     
