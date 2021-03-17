@@ -55,6 +55,7 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
     ptype=2
     intRule=2
     ep=[ptype, ep[0], intRule, ep[1], ep[2]]
+    plt.rcParams["figure.dpi"] = 200
     
     try:
         volFrac,meshSize, rMin, changeLimit,SIMP_penal,method,Debug = settings
@@ -231,8 +232,8 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
                 fig, ax = plt.subplots()
                 for j in range(0,nElem):
                     ax.fill(elemX[j,:], elemY[j,:], color = [1,1,1]*(1-x[j]))
-                    ax.axis('equal')
-                plt.pause(1) 
+                ax.axis('equal')
+                plt.show() 
                 
         
     else:
