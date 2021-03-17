@@ -37,6 +37,7 @@ from scipy.sparse import lil_matrix
 import Debugger
 import MaterialModelSelection as MMS
 import json
+#import calfem.vis_mpl as cvm
 
 def Main(g,force,bmarker,settings,mp,ep, materialFun):
     
@@ -44,7 +45,7 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
     change = 2
     loop = 0
     ticGlobal=time.perf_counter()
-    save=True
+    save=False
     
     
     #Settings
@@ -247,11 +248,20 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
         with open('Saved_Results/myfile.json', 'w') as outfile:
             json.dump(data, outfile, indent=4)
     
-    cfv.draw_element_values(x, coords, edof, 2, el_type,displacements=None,
-                      draw_elements=True, draw_undisplaced_mesh=False, 
-                      title="Density", magnfac=1.0,clim=(0,1))
     
-    cfv.showAndWait()
+    
+    
+    fig, ax = plt.subplots()
+    for j in range(0,nElem):
+        ax.fill(elemX[j,:], elemY[j,:], color = [1,1,1]*(1-x[j]))
+    plt.show()    
+    
+    #cfv.draw_element_values(x, coords, edof, 2, el_type,displacements=None,
+    #                  draw_elements=True, draw_undisplaced_mesh=False, 
+    #                  title="Density", magnfac=1.0,clim=(0,1))
+    
+   
+    #cfv.showAndWait()
 
     
     
