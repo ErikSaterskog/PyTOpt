@@ -15,17 +15,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import Mod_Hook as MH
 import calfem.core as cfc
-import TestMaterial as tm
+import Material_Bilinear as MB
 
 E = 210e9
 nu= 0.3
 
-mp = [E,nu,0]
+mp = [E,nu,0.002]
 numEval=1000
 
 #D_lin = cfc.hooke(2,E,nu)
 
-eps11 = np.linspace(0.002,0.005,numEval)
+eps11 = np.linspace(-0.002,0.005,numEval)
 
 eps = np.zeros([6,numEval])
 sigma = eps.copy()
@@ -33,7 +33,7 @@ sigma = eps.copy()
 eps[0,:] = eps11
 for i in range(1,numEval):
     
-    sigma_temp,D = tm.head(eps[:,i],mp)
+    sigma_temp,D = MB.head(eps[:,i],mp)
     sigma[:,i]=sigma_temp.reshape(6)
 
 plt.figure()

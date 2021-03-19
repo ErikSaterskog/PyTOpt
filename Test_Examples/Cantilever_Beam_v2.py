@@ -45,9 +45,9 @@ Then we call on the Main module to start the optimisation.
 import numpy as np
 import calfem.geometry as cfg
 import calfem.vis as cfv
-import elastic as el
+import Material_Elastic as me
 import PyTOpt
-import TestMaterial as tm
+import Material_Bilinear as mb
 
 g = cfg.Geometry()
 
@@ -94,7 +94,7 @@ settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 #sick.sick(epsilon,mp)
 #mh.mod_hook(epsilon, mp)
 #materialFun=el.elastic
-materialFun = tm.head
+materialFun = mb.head
 
 PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun)
 

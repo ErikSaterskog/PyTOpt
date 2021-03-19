@@ -44,16 +44,16 @@ import numpy as np
 import calfem.geometry as cfg
 import calfem.vis as cfv
 import PyTOpt
-import elastic as el
-import TestMaterial as tm
+import Material_Elastic as me
+import Material_Bilinear as mb
 
 
 g = cfg.Geometry()
 
 g.point([0,0])                 #0
 g.point([30,0])
-g.point([35,0])
-g.point([65,0])
+g.point([45,0])
+g.point([55,0])
 g.point([70,0])
 g.point([100,0])
 g.point([100,25])                 #1
@@ -71,8 +71,8 @@ g.line([7, 0],marker=7)
 
 g.surface([0, 1, 2, 3, 4, 5, 6, 7])
 
-force = [-4e7,6,2] #First magnitude, second marker, third direction
-bmarker = [1,3,5,7]
+force = [-1e6,6,2] #First magnitude, second marker, third direction
+bmarker = [7]
 
 
 E = 210e9 # Young's modulus
@@ -97,7 +97,7 @@ settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 #sick.sick(epsilon,mp)
 #mh.mod_hook(epsilon, mp)
 #materialFun=el.elastic
-materialFun = tm.head
+materialFun = me.head
 
 PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun)
 

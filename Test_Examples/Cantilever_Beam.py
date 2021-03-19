@@ -47,7 +47,8 @@ import calfem.geometry as cfg
 import calfem.vis as cfv
 import elastic as el
 import PyTOpt
-import TestMaterial as tm
+import Material_Bilinear as mb
+import Material_ModifiedHooke as mm
 
 g = cfg.Geometry()
 
@@ -71,22 +72,22 @@ g.line([6, 0],marker=6)
 
 g.surface([0, 1, 2, 3, 4,5,6])
 
-force = [-4e5,9,2] #First magnitude, second marker, third direction
+force = [-1e6,9,2] #First magnitude, second marker, third direction
 bmarker = 5
 
 
 E = 210e9 # Young's modulus
 nu = 0.3 #Poisson's ratio
-eps_y = 7e-5
+eps_y = 0
 
 
 mp = [E,nu,eps_y]
 
 volFrac = 0.3 # Constraint on volume
-meshSize=0.05 # The average length of one element. 
+meshSize=0.04 # The average length of one element. 
 rMin = meshSize*0.7 # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.01 # How small change between two optmisation we allow before stopping.
-ep=[1,True,2]    #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
+ep=[1,False,2]    #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
 SIMP_penal = 3
 method='OC'
 Debug=False
@@ -95,9 +96,9 @@ settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 
 
 #sick.sick(epsilon,mp)
-#mh.mod_hook(epsilon, mp)
+#materialFun=mh.mod_hooke
 #materialFun=el.elastic
-materialFun = tm.head
+materialFun = mb.head
 
 PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun)
 
