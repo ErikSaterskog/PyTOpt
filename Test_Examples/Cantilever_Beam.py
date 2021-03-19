@@ -40,16 +40,9 @@ materialFun- Determine which material model that should be used. The user can
 Then we call on the Main module to start the optimisation.
 """
 
-
-#Really simple test
-import numpy as np
 import calfem.geometry as cfg
-import calfem.vis as cfv
-import elastic as el
 import PyTOpt
-import Material_Bilinear as mb
-import Material_ModifiedHooke as mm
-
+import Material_Routine_Selection as mrs
 g = cfg.Geometry()
 
 g.point([0,0])                 #0
@@ -94,11 +87,7 @@ Debug=False
 
 settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 
-
-#sick.sick(epsilon,mp)
-#materialFun=mh.mod_hooke
-#materialFun=el.elastic
-materialFun = mb.head
+materialFun = mrs.elastic
 
 PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun)
 
