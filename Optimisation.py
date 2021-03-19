@@ -28,32 +28,36 @@ class Optimisation:
     
         return xnew
 
-    def mma(self,nelem,SIMP_penal,edof,f,ep,elemx,elemy,D,weightMatrix,volFrac,x,elementType,el_type,FEM,materialFun):
+    def mma(self,nelem,SIMP_penal,edof,f,ep,elemx,elemy,D,weightMatrix,volFrac,x,elementType,el_type,FEM,materialFun,eq=None):
         
         def Objfun(x,grad):
             x = x.reshape(nelem,1)
             grad = grad.reshape(nelem,1)
             global U
-            U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementType,materialFun)
+            U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementType,materialFun,eq)
             c = np.matmul(f.T,U)            
             for elem in range(nelem):
                 if ep[3]==1:
                     
                     if el_type==2:
-                        Ke=cfc.plante(elemx[elem,:],elemy[elem,:],ep[0:2],D) 
+                        Ke=cfc.plante(elemx[elem,:],elemy[elem,:],ep[0:2],D)  #Element Stiffness Matrix for Triangular Element
+                        eqe=[eq,eq,eq]
+                        eqe=np.array(eqe).reshape(1,6)
                     else:
-                        Ke=cfc.plani4e(elemx[elem,:],elemy[elem,:],ep,D)[0]   
+                        Ke=cfc.plani4e(elemx[elem,:],elemy[elem,:],ep,D)[0]  #Element Stiffness Matrix for Quad Element
+                        eqe=[eq,eq,eq,eq]
+                        eqe=np.array(eqe).reshape(1,8)   
                         
                     Ue = U[np.ix_(edof[elem,:]-1)]
                     
-                    grad[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                    grad[elem] =  np.matmul(eqe,Ue)*SIMP_penal*x[elem][0]**(SIMP_penal-1)  - SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                     
                 else:
                     lambdaFe = lambdaF[np.ix_(edof[elem,:]-1)]
                     grad[elem] = np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
             
             
-            grad[:] = Filter.Check(x,grad,weightMatrix)
+            grad[:] = Filter.Filter(x,grad,weightMatrix)
             grad = grad.reshape(len(x),)
             x = x.reshape(len(x),)
             
@@ -66,7 +70,7 @@ class Optimisation:
             grad[:] = 4**x.copy()
             x = x.reshape(nelem,1)
             grad = grad.reshape(nelem,1)
-            grad[:] = Filter.Check(x,grad,weightMatrix)
+            grad[:] = Filter.Filter(x,grad,weightMatrix)
             grad = grad.reshape(len(x),)
             x = x.reshape(len(x),)
             return sum(x)-volFrac*len(x)

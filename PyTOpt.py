@@ -38,7 +38,7 @@ import Element_Routine_Selection as ERS
 import json
 
 
-def Main(g,force,bmarker,settings,mp,ep, materialFun):
+def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
     
     #Initiating
     change = 2
@@ -178,7 +178,7 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
             dc = xold.copy() 
             
         
-            U,dR,lambdaF,sig_VM = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun)
+            U,dR,lambdaF,sig_VM = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
                         
             tic=time.perf_counter()
             
@@ -187,11 +187,16 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
                     
                     if el_type==2:
                         Ke=cfc.plante(elemx[elem,:],elemy[elem,:],ep[0:2],D)   #!THIS COULD BE PLACED OUTSIDE OF LOOP!               #Element Stiffness Matrix for Triangular Element
+                        eqe=[eq,eq,eq]
+                        eqe=np.array(eqe).reshape(1,6)
                     else:
                         Ke=cfc.plani4e(elemx[elem,:],elemy[elem,:],ep,D)[0]    #!THIS COULD BE PLACED OUTSIDE OF LOOP!           #Element Stiffness Matrix for Quad Element
-                        
+                        eqe=[eq,eq,eq,eq]
+                        eqe=np.array(eqe).reshape(1,8)
+
                     Ue = U[np.ix_(edof[elem,:]-1)]
-                    dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+
+                    dc[elem] = np.matmul(eqe,Ue)*SIMP_penal*x[elem][0]**(SIMP_penal-1)  -  SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                     
                 else:
                     lambdaFe = lambdaF[np.ix_(edof[elem,:]-1)]
@@ -200,7 +205,7 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
                     if dc[elem] >0:
                         print(str(elem) + ':' +str(dc[elem]))
                         dc[elem] = 0
-       
+                        
             if Debug and loop==1:
                 dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nelem,elementFun)
 
@@ -238,9 +243,9 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
         
     elif method =='MMA':
         
-        x = Opt.Optimisation().mma(nelem,SIMP_penal,edof,f,ep,elemx,elemy,D,weightMatrix,volFrac,x,elementFun,el_type,FEM,materialFun)
+        x = Opt.Optimisation().mma(nelem,SIMP_penal,edof,f,ep,elemx,elemy,D,weightMatrix,volFrac,x,elementFun,el_type,FEM,materialFun,eq)
         x = x.reshape(nelem,1)
-        U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementFun,materialFun)
+        #U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementFun,materialFun,eq)
      
     else:
         raise Exception('No Optimisation method of that names')

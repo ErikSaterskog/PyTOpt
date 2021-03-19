@@ -68,7 +68,7 @@ class FE():
         
     
         
-    def fe(self,x,SIMP_penal,F,ep,elementFun,materialFun):
+    def fe(self,x,SIMP_penal,F,ep,elementFun,materialFun, eq=None):
         #Settings
         epLin=ep.copy()
         epLin[3]=1
@@ -86,7 +86,7 @@ class FE():
                 
             edofIndex=(self.edof[elem,:]-1).tolist() 
 
-            Ke, fint, fext, stress, epsilon=elementFun(np.zeros(np.size(self.edof,1),), self.elemX[elem,:], self.elemY[elem,:], epLin, self.mp, materialFun) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
+            Ke, fint, fext, stress, epsilon=elementFun(np.zeros(np.size(self.edof,1),), self.elemX[elem,:], self.elemY[elem,:], epLin, self.mp, materialFun, eq) 
 
             Ke=np.matrix(Ke)               
 
@@ -112,7 +112,7 @@ class FE():
         return self.U
     
     
-    def fe_nl(self,x,SIMP_penal,F,ep,elementFun, materialFun):
+    def fe_nl(self,x,SIMP_penal,F,ep,elementFun, materialFun, eq=None):
         """
         INPUT:
             x          - element densities, design variables
@@ -170,7 +170,7 @@ class FE():
                 
                 Ue = U[edofIndex1D]
                 
-                Ke, fint, fext, sig, epsilon=elementFun(Ue.reshape(np.size(self.edof,1),), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp, materialFun) 
+                Ke, fint, fext, sig, epsilon=elementFun(Ue.reshape(np.size(self.edof,1),), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp, materialFun, eq) 
                 Ke=np.matrix(Ke)
                 
                 fextGlobal[edofIndex1D]+=fext

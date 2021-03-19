@@ -67,6 +67,7 @@ g.surface([0, 1, 2, 3, 4,5,6])
 
 force = [-1e6,9,2]      #First magnitude, second marker, third direction
 bmarker = 5
+eq=[0,0]
 
 
 E = 210e9               # Young's modulus
@@ -77,10 +78,10 @@ eps_y = 0
 mp = [E,nu,eps_y]
 
 volFrac = 0.3           # Constraint on volume
-meshSize=0.4           # The average length of one element. 
+meshSize=0.06            # The average length of one element. 
 rMin = meshSize*0.7     # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.01        # How small change between two optmisation we allow before stopping.
-ep=[1,False,2]          #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
+ep=[1,True,2]          #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
 SIMP_penal = 3
 method='OC'
 Debug=False
@@ -89,7 +90,7 @@ settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 
 materialFun = mrs.Bilinear
 
-PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun)
+PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun, eq)
 
 
 
