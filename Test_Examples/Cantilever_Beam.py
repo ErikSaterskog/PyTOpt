@@ -67,7 +67,7 @@ g.surface([0, 1, 2, 3, 4,5,6])
 
 force = [-1e6,9,2]      #First magnitude, second marker, third direction
 bmarker = 5
-eq=[0,0]
+eq=[0,-9.81]
 
 
 E = 210e9               # Young's modulus

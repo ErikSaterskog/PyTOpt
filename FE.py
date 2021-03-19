@@ -79,13 +79,14 @@ class FE():
         row=[]
         col=[]
         data=[]
-        
+        fext_global = F.copy()
         #ASSEMBLE, should be done using coo_matrix() if possible
         
         for elem in range(self.nElem):  
                 
             edofIndex=(self.edof[elem,:]-1).tolist() 
-
+            edofIndex1D=np.ix_(self.edof[elem,:]-1)
+            
             Ke, fint, fext, stress, epsilon=elementFun(np.zeros(np.size(self.edof,1),), self.elemX[elem,:], self.elemY[elem,:], epLin, self.mp, materialFun, eq) 
 
             Ke=np.matrix(Ke)               
@@ -93,6 +94,8 @@ class FE():
             row.extend(edofIndex*len(edofIndex))
             col.extend(np.repeat(edofIndex,len(edofIndex)))
             data.extend(np.reshape(Ke*x[elem][0]**SIMP_penal,np.size(Ke)).tolist()[0])
+            
+            fext_global[edofIndex1D] += fext*x[elem][0]**SIMP_penal
 
         K=coo_matrix((data,(row,col)),shape=(self.ndof,self.ndof))
         K=K.tocsc()
@@ -100,7 +103,7 @@ class FE():
         toc1 = time.perf_counter()
         tic2 = time.perf_counter()
         
-        self.U[np.ix_(self.freedofs)] = spsolve(K[np.ix_(self.freedofs,self.freedofs)],F[np.ix_(self.freedofs)]).reshape(len(self.freedofs),1)
+        self.U[np.ix_(self.freedofs)] = spsolve(K[np.ix_(self.freedofs,self.freedofs)],fext_global[np.ix_(self.freedofs)]).reshape(len(self.freedofs),1)
         toc2 = time.perf_counter()
         
     
@@ -173,9 +176,9 @@ class FE():
                 Ke, fint, fext, sig, epsilon=elementFun(Ue.reshape(np.size(self.edof,1),), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp, materialFun, eq) 
                 Ke=np.matrix(Ke)
                 
-                fextGlobal[edofIndex1D]+=fext
+                fextGlobal[edofIndex1D]+=fext*x[elem][0]**SIMP_penal
                 fintGlobal[edofIndex1D]+=fint*x[elem][0]**SIMP_penal
-                dR[elem,:] = (SIMP_penal*x[elem][0]**(SIMP_penal-1)*fint).reshape(np.size(self.edof,1),)
+                dR[elem,:] = (SIMP_penal*x[elem][0]**(SIMP_penal-1)*fint).reshape(np.size(self.edof,1),)-(SIMP_penal*x[elem][0]**(SIMP_penal-1)*fext).reshape(np.size(self.edof,1),)
                 
                 row.extend(edofIndexList*len(edofIndexList))
                 col.extend(np.repeat(edofIndexList,len(edofIndexList)))
@@ -197,7 +200,7 @@ class FE():
             U[index1D] = U[index1D] - spsolve(K[index2D],R[self.freedofs]).reshape(len(self.freedofs),1)
                     
 
-        lambdaF[index1D] = -spsolve(K[index2D],F[self.freedofs]).reshape(len(self.freedofs),1)
+        lambdaF[index1D] = -spsolve(K[index2D],fextGlobal[self.freedofs]).reshape(len(self.freedofs),1)
               
         
         print('N.iters:    ' + str(newtonIt))

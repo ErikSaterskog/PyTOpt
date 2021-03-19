@@ -40,20 +40,17 @@ Then we call on the Main module to start the optimisation.
 
 
 #Really simple test
-import numpy as np
 import calfem.geometry as cfg
-import calfem.vis as cfv
 import PyTOpt
-import Material_Elastic as me
-import Material_Bilinear as mb
+import Material_Routine_Selection as mrs
 
 
 g = cfg.Geometry()
 
 g.point([0,0])                 
 g.point([30,0])
-g.point([45,0])
-g.point([55,0])
+g.point([35,0])
+g.point([65,0])
 g.point([70,0])
 g.point([100,0])
 g.point([100,25])                 
@@ -71,17 +68,18 @@ g.line([7, 0],marker=7)
 
 g.surface([0, 1, 2, 3, 4, 5, 6, 7])
 
-force = [-1e6,6,2] #First magnitude, second marker, third direction
-bmarker = [7]
+force = [-7e4,6,2] #First magnitude, second marker, third direction
+bmarker = [1,3,5,7]
 
 
 E = 210e9       # Young's modulus
 nu = 0.3        #Poisson's ratio
+eq = [0,-9.81]
 
 mp = [E,nu,1e-6]
 
 volFrac = 0.3       # Constraint on 50% volume
-meshSize=1          # The average length of one element. 
+meshSize=4          # The average length of one element. 
 rMin = meshSize*0.7 # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.01    # How small change between two optmisation we allow before stopping.
 
@@ -93,13 +91,10 @@ Debug=False
 
 settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 
+materialFun = mrs.Bilinear
 
-#sick.sick(epsilon,mp)
-#mh.mod_hook(epsilon, mp)
-#materialFun=el.elastic
-materialFun = me.head
 
-PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun)
+PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun,eq)
 
 
 
