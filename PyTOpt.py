@@ -26,7 +26,6 @@ The module ends by plotting the result of
 import numpy as np
 import calfem.utils as cfu
 import Mesh
-import calfem.vis as cfv
 import FE
 import Opt
 import Filter
@@ -35,9 +34,9 @@ import matplotlib.pyplot as plt
 import calfem.core as cfc
 from scipy.sparse import lil_matrix
 import Debugger
-import MaterialModelSelection as MMS
+import Element_Routine_Selection as ERS
 import json
-#import calfem.vis_mpl as cvm
+
 
 def Main(g,force,bmarker,settings,mp,ep, materialFun):
     
@@ -49,8 +48,7 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
     
     
     #Settings
-    E=mp[0]
-    v=mp[1]
+    E,nu=mp
     el_type=ep[2]
     ptype=2
     intRule=2
@@ -78,27 +76,23 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
     if el_type == 2:
         coords, edof, dofs, bdofs = mesh.tri()
         if ep[3]:
-            elementFun = MMS.LinTri
+            elementFun = ERS.LinTri
         else:
-            elementFun = MMS.Tri    
+            elementFun = ERS.Tri    
     elif el_type == 3:
         coords, edof, dofs, bdofs = mesh.quad()
         if ep[3]:
-            elementFun = MMS.LinQuad
+            elementFun = ERS.LinQuad
         else:
-            elementFun = MMS.Quad
+            elementFun = ERS.Quad
     else:
         print("Wrong Element Type!")
     
     
-
     """ Denote Forces and Boundary Conditions """
     
-    nDofs = np.max(edof)
-    
-    f = np.zeros([nDofs,1])
-    
-    
+    f = np.zeros([np.max(edof),1])
+        
     bc = np.array([],'i')
     bcVal = np.array([],'f')
     
@@ -108,7 +102,7 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
     except:
         bc, bcVal = cfu.applybc(bdofs, bc, bcVal, bmarker, value=0.0, dimension=0)
     
-    bc=bc-1   #Fix a calfem bug
+    bc=bc-1   
     
     try:
         for fcmarker in force[1]:
@@ -119,59 +113,59 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
     
     """ Initialization Cont."""
 
-    nElem=np.size(edof,0)
+    nelem = np.size(edof,0)
     
-    x =np.zeros([nElem,1])+volFrac
+    x = np.zeros([nelem,1])+volFrac
         
     #Check sizes, Initialize
     nx=coords[:,0]
     ny=coords[:,1]
-    elemCenterX=np.zeros([nElem,1])
-    elemCenterY=np.zeros([nElem,1])
+    elemCenterx=np.zeros([nelem,1])
+    elemCentery=np.zeros([nelem,1])
     print('Initializing...')
-    print('Number of elements: '+str(nElem))
+    print('Number of elements: '+str(nelem))
     
     
     #Check element type
     if len(edof[0,:])==6:   #Triangular Element
-        elemX=np.zeros([nElem,3])
-        elemY=np.zeros([nElem,3])
+        elemx=np.zeros([nelem,3])
+        elemy=np.zeros([nelem,3])
     elif len(edof[0,:])==8: #Quad Element
-        elemX=np.zeros([nElem,4])
-        elemY=np.zeros([nElem,4])
+        elemx=np.zeros([nelem,4])
+        elemy=np.zeros([nelem,4])
     else:
-        raise Exception('Unrecognized Element Shape, Check eDof Matrix')
+        raise Exception('Unrecognized Element Shape, Check edof Matrix')
     
     #Find The coordinates for each element's nodes
-    for elem in range(nElem):
+    for elem in range(nelem):
             
-        nNode=np.ceil(np.multiply(edof[elem,:],0.5))-1
-        nNode=nNode.astype(int)
+        nnode=np.ceil(np.multiply(edof[elem,:],0.5))-1
+        nnode=nnode.astype(int)
             
-        elemX[elem,:]=nx[nNode[0:8:2]]
-        elemY[elem,:]=ny[nNode[0:8:2]]
-        elemCenterX[elem]=np.mean(elemX[elem])
-        elemCenterY[elem]=np.mean(elemY[elem])
+        elemx[elem,:]=nx[nnode[0:8:2]]
+        elemy[elem,:]=ny[nnode[0:8:2]]
+        elemCenterx[elem]=np.mean(elemx[elem])
+        elemCentery[elem]=np.mean(elemy[elem])
 
     #Linear Elastic Constitutive Matrix
-    D=cfc.hooke(ep[0], E, v)
+    D=cfc.hooke(ep[0], E, nu)
 
 
     #Create weighting matrix for Filter
-    weightMatrix=lil_matrix((nElem,nElem))
+    weightMatrix=lil_matrix((nelem,nelem))
 
     ticH=time.perf_counter()
-    for elem in range(0,nElem):
-        xDist=elemCenterX-elemCenterX[elem]
-        yDist=elemCenterY-elemCenterY[elem]
-        dist=np.sqrt(xDist**2+yDist**2)            #Calculates the distance from the current element to all others
+    for elem in range(0,nelem):
+        xdist=elemCenterx-elemCenterx[elem]
+        ydist=elemCentery-elemCentery[elem]
+        dist=np.sqrt(xdist**2+ydist**2)            
         
-        weightMatrix[:,elem]=np.maximum(rMin-dist,np.zeros([nElem,1]))
+        weightMatrix[:,elem]=np.maximum(rMin-dist,np.zeros([nelem,1]))
             
     tocH=time.perf_counter()
     print('H:'+str(tocH-ticH))
 
-
+    #Initiate the FEM
     FEM = FE.FE(edof,coords,mp,bc)
 
     """ MAIN LOOP """
@@ -187,13 +181,13 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
                         
             tic=time.perf_counter()
             
-            for elem in range(nElem):
+            for elem in range(nelem):
                 if ep[3]:
                     
                     if el_type==2:
-                        Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D)   #!THIS COULD BE PLACED OUTSIDE OF LOOP!               #Element Stiffness Matrix for Triangular Element
+                        Ke=cfc.plante(elemx[elem,:],elemy[elem,:],ep[0:2],D)   #!THIS COULD BE PLACED OUTSIDE OF LOOP!               #Element Stiffness Matrix for Triangular Element
                     else:
-                        Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)[0]    #!THIS COULD BE PLACED OUTSIDE OF LOOP!           #Element Stiffness Matrix for Quad Element
+                        Ke=cfc.plani4e(elemx[elem,:],elemy[elem,:],ep,D)[0]    #!THIS COULD BE PLACED OUTSIDE OF LOOP!           #Element Stiffness Matrix for Quad Element
                         
                     Ue = U[np.ix_(edof[elem,:]-1)]
                     dc[elem] = -SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
@@ -203,13 +197,13 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
                     dc[elem] = np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
                     
                     if dc[elem] >0:
-                        dc[elem] = 0
                         print(str(elem) + ':' +str(dc[elem]))
+                        dc[elem] = 0
        
             if Debug and loop==1:
-                dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem,elementFun)
+                dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nelem,elementFun)
 
-                plt.plot(range(0,nElem),(1-dc_Num/dc)*100)
+                plt.plot(range(0,nelem),(1-dc_Num/dc)*100)
                 plt.xlabel('Element')
                 plt.ylabel('Percent Error')    
             
@@ -219,33 +213,36 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
             dc = Filter.Check(x,dc,weightMatrix)
 
             ticOpt=time.perf_counter()
-            x = Opt.Optimisation().OC(nElem,x,volFrac,dc)
+            x = Opt.Optimisation().OC(nelem,x,volFrac,dc)
             tocOpt=time.perf_counter()
     
-            change =np.max(np.max(abs(x-xold)))
+            change = np.max(np.max(abs(x-xold)))
             
             print('Sens. Anal.:'+str(toc-tic))
             print('Opt:        '+str(tocOpt-ticOpt))
             print('Change:     '+str(change))
             print('Iteration:  '+str(loop))
             print('---------------------------')
-            if loop == 50:                                                          # If alternating
+            
+            if loop == 50:
                 break
             
             if loop % 5 == 0: 
                 fig, ax = plt.subplots()
-                for j in range(0,nElem):
-                    ax.fill(elemX[j,:], elemY[j,:], color = [1,1,1]*(1-x[j]))
+                for j in range(0,nelem):
+                    ax.fill(elemx[j,:], elemy[j,:], color = [1,1,1]*(1-x[j]))
                 ax.axis('equal')
                 plt.show() 
                 
         
-    else:
+    elif method =='MMA':
         
-        x = Opt.Optimisation().mma(nElem,SIMP_penal,edof,f,ep,elemX,elemY,D,weightMatrix,volFrac,x,elementFun,el_type,FEM,materialFun)
-        x = x.reshape(nElem,1)
+        x = Opt.Optimisation().mma(nelem,SIMP_penal,edof,f,ep,elemx,elemy,D,weightMatrix,volFrac,x,elementFun,el_type,FEM,materialFun)
+        x = x.reshape(nelem,1)
         U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementFun,materialFun)
-        #raise Exception('Not implemented yet!')
+     
+    else:
+        raise Exception('No Optimisation method of that names')
             
             
     """ Visualisation """
@@ -254,19 +251,16 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
     timeMin=(tocGlobal-ticGlobal)/60
     print('Total computation time: '+str(int(timeMin))+'m '+str(round(np.mod(timeMin,1)*60,1))+'s')
     
-
     if save:
         data = {'x': x.tolist(),'coords': coords.tolist(),'edof': edof.tolist(), 'el_type': el_type}
         with open('Saved_Results/myfile.json', 'w') as outfile:
             json.dump(data, outfile, indent=4)
     
-    
-    
-    
     fig, ax = plt.subplots()
-    for j in range(0,nElem):
-        ax.fill(elemX[j,:], elemY[j,:], color = [1,1,1]*(1-x[j]))
-        ax.axis('equal')
+    for j in range(0,nelem):
+        ax.fill(elemx[j,:], elemy[j,:], color = [1,1,1]*(1-x[j]))
+        
+    ax.axis('equal')
     plt.show()    
 
     

@@ -1,7 +1,6 @@
 
 import numpy as np
 import nlopt 
-import FE
 import calfem.core as cfc 
 import Filter
 
@@ -17,12 +16,11 @@ class Optimisation:
         while (l2-l1) > 1e-4:
             lmid = 0.5*(l2+l1)
             
-            #FirstMin = np.minimum.reduce([(x+step),x*((-dc/lmid)**damping)])
             FirstMin = np.minimum.reduce([(x+step),x*np.array(np.power((-dc/lmid),damping))])
-            
             SecondMin = np.minimum.reduce([np.ones([nel,1]), FirstMin])
             FirstMax = np.maximum.reduce([(x-step),SecondMin])
             xnew = np.maximum.reduce([0.001*np.ones([nel,1]),FirstMax])
+            
             if (sum(sum(xnew)) - volfrac*nel) > 0:
                 l1 = lmid
             else:
@@ -30,23 +28,21 @@ class Optimisation:
     
         return xnew
 
-    def mma(self,nElem,SIMP_penal,edof,f,ep,elemX,elemY,D,weightMatrix,volFrac,x,elementType,el_type,FEM,materialFun):
+    def mma(self,nelem,SIMP_penal,edof,f,ep,elemx,elemy,D,weightMatrix,volFrac,x,elementType,el_type,FEM,materialFun):
         
         def Objfun(x,grad):
-            
-            
-            x = x.reshape(nElem,1)
-            grad = grad.reshape(nElem,1)
+            x = x.reshape(nelem,1)
+            grad = grad.reshape(nelem,1)
             global U
             U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementType,materialFun)
             c = np.matmul(f.T,U)            
-            for elem in range(nElem):
+            for elem in range(nelem):
                 if ep[3]==1:
                     
                     if el_type==2:
-                        Ke=cfc.plante(elemX[elem,:],elemY[elem,:],ep[0:2],D) 
+                        Ke=cfc.plante(elemx[elem,:],elemy[elem,:],ep[0:2],D) 
                     else:
-                        Ke=cfc.plani4e(elemX[elem,:],elemY[elem,:],ep,D)[0]   
+                        Ke=cfc.plani4e(elemx[elem,:],elemy[elem,:],ep,D)[0]   
                         
                     Ue = U[np.ix_(edof[elem,:]-1)]
                     
@@ -68,8 +64,8 @@ class Optimisation:
         
         def VolCon(x,grad):
             grad[:] = 4**x.copy()
-            x = x.reshape(nElem,1)
-            grad = grad.reshape(nElem,1)
+            x = x.reshape(nelem,1)
+            grad = grad.reshape(nelem,1)
             grad[:] = Filter.Check(x,grad,weightMatrix)
             grad = grad.reshape(len(x),)
             x = x.reshape(len(x),)
@@ -81,13 +77,7 @@ class Optimisation:
         ub = np.ones(np.size(x))                           
         opt.set_lower_bounds(lb)
         opt.set_upper_bounds(ub)
-        
-        
-        # Both fc and h is in the same form as f. 
         opt.add_inequality_constraint(VolCon,0)
-        
-        
-        #Later here should stopping criterion be implemented
         opt.set_xtol_rel(1e-2)
         opt.set_maxeval(150)
         x = opt.optimize(x.reshape(len(x),))
