@@ -27,7 +27,7 @@ import numpy as np
 import calfem.utils as cfu
 import Mesh
 import FE
-import Opt
+import Optimisation as Opt
 import Filter
 import time
 import matplotlib.pyplot as plt
@@ -48,7 +48,8 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
     
     
     #Settings
-    E,nu=mp
+    E = mp[0]
+    nu = mp[1]
     el_type=ep[2]
     ptype=2
     intRule=2
@@ -210,7 +211,7 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
             
             toc=time.perf_counter()
 
-            dc = Filter.Check(x,dc,weightMatrix)
+            dc = Filter.Filter(x,dc,weightMatrix)
 
             ticOpt=time.perf_counter()
             x = Opt.Optimisation().OC(nelem,x,volFrac,dc)

@@ -1,8 +1,6 @@
 import numpy as np
 import numpy.linalg
-import Mod_Hook as mh
 from scipy.sparse.linalg import spsolve
-import elastic as el
 
 def gauss_quad(ir):
     if ir ==1:
@@ -47,7 +45,7 @@ def shape_functions(xsi,eta,ir):
     return N,dNr   
     
 
-def elem4n(ue, ex, ey, ep, mp, materialFun, eq=None):
+def Element_Quad_Routine(ue, ex, ey, ep, mp, materialFun, eq=None):
     
     ptype   = ep[0]             # Which analysis type?
     t       = ep[1]             # Element thickness

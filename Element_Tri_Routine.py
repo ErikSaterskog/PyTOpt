@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.sparse.linalg import spsolve
 
-def  elem3n(ue, ex, ey, ep, mp, materialFun, eq=None):
+def Element_Tri_Routine(ue, ex, ey, ep, mp, materialFun, eq=None):
 
 
     ptype   = ep[0]         # Which analysis type?

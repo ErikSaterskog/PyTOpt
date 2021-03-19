@@ -84,9 +84,9 @@ class FE():
         
         for elem in range(self.nElem):  
                 
-            edofIndex=(self.eDof[elem,:]-1).tolist() 
+            edofIndex=(self.edof[elem,:]-1).tolist() 
 
-            Ke, fint, fext, stress, epsilon=elementFun(np.zeros(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], epLin, self.mp, materialFun) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
+            Ke, fint, fext, stress, epsilon=elementFun(np.zeros(np.size(self.edof,1),), self.elemX[elem,:], self.elemY[elem,:], epLin, self.mp, materialFun) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
 
             Ke=np.matrix(Ke)               
 
