@@ -201,6 +201,10 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun):
                 else:
                     lambdaFe = lambdaF[np.ix_(edof[elem,:]-1)]
                     dc[elem] = np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
+                    
+                    if dc[elem] >0:
+                        dc[elem] = 0
+                        print(str(elem) + ':' +str(dc[elem]))
        
             if Debug and loop==1:
                 dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nElem,elementFun)
