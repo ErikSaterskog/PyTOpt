@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Feb  4 10:48:00 2021
-
-@author: Daniel
-"""
-
 import numpy as np
 import numpy.linalg
 import Mod_Hook as mh
@@ -56,10 +49,10 @@ def shape_functions(xsi,eta,ir):
 
 def elem4n(ue, ex, ey, ep, mp, materialFun, eq=None):
     
-    ptype   = ep[0]          # Which analysis type?
-    t       = ep[1]           # Element thickness
+    ptype   = ep[0]             # Which analysis type?
+    t       = ep[1]             # Element thickness
     ir      = ep[2]  
-    ngp= ir*ir              # Integration rule and number of gauss points
+    ngp= ir*ir                  # Integration rule and number of gauss points
     matmod  = ep[3]
     xsi,eta,wp = gauss_quad(ir)
     N,dNr = shape_functions(xsi,eta,ir)
@@ -88,9 +81,9 @@ def elem4n(ue, ex, ey, ep, mp, materialFun, eq=None):
                 detJ = np.linalg.det(JacTran[ind,:])
             except:
                 raise Exception("Determinant too small!")
-            #invJac = np.linalg.inv(JacTran[ind,:])
+
             dNx=spsolve(JacTran[ind,:],dNr[ind,:])
-            #sdNx  = np.matmul(invJac,dNr[ind,:])
+
             
             B = np.zeros([3,ngp*2])
             
@@ -107,17 +100,17 @@ def elem4n(ue, ex, ey, ep, mp, materialFun, eq=None):
             epsilon = np.zeros([6,])
             epsilon[np.ix_([0,1,3])] = np.matmul(B,ue)
             
-        #Calculate material response at current gauss point
+            #Calculate material response at current gauss point
             [sigma, dsde] = materialFun(epsilon, mp)
 
                 
-            stress[:, i] = sigma.reshape(6,)   #Save stress for current gauss point
+            stress[:, i] = sigma.reshape(6,)                                   #Save stress for current gauss point
         
-#Calculate the gauss point's contribution to element stiffness and forces
-            Dm=dsde[np.ix_([0, 1, 3],[0, 1, 3])]                 # Components for plane strain
-            Ke=Ke+np.matmul(np.matmul(B.T,Dm),B)*detJ*wp[i]*t                                  # Stiffness contribution
-            fint=fint+np.matmul(B.T,sigma[np.ix_([0,1,3])])*wp[i]*detJ*t                  # Internal force vector 
-            fext=fext+np.matmul(N2.T,b)*detJ*wp[i]*t                                # External force vector
+           #Calculate the gauss point's contribution to element stiffness and forces
+            Dm=dsde[np.ix_([0, 1, 3],[0, 1, 3])]                               # Components for plane strain
+            Ke=Ke+np.matmul(np.matmul(B.T,Dm),B)*detJ*wp[i]*t                  # Stiffness contribution
+            fint=fint+np.matmul(B.T,sigma[np.ix_([0,1,3])])*wp[i]*detJ*t       # Internal force vector 
+            fext=fext+np.matmul(N2.T,b)*detJ*wp[i]*t                           # External force vector
     
     else:
         raise Exception('Only plane strain ep(1)=ptype=2 allowed (unless ep(2)=2, then ep(1)=3 is allowed)');

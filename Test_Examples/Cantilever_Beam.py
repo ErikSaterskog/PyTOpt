@@ -54,11 +54,11 @@ g = cfg.Geometry()
 
 g.point([0,0])                 #0
 g.point([1,0])                 #1
-g.point([1,0.4],marker=9)      #2               #2
-g.point([1,0.8])               #2
-g.point([0,0.8])               #3
-g.point([0,0.5])               #3
-g.point([0,0.3])               #3
+g.point([1,0.4],marker=9)      #2               
+g.point([1,0.8])               #3
+g.point([0,0.8])               #4
+g.point([0,0.5])               #5
+g.point([0,0.3])               #6
 
 
 g.line([0, 1],marker=0)
@@ -72,22 +72,22 @@ g.line([6, 0],marker=6)
 
 g.surface([0, 1, 2, 3, 4,5,6])
 
-force = [-1e6,9,2] #First magnitude, second marker, third direction
+force = [-1e6,9,2]      #First magnitude, second marker, third direction
 bmarker = 5
 
 
-E = 210e9 # Young's modulus
-nu = 0.3 #Poisson's ratio
+E = 210e9               # Young's modulus
+nu = 0.3                #Poisson's ratio
 eps_y = 0
 
 
 mp = [E,nu,eps_y]
 
-volFrac = 0.3 # Constraint on volume
-meshSize=0.04 # The average length of one element. 
-rMin = meshSize*0.7 # How aggressive the filter should be. Smaller -> less aggressive
-changeLimit=0.01 # How small change between two optmisation we allow before stopping.
-ep=[1,False,2]    #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
+volFrac = 0.3           # Constraint on volume
+meshSize=0.04           # The average length of one element. 
+rMin = meshSize*0.7     # How aggressive the filter should be. Smaller -> less aggressive
+changeLimit=0.01        # How small change between two optmisation we allow before stopping.
+ep=[1,False,2]          #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
 SIMP_penal = 3
 method='OC'
 Debug=False

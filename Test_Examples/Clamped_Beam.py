@@ -55,9 +55,9 @@ g = cfg.Geometry()
 
 g.point([0,0])                 #0
 g.point([1,0])                 #1
-g.point([1,0.4])      #2               #2
-g.point([0.5,0.4],marker=9)               #2
-g.point([0,0.4])               #3
+g.point([1,0.4])               #2               
+g.point([0.5,0.4],marker=9)    #3
+g.point([0,0.4])               #4
 
 g.line([0, 1],marker=0)
 g.line([1, 2],marker=1)
@@ -72,15 +72,15 @@ force = [-4e7,9,2] #First magnitude, second marker, third direction
 bmarker = [1,4]
 
 
-E = 210e9 # Young's modulus
-nu = 0.3 #Poisson's ratio
+E = 210e9       # Young's modulus
+nu = 0.3        #Poisson's ratio
 
 mp = [E,nu,1e-7]
 
-volFrac = 0.3 # Constraint on 50% volume
-meshSize=0.02 # The average length of one element. 
+volFrac = 0.3       # Constraint on 50% volume
+meshSize=0.02       # The average length of one element. 
 rMin = meshSize*0.7 # How aggressive the filter should be. Smaller -> less aggressive
-changeLimit=0.01 # How small change between two optmisation we allow before stopping.
+changeLimit=0.01    # How small change between two optmisation we allow before stopping.
 
 
 ep=[1,False,2]    #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  

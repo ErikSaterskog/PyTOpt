@@ -50,14 +50,14 @@ import Material_Bilinear as mb
 
 g = cfg.Geometry()
 
-g.point([0,0])                 #0
+g.point([0,0])                 
 g.point([30,0])
 g.point([45,0])
 g.point([55,0])
 g.point([70,0])
 g.point([100,0])
-g.point([100,25])                 #1
-g.point([0,25])               #3
+g.point([100,25])                 
+g.point([0,25])               
 
 g.line([0, 1],marker=0)
 g.line([1, 2],marker=1)
@@ -75,18 +75,18 @@ force = [-1e6,6,2] #First magnitude, second marker, third direction
 bmarker = [7]
 
 
-E = 210e9 # Young's modulus
-nu = 0.3 #Poisson's ratio
+E = 210e9       # Young's modulus
+nu = 0.3        #Poisson's ratio
 
 mp = [E,nu,1e-6]
 
-volFrac = 0.3 # Constraint on 50% volume
-meshSize=1 # The average length of one element. 
+volFrac = 0.3       # Constraint on 50% volume
+meshSize=1          # The average length of one element. 
 rMin = meshSize*0.7 # How aggressive the filter should be. Smaller -> less aggressive
-changeLimit=0.01 # How small change between two optmisation we allow before stopping.
+changeLimit=0.01    # How small change between two optmisation we allow before stopping.
 
 
-ep=[1,True,2]    #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
+ep=[1,True,2]       #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
 SIMP_penal = 3
 method='OC'
 Debug=False

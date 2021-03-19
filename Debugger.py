@@ -8,7 +8,7 @@ import numpy as np
 """Numerical Sensitivity Analysis"""
 
 
-def num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,numElem,elementType):
+def num_Sens(x,SIMP_penal,edof,coords,bc,f,ep,mp,numElem,elementType):
     
     eps=1e-7
     dc = x.copy() 

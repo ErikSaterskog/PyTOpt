@@ -19,61 +19,52 @@ The resultant will influence the next guess of the displacements.
 """
 import numpy as np
 import time
-from scipy.sparse import csc_matrix, linalg, csr_matrix, lil_matrix, coo_matrix
+from scipy.sparse import coo_matrix
 from scipy.sparse.linalg import spsolve
-import calfem.core as cfc
-import Mod_Hook as mh
-import Plani4s
-import elem3n
-import elem4n
-import MaterialModelSelection as MMS
 
 
 class FE():
     
     
-    def __init__(self,eDof,coords,mp,fixDofs):
+    def __init__(self,edof,coords,mp,fixdofs):
         self.mp = mp
         self.E=mp[0]
         self.v=mp[1]
         
-        self.nDof=np.max(eDof)
-        self.nElem=np.size(eDof,0)
+        self.ndof=np.max(edof)
+        self.nElem=np.size(edof,0)
         nx=coords[:,0]
         ny=coords[:,1]
         
         #Initialize Vecotors and Matrices
-        #K = np.zeros([nDof,nDof])
-        self.K = coo_matrix((self.nDof,self.nDof))
-        #F = np.zeros([nDof,1])
-        self.U = np.zeros([self.nDof,1])
+        self.K = coo_matrix((self.ndof,self.ndof))
+        self.U = np.zeros([self.ndof,1])
         
         
         #Check element type
-        if len(eDof[0,:])==6:   #Triangular Element
+        if len(edof[0,:])==6:   #Triangular Element
             
             self.elemX=np.zeros([self.nElem,3])
             self.elemY=np.zeros([self.nElem,3])
-        elif len(eDof[0,:])==8: #Quad Element
+        elif len(edof[0,:])==8: #Quad Element
             
             self.elemX=np.zeros([self.nElem,4])
             self.elemY=np.zeros([self.nElem,4])
         else:
             raise Exception('Unrecognized Element Shape, Check eDof Matrix')
     
-    
         #Find The coordinates for each element's nodes
         for elem in range(self.nElem):
             
-            nNode=np.ceil(np.multiply(eDof[elem,:],0.5))-1
+            nNode=np.ceil(np.multiply(edof[elem,:],0.5))-1
             nNode=nNode.astype(int)
             
             self.elemX[elem,:]=nx[nNode[0:8:2]]
             self.elemY[elem,:]=ny[nNode[0:8:2]]
         
-        allDofs = range(self.nDof)        
-        self.freeDofs = np.setdiff1d(allDofs, fixDofs)
-        self.eDof = eDof
+        alldofs = range(self.ndof)        
+        self.freedofs = np.setdiff1d(alldofs, fixdofs)
+        self.edof = edof
         
     
         
@@ -81,7 +72,7 @@ class FE():
         #Settings
         epLin=ep.copy()
         epLin[3]=1
-        Timers=True     #Print Timers 
+        Timers=True                      #Print Timers 
         
         tic1 = time.perf_counter()       #Start timer
         
@@ -93,41 +84,23 @@ class FE():
         
         for elem in range(self.nElem):  
                 
-            #part 1
-            #ticedof1 = time.perf_counter()
             edofIndex=(self.eDof[elem,:]-1).tolist() 
-            edofIndex2D=np.ix_(self.eDof[elem,:]-1,self.eDof[elem,:]-1)
-            #ticedof2 = time.perf_counter()
-            
-            #part 2
-            #ticedof = time.perf_counter()
+
             Ke, fint, fext, stress, epsilon=elementFun(np.zeros(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], epLin, self.mp, materialFun) #här kna man skicka in en materiafunktion istället för att definera den i elem3n
-            #ticedof = time.perf_counter()
-            
-            #part 3
-            #ticedof = time.perf_counter()
+
             Ke=np.matrix(Ke)               
-            #ticedof = time.perf_counter()
-            
-            #part 4
-            #ticedof = time.perf_counter()
+
             row.extend(edofIndex*len(edofIndex))
             col.extend(np.repeat(edofIndex,len(edofIndex)))
             data.extend(np.reshape(Ke*x[elem][0]**SIMP_penal,np.size(Ke)).tolist()[0])
-            #ticedof = time.perf_counter()
-        
-        #part 5
-        #ticedof = time.perf_counter()
-        K=coo_matrix((data,(row,col)),shape=(self.nDof,self.nDof))
+
+        K=coo_matrix((data,(row,col)),shape=(self.ndof,self.ndof))
         K=K.tocsc()
-        #ticedof = time.perf_counter()
-        
-        
-        
+
         toc1 = time.perf_counter()
         tic2 = time.perf_counter()
         
-        self.U[np.ix_(self.freeDofs)] = spsolve(K[np.ix_(self.freeDofs,self.freeDofs)],F[np.ix_(self.freeDofs)]).reshape(len(self.freeDofs),1)
+        self.U[np.ix_(self.freedofs)] = spsolve(K[np.ix_(self.freedofs,self.freedofs)],F[np.ix_(self.freedofs)]).reshape(len(self.freedofs),1)
         toc2 = time.perf_counter()
         
     
@@ -170,8 +143,8 @@ class FE():
 
         lambdaF = U.copy()
         
-        index1D=np.ix_(self.freeDofs)
-        index2D=np.ix_(self.freeDofs,self.freeDofs)
+        index1D=np.ix_(self.freedofs)
+        index2D=np.ix_(self.freedofs,self.freedofs)
         
         newtonIt = 0
         sig_VM = np.zeros(np.shape(x))
@@ -186,45 +159,45 @@ class FE():
             data=[]
             newtonIt +=1
             R = np.zeros(np.shape(F)) 
-            dR = np.zeros([self.nElem,np.size(self.eDof,1)])
+            dR = np.zeros([self.nElem,np.size(self.edof,1)])
             fextGlobal = F.copy()
             fintGlobal = np.zeros(U.shape)
             
             for elem in range(self.nElem):
                 
-                edofIndexList=(self.eDof[elem,:]-1).tolist()
-                edofIndex1D=np.ix_(self.eDof[elem,:]-1)
+                edofIndexList=(self.edof[elem,:]-1).tolist()
+                edofIndex1D=np.ix_(self.edof[elem,:]-1)
                 
                 Ue = U[edofIndex1D]
                 
-                Ke, fint, fext, stress, epsilon=elementFun(Ue.reshape(np.size(self.eDof,1),), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp, materialFun) 
+                Ke, fint, fext, sig, epsilon=elementFun(Ue.reshape(np.size(self.edof,1),), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp, materialFun) 
                 Ke=np.matrix(Ke)
                 
                 fextGlobal[edofIndex1D]+=fext
                 fintGlobal[edofIndex1D]+=fint*x[elem][0]**SIMP_penal
-                dR[elem,:] = (SIMP_penal*x[elem][0]**(SIMP_penal-1)*fint).reshape(np.size(self.eDof,1),)
+                dR[elem,:] = (SIMP_penal*x[elem][0]**(SIMP_penal-1)*fint).reshape(np.size(self.edof,1),)
                 
                 row.extend(edofIndexList*len(edofIndexList))
                 col.extend(np.repeat(edofIndexList,len(edofIndexList)))
                 data.extend(np.reshape(Ke*x[elem][0]**SIMP_penal,np.size(Ke)).tolist()[0])
                 
-                sig_VM[elem]= np.sqrt(((stress[0]-stress[1])**2+(stress[1]-stress[2])**2+(stress[2]-stress[0])**2)/2+3*(stress[3]**2+stress[4]**2+stress[5]**2))
+                sig_VM[elem]= np.sqrt(((sig[0]-sig[1])**2+(sig[1]-sig[2])**2+(sig[2]-sig[0])**2)/2+3*(sig[3]**2+sig[4]**2+sig[5]**2))
     
             
-            K=coo_matrix((data,(row,col)),shape=(self.nDof,self.nDof))
+            K=coo_matrix((data,(row,col)),shape=(self.ndof,self.ndof))
             K=K.tocsc()
               
             R=fintGlobal-fextGlobal
-            err = np.linalg.norm(R[self.freeDofs])
+            err = np.linalg.norm(R[self.freedofs])
             print(err)
             
             if newtonIt ==100:
                 break
             
-            U[index1D] = U[index1D] - spsolve(K[index2D],R[self.freeDofs]).reshape(len(self.freeDofs),1)
+            U[index1D] = U[index1D] - spsolve(K[index2D],R[self.freedofs]).reshape(len(self.freedofs),1)
                     
 
-        lambdaF[index1D] = -spsolve(K[index2D],F[self.freeDofs]).reshape(len(self.freeDofs),1)
+        lambdaF[index1D] = -spsolve(K[index2D],F[self.freedofs]).reshape(len(self.freedofs),1)
               
         
         print('N.iters:    ' + str(newtonIt))
