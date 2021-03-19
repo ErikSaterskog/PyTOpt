@@ -50,7 +50,7 @@ class Optimisation:
                         
                     Ue = U[np.ix_(edof[elem,:]-1)]
                     
-                    grad[elem] =  np.matmul(eqe,Ue)*SIMP_penal*x[elem][0]**(SIMP_penal-1)  - SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                    grad[elem] =  np.matmul(eqe,Ue)  - SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                     
                 else:
                     lambdaFe = lambdaF[np.ix_(edof[elem,:]-1)]

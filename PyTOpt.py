@@ -178,7 +178,7 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
             dc = xold.copy() 
             
         
-            U,dR,lambdaF,sig_VM = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
+            U,dR,lambdaF,sig_VM,fext_tilde = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
                         
             tic=time.perf_counter()
             
@@ -201,8 +201,8 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
                             eqe=np.zeros([1,8])
 
                     Ue = U[np.ix_(edof[elem,:]-1)]
-
-                    dc[elem] = np.matmul(eqe,Ue)*SIMP_penal*x[elem][0]**(SIMP_penal-1)  -  SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+                    fext_tildee = fext_tilde[np.ix_(edof[elem,:]-1)]
+                    dc[elem] = np.matmul(fext_tildee.T,Ue)  -  SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                     
                     if dc[elem] >0:
                         print(str(elem) + ':' +str(dc[elem]))
@@ -216,7 +216,7 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
                             eqe=np.zeros([1,6])
                     lambdaFe = lambdaF[np.ix_(edof[elem,:]-1)]
                     Ue = U[np.ix_(edof[elem,:]-1)]
-                    dc[elem] = np.matmul(eqe,Ue)*SIMP_penal*x[elem][0]**(SIMP_penal-1) + np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
+                    dc[elem] = np.matmul(eqe,Ue) + np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
                     
                     if dc[elem] >0:
                         print(str(elem) + ':' +str(dc[elem]))

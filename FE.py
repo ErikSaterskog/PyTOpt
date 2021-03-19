@@ -79,7 +79,8 @@ class FE():
         row=[]
         col=[]
         data=[]
-        fext_global = F.copy()
+        fextGlobal = F.copy()
+        fext_tilde = np.zeros(F.shape)
         #ASSEMBLE, should be done using coo_matrix() if possible
         
         for elem in range(self.nElem):  
@@ -95,7 +96,8 @@ class FE():
             col.extend(np.repeat(edofIndex,len(edofIndex)))
             data.extend(np.reshape(Ke*x[elem][0]**SIMP_penal,np.size(Ke)).tolist()[0])
             
-            fext_global[edofIndex1D] += fext*x[elem][0]**SIMP_penal
+            fextGlobal[edofIndex1D] += fext*x[elem][0]
+            fext_tilde[edofIndex1D] += fext 
 
         K=coo_matrix((data,(row,col)),shape=(self.ndof,self.ndof))
         K=K.tocsc()
@@ -103,7 +105,7 @@ class FE():
         toc1 = time.perf_counter()
         tic2 = time.perf_counter()
         
-        self.U[np.ix_(self.freedofs)] = spsolve(K[np.ix_(self.freedofs,self.freedofs)],fext_global[np.ix_(self.freedofs)]).reshape(len(self.freedofs),1)
+        self.U[np.ix_(self.freedofs)] = spsolve(K[np.ix_(self.freedofs,self.freedofs)],fextGlobal[np.ix_(self.freedofs)]).reshape(len(self.freedofs),1)
         toc2 = time.perf_counter()
         
     
@@ -111,8 +113,8 @@ class FE():
             print('FE, Assem.: '+str(toc1-tic1))
             print('FE, Solve:  '+str(toc2-tic2))
             
-    
-        return self.U
+        
+        return self.U,fext_tilde
     
     
     def fe_nl(self,x,SIMP_penal,F,ep,elementFun, materialFun, eq=None):
@@ -141,7 +143,7 @@ class FE():
         err=1e9                  # Setting an error, arbritary big.
         TOL=1e-11*max(abs(F))    # Setting a resonable low tolerance. 
         
-        U = FE.fe(self, x, SIMP_penal, F, ep, elementFun, materialFun)
+        U,fext_tilde = FE.fe(self, x, SIMP_penal, F, ep, elementFun, materialFun,eq)
         
 
         lambdaF = U.copy()
@@ -152,7 +154,7 @@ class FE():
         newtonIt = 0
         sig_VM = np.zeros(np.shape(x))
         if ep[3]==1:  #Check if linear.
-            return U,[],[],[]
+            return U,[],[],[],fext_tilde
             
         
         #Newton iteration loop until convergens.
@@ -163,6 +165,7 @@ class FE():
             newtonIt +=1
             R = np.zeros(np.shape(F)) 
             dR = np.zeros([self.nElem,np.size(self.edof,1)])
+            fext_tilde = np.zeros(U.shape)
             fextGlobal = F.copy()
             fintGlobal = np.zeros(U.shape)
             
@@ -176,9 +179,10 @@ class FE():
                 Ke, fint, fext, sig, epsilon=elementFun(Ue.reshape(np.size(self.edof,1),), self.elemX[elem,:], self.elemY[elem,:], ep, self.mp, materialFun, eq) 
                 Ke=np.matrix(Ke)
                 
-                fextGlobal[edofIndex1D]+=fext*x[elem][0]**SIMP_penal
+                fextGlobal[edofIndex1D]+=fext*x[elem][0]
                 fintGlobal[edofIndex1D]+=fint*x[elem][0]**SIMP_penal
-                dR[elem,:] = (SIMP_penal*x[elem][0]**(SIMP_penal-1)*fint).reshape(np.size(self.edof,1),)-(SIMP_penal*x[elem][0]**(SIMP_penal-1)*fext).reshape(np.size(self.edof,1),)
+                fext_tilde[edofIndex1D]+= fext 
+                dR[elem,:] = (SIMP_penal*x[elem][0]**(SIMP_penal-1)*fint).reshape(np.size(self.edof,1),)-(fext).reshape(np.size(self.edof,1),)
                 
                 row.extend(edofIndexList*len(edofIndexList))
                 col.extend(np.repeat(edofIndexList,len(edofIndexList)))
@@ -202,10 +206,11 @@ class FE():
 
         lambdaF[index1D] = -spsolve(K[index2D],fextGlobal[self.freedofs]).reshape(len(self.freedofs),1)
               
+     
         
         print('N.iters:    ' + str(newtonIt))
         print('Final error:' + str(err))
-        return U,dR,lambdaF,sig_VM
+        return U,dR,lambdaF,sig_VM,fext_tilde
     
     
 
