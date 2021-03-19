@@ -19,9 +19,6 @@ def elastic(eps,mp):
     I_s = np.diag([1,1,1,0.5,0.5,0.5])
     I_sdev = (I_s - 1/3*I_v*I_vT)
     
-    eps_dev = np.matmul(I_sdev,eps)
-    
-    
     sigma = np.zeros([6,])
     D = np.zeros([6,6])
     

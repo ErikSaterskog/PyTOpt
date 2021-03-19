@@ -14,7 +14,6 @@ def mod_hooke(eps,mp):
     G[2] = G[0].copy()
     K = E/(3*(1-2*nu))
     
-    
     I_v = np.array([1,1,1,0,0,0])
     I_vT = np.array([[1],[1],[1],[0],[0],[0]])
     I_s = np.diag([1,1,1,0.5,0.5,0.5])
