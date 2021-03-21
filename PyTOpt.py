@@ -36,6 +36,9 @@ from scipy.sparse import lil_matrix
 import Debugger
 import Element_Routine_Selection as ERS
 import json
+import matplotlib
+from matplotlib.patches import Polygon
+from matplotlib.collections import PatchCollection
 
 
 def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
@@ -250,9 +253,15 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
                 break
             
             if loop % 5 == 0: 
+                patches = []
                 fig, ax = plt.subplots()
                 for j in range(0,nelem):
-                    ax.fill(elemx[j,:], elemy[j,:], color = [1,1,1]*(1-x[j]))
+                    polygon = Polygon(np.transpose([elemx[j,:], elemy[j,:]]))
+                    patches.append(polygon)
+
+                p = PatchCollection(patches, cmap=matplotlib.cm.Greys)
+                p.set_array(np.transpose(x)[0])
+                ax.add_collection(p)
                 ax.axis('equal')
                 plt.show() 
                 
@@ -278,12 +287,17 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
         with open('Saved_Results/myfile.json', 'w') as outfile:
             json.dump(data, outfile, indent=4)
     
+    patches = []
     fig, ax = plt.subplots()
     for j in range(0,nelem):
-        ax.fill(elemx[j,:], elemy[j,:], color = [1,1,1]*(1-x[j]))
-        
+        polygon = Polygon(np.transpose([elemx[j,:], elemy[j,:]]))
+        patches.append(polygon)
+
+    p = PatchCollection(patches, cmap=matplotlib.cm.Greys)
+    p.set_array(np.transpose(x)[0])
+    ax.add_collection(p)
     ax.axis('equal')
-    plt.show()    
+    plt.show()  
 
     
     
