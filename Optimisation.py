@@ -16,7 +16,7 @@ class Optimisation:
         while (l2-l1) > 1e-4:
             lmid = 0.5*(l2+l1)
             
-            FirstMin = np.minimum.reduce([(x+step),x*np.array(np.power((-dc/lmid),damping))])
+            FirstMin = np.minimum.reduce([(x+step),np.array(-np.sign(dc))*x*np.array(np.power((abs(dc)/lmid),damping))])
             SecondMin = np.minimum.reduce([np.ones([nel,1]), FirstMin])
             FirstMax = np.maximum.reduce([(x-step),SecondMin])
             xnew = np.maximum.reduce([0.001*np.ones([nel,1]),FirstMax])
@@ -34,7 +34,7 @@ class Optimisation:
             x = x.reshape(nelem,1)
             grad = grad.reshape(nelem,1)
             global U
-            U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementType,materialFun,eq)
+            U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementType,materialFun)
             c = np.matmul(f.T,U)            
             for elem in range(nelem):
                 if ep[3]==1:
