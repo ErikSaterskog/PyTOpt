@@ -114,7 +114,7 @@ class FE():
             print('FE, Solve:  '+str(toc2-tic2))
             
         
-        return self.U,fext_tilde
+        return self.U, fext_tilde, fextGlobal
     
     
     def fe_nl(self,x,SIMP_penal,F,ep,elementFun, materialFun, eq=None):
@@ -143,7 +143,7 @@ class FE():
         err=1e9                  # Setting an error, arbritary big.
         TOL=1e-11*max(abs(F))    # Setting a resonable low tolerance. 
         
-        U,fext_tilde = FE.fe(self, x, SIMP_penal, F, ep, elementFun, materialFun,eq)
+        U,fext_tilde, fextGlobal = FE.fe(self, x, SIMP_penal, F, ep, elementFun, materialFun,eq)
         
 
         lambdaF = U.copy()
@@ -154,7 +154,7 @@ class FE():
         newtonIt = 0
         sig_VM = np.zeros(np.shape(x))
         if ep[3]==1:  #Check if linear.
-            return U,[],[],[],fext_tilde
+            return U, [], [], [], fext_tilde, fextGlobal
             
         
         #Newton iteration loop until convergens.
@@ -210,7 +210,7 @@ class FE():
         
         print('N.iters:    ' + str(newtonIt))
         print('Final error:' + str(err))
-        return U,dR,lambdaF,sig_VM,fext_tilde
+        return U, dR, lambdaF, sig_VM, fext_tilde, fextGlobal
     
     
 

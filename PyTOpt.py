@@ -181,7 +181,7 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
             dc = xold.copy() 
             
         
-            U,dR,lambdaF,sig_VM,fext_tilde = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
+            U, dR, lambdaF, sig_VM, fext_tilde, fextGlobal = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
                         
             tic=time.perf_counter()
             
@@ -273,7 +273,7 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
         #U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementFun,materialFun,eq)
      
     else:
-        raise Exception('No Optimisation method of that names')
+        raise Exception('No Optimisation method of that name')
             
             
     """ Visualisation """
@@ -281,6 +281,11 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
     tocGlobal=time.perf_counter()
     timeMin=(tocGlobal-ticGlobal)/60
     print('Total computation time: '+str(int(timeMin))+'m '+str(round(np.mod(timeMin,1)*60,1))+'s')
+
+
+    C=np.matmul(fextGlobal.T,U)
+    print('Final G0: '+str(float(C)))
+    
     
     if save:
         data = {'x': x.tolist(),'coords': coords.tolist(),'edof': edof.tolist(), 'el_type': el_type}
