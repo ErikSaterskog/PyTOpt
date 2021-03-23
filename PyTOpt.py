@@ -39,6 +39,7 @@ import json
 import matplotlib
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
+import Material_Routine_Selection as mrs
 
 
 def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
@@ -181,7 +182,7 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
             dc = xold.copy() 
             
         
-            U, dR, lambdaF, sig_VM, fext_tilde, fextGlobal = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
+            U, dR, lambdaF, sig_VM, fext_tilde, fextGlobal,eps_h = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
                         
             tic=time.perf_counter()
             
@@ -219,7 +220,8 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
                             eqe=np.zeros([1,6])
                     lambdaFe = lambdaF[np.ix_(edof[elem,:]-1)]
                     Ue = U[np.ix_(edof[elem,:]-1)]
-                    dc[elem] = np.matmul(eqe,Ue) + np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
+                    fext_tildee = fext_tilde[np.ix_(edof[elem,:]-1)]
+                    dc[elem] = np.matmul(fext_tildee.T,Ue) + np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
                     
                     if dc[elem] >0:
                         print(str(elem) + ':' +str(dc[elem]))
@@ -249,7 +251,7 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
             print('Iteration:  '+str(loop))
             print('---------------------------')
             
-            if loop == 50:
+            if loop == 10:
                 break
             
             if loop % 5 == 0: 
@@ -267,11 +269,22 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
                 
         
     elif method =='MMA':
-        
-        x = Opt.Optimisation().mma(nelem,SIMP_penal,edof,f,ep,elemx,elemy,D,weightMatrix,volFrac,x,elementFun,el_type,FEM,materialFun,eq)
-        x = x.reshape(nelem,1)
-        #U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementFun,materialFun,eq)
-     
+        for i in range(0,3):
+            x = Opt.Optimisation().mma(nelem,SIMP_penal,edof,f,ep,elemx,elemy,D,weightMatrix,volFrac,x,elementFun,el_type,FEM,materialFun,eq)
+            x = x.reshape(nelem,1)
+            #U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementFun,materialFun,eq)
+            if i % 1 == 0: 
+                    patches = []
+                    fig, ax = plt.subplots()
+                    for j in range(0,nelem):
+                        polygon = Polygon(np.transpose([elemx[j,:], elemy[j,:]]))
+                        patches.append(polygon)
+    
+                    p = PatchCollection(patches, cmap=matplotlib.cm.Greys)
+                    p.set_array(np.transpose(x)[0])
+                    ax.add_collection(p)
+                    ax.axis('equal')
+                    plt.show() 
     else:
         raise Exception('No Optimisation method of that name')
             
@@ -300,6 +313,32 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
 
     p = PatchCollection(patches, cmap=matplotlib.cm.Greys)
     p.set_array(np.transpose(x)[0])
+    ax.add_collection(p)
+    ax.axis('equal')
+    plt.show()  
+    
+    if ep[3]:
+        ep[3] = False
+        materialFun = mrs.Elastic 
+        if el_type == 2:
+            elementFun = ERS.Tri    
+        elif el_type == 3:
+            elementFun = ERS.Quad
+        U, dR, lambdaF, sig_VM, fext_tilde, fextGlobal,eps_h = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
+
+    
+    eps_h[np.where(x<0.1)]=0
+    
+    patches = []
+    fig, ax = plt.subplots()
+    for j in range(0,nelem):
+        polygon = Polygon(np.transpose([elemx[j,:], elemy[j,:]]))
+        patches.append(polygon)
+
+    p = PatchCollection(patches, cmap=matplotlib.cm.RdBu)
+    p.set_array(np.transpose(eps_h)[0])
+    plt.colorbar(p)
+    p.set_clim(-max(abs(eps_h)), max(abs(eps_h)));
     ax.add_collection(p)
     ax.axis('equal')
     plt.show()  

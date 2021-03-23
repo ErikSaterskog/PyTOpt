@@ -153,8 +153,9 @@ class FE():
         
         newtonIt = 0
         sig_VM = np.zeros(np.shape(x))
+        eps_h  = sig_VM.copy()
         if ep[3]==1:  #Check if linear.
-            return U, [], [], [], fext_tilde, fextGlobal
+            return U, [], [], [], fext_tilde, fextGlobal,eps_h
             
         
         #Newton iteration loop until convergens.
@@ -189,6 +190,7 @@ class FE():
                 data.extend(np.reshape(Ke*x[elem][0]**SIMP_penal,np.size(Ke)).tolist()[0])
                 
                 sig_VM[elem]= np.sqrt(((sig[0]-sig[1])**2+(sig[1]-sig[2])**2+(sig[2]-sig[0])**2)/2+3*(sig[3]**2+sig[4]**2+sig[5]**2))
+                eps_h[elem] = sum(epsilon[:2])/3
     
             
             K=coo_matrix((data,(row,col)),shape=(self.ndof,self.ndof))
@@ -210,18 +212,10 @@ class FE():
         
         print('N.iters:    ' + str(newtonIt))
         print('Final error:' + str(err))
-        return U, dR, lambdaF, sig_VM, fext_tilde, fextGlobal
+        return U, dR, lambdaF, sig_VM, fext_tilde, fextGlobal,eps_h
     
     
-
-
-
-
-
-
-
-
-
+   
 
 
 
