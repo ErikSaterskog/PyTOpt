@@ -32,7 +32,7 @@ import Filter
 import time
 import matplotlib.pyplot as plt
 import calfem.core as cfc
-from scipy.sparse import lil_matrix
+from scipy.sparse import lil_matrix, coo_matrix
 import Debugger
 import Element_Routine_Selection as ERS
 import json
@@ -155,18 +155,23 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
     #Linear Elastic Constitutive Matrix
     D=cfc.hooke(ep[0], E, nu)
 
-
-    #Create weighting matrix for Filter
-    weightMatrix=lil_matrix((nelem,nelem))
-
+    data = []
+    row = []
+    col = []
+    
     ticH=time.perf_counter()
     for elem in range(0,nelem):
         xdist=elemCenterx-elemCenterx[elem]
         ydist=elemCentery-elemCentery[elem]
         dist=np.sqrt(xdist**2+ydist**2)            
+        weightdata = np.maximum(rMin-dist,np.zeros([nelem,1]))
+        data.extend(weightdata[np.where(weightdata>0)])
+        row.extend(np.where(weightdata>0)[0])
+        col.extend(np.repeat(elem,len(np.where(weightdata>0)[0])))
         
-        weightMatrix[:,elem]=np.maximum(rMin-dist,np.zeros([nelem,1]))
-            
+    #Create weighting matrix for Filter
+    weightMatrix=coo_matrix((data,(row,col)),shape=(nelem,nelem))
+       
     tocH=time.perf_counter()
     print('H:'+str(tocH-ticH))
 
