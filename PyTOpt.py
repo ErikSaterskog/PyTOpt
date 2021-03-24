@@ -256,7 +256,7 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
             print('Iteration:  '+str(loop))
             print('---------------------------')
             
-            if loop == 10:
+            if loop == 50:
                 break
             
             if loop % 5 == 0: 
@@ -343,9 +343,10 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
     p = PatchCollection(patches, cmap=matplotlib.cm.RdBu)
     p.set_array(np.transpose(eps_h)[0])
     plt.colorbar(p)
-    p.set_clim(-max(abs(eps_h)), max(abs(eps_h)));
+    p.set_clim(-max(abs(eps_h))/2, max(abs(eps_h))/2)
     ax.add_collection(p)
     ax.axis('equal')
+    plt.title('Hydrostatic Strain')
     plt.show()  
 
     
