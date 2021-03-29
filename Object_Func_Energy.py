@@ -6,7 +6,7 @@ import calfem.core as cfc
 
 
 
-def Energy(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, SIMP_penal, x, dG0, lambdaF, dR):
+def Energy(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_penal, x, dG0, lambdaF, dR):
     for elem in range(nelem):
         if ep[3]:
                     
@@ -48,8 +48,9 @@ def Energy(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, SIMP_pe
                 print(str(elem) + ':' +str(dG0[elem]))
                 dG0[elem] = 0
                 
+        G0=np.matmul(fextGlobal.T,U)
             
-    return dG0
+    return G0, dG0
 
 
 

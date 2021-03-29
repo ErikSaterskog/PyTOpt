@@ -190,8 +190,8 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
             #FE Calculation
             U, dR, lambdaF, sig_VM, fext_tilde, fextGlobal,eps_h = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
                         
-            #Object Function Derivative Calculation
-            dG0 = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, SIMP_penal, x, dG0, lambdaF, dR)
+            #Object Function Calculation
+            G0, dG0 = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_penal, x, dG0, lambdaF, dR)
             
             if Debug and loop==1:
                 dG0_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nelem,elementFun)
@@ -206,6 +206,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
 
             change = np.max(np.max(abs(x-xold)))
             
+            print('G0:         '+str(float(G0)))
             print('Change:     '+str(change))
             print('Iteration:  '+str(loop))
             print('---------------------------')
@@ -255,8 +256,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
     print('Total computation time: '+str(int(timeMin))+'m '+str(round(np.mod(timeMin,1)*60,1))+'s')
 
 
-    C=np.matmul(fextGlobal.T,U)
-    print('Final G0: '+str(float(C)))
+    print('Final G0: '+str(float(G0)))
     
     
     if save:

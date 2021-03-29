@@ -79,7 +79,7 @@ eps_y = 0
 mp = [E,nu,eps_y]
 
 volFrac = 0.3           # Constraint on volume
-meshSize=0.1            # The average length of one element. 
+meshSize=0.05            # The average length of one element. 
 rMin = meshSize*0.7     # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.0        # How small change between two optmisation we allow before stopping.
 ep=[1,True,2]          #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
