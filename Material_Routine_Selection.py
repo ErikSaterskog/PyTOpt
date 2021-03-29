@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Mar 19 10:25:11 2021
-
-@author: Daniel
-"""
-
-
 
 import numpy as np
 import Material_Elastic
