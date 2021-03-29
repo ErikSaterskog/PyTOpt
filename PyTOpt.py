@@ -185,24 +185,24 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
             
             loop = loop + 1
             xold = x.copy()
-            dc = xold.copy() 
+            dG0 = xold.copy() 
             
             #FE Calculation
             U, dR, lambdaF, sig_VM, fext_tilde, fextGlobal,eps_h = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
                         
             #Object Function Derivative Calculation
-            dc = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, SIMP_penal, x, dc, lambdaF, dR)
+            dG0 = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, SIMP_penal, x, dG0, lambdaF, dR)
             
             if Debug and loop==1:
-                dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nelem,elementFun)
-                plt.plot(range(0,nelem),(1-dc_Num/dc)*100)
+                dG0_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nelem,elementFun)
+                plt.plot(range(0,nelem),(1-dG0_Num/dG0)*100)
                 plt.xlabel('Element')
                 plt.ylabel('Percent Error')
 
             #Apply Filter
-            dc = Filter.Filter(x,dc,weightMatrix)
+            dG0 = Filter.Filter(x,dG0,weightMatrix)
 
-            x = Opt.Optimisation().OC(nelem,x,volFrac,dc)
+            x = Opt.Optimisation().OC(nelem,x,volFrac,dG0)
 
             change = np.max(np.max(abs(x-xold)))
             
