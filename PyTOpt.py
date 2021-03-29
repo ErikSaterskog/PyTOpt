@@ -41,6 +41,7 @@ from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 import Material_Routine_Selection as mrs
 import Object_Func_Energy
+import MMA_DTU_solver as mds
 
 
 def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
@@ -229,22 +230,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
                 
         
     elif method =='MMA':
-        for i in range(0,3):
-            x = Opt.Optimisation().mma(nelem,SIMP_penal,edof,f,ep,elemx,elemy,D,weightMatrix,volFrac,x,elementFun,el_type,FEM,materialFun,eq)
-            x = x.reshape(nelem,1)
-            #U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementFun,materialFun,eq)
-            if i % 1 == 0: 
-                    patches = []
-                    fig, ax = plt.subplots()
-                    for j in range(0,nelem):
-                        polygon = Polygon(np.transpose([elemx[j,:], elemy[j,:]]))
-                        patches.append(polygon)
-    
-                    p = PatchCollection(patches, cmap=matplotlib.cm.Greys)
-                    p.set_array(np.transpose(x)[0])
-                    ax.add_collection(p)
-                    ax.axis('equal')
-                    plt.show() 
+        G0,x,eps_h = mds.mma_solver(bc,mp,f,edof,elemx,elemy,x,SIMP_penal,ep,elementFun,materialFun,FEM,el_type,D,eq,weightMatrix,volFrac)
     else:
         raise Exception('No Optimisation method of that name')
             
