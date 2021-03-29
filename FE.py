@@ -103,7 +103,7 @@ class FE():
         self.U[np.ix_(self.freedofs)] = spsolve(K[np.ix_(self.freedofs,self.freedofs)],fextGlobal[np.ix_(self.freedofs)]).reshape(len(self.freedofs),1)
 
         
-        return self.U, fext_tilde, fextGlobal
+        return self.U, fext_tilde, fextGlobal, K
     
     
     def fe_nl(self,x,SIMP_penal,F,ep,elementFun, materialFun, eq=None):
@@ -132,10 +132,10 @@ class FE():
         err=1e9                  # Setting an error, arbritary big.
         TOL=1e-11*max(abs(F))    # Setting a resonable low tolerance. 
         
-        U,fext_tilde, fextGlobal = FE.fe(self, x, SIMP_penal, F, ep, elementFun, materialFun,eq)
+        U,fext_tilde, fextGlobal, K = FE.fe(self, x, SIMP_penal, F, ep, elementFun, materialFun,eq)
         
 
-        lambdaF = U.copy()
+        #lambdaF = U.copy()
         
         index1D=np.ix_(self.freedofs)
         index2D=np.ix_(self.freedofs,self.freedofs)
@@ -144,8 +144,8 @@ class FE():
         sig_VM = np.zeros(np.shape(x))
         eps_h  = sig_VM.copy()
         if ep[3]==1:  #Check if linear.
-            return U, [], [], [], fext_tilde, fextGlobal,eps_h
-            
+            return U, [], [], fext_tilde, fextGlobal, eps_h, self.freedofs, K
+
         
         #Newton iteration loop until convergens.
         while err>TOL:
@@ -195,14 +195,14 @@ class FE():
             U[index1D] = U[index1D] - spsolve(K[index2D],R[self.freedofs]).reshape(len(self.freedofs),1)
                     
 
-        lambdaF[index1D] = -spsolve(K[index2D],fextGlobal[self.freedofs]).reshape(len(self.freedofs),1)
+        #lambdaF[index1D] = -spsolve(K[index2D],fextGlobal[self.freedofs]).reshape(len(self.freedofs),1)
               
      
         
         print('N.iters:    ' + str(newtonIt))
         print('Final error:' + str(err))
-        return U, dR, lambdaF, sig_VM, fext_tilde, fextGlobal,eps_h
-    
+        return U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, self.freedofs, K
+
     
    
 

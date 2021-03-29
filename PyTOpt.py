@@ -188,10 +188,10 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
             dG0 = xold.copy() 
             
             #FE Calculation
-            U, dR, lambdaF, sig_VM, fext_tilde, fextGlobal,eps_h = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
+            U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
                         
             #Object Function Calculation
-            G0, dG0 = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_penal, x, dG0, lambdaF, dR)
+            G0, dG0 = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_penal, x, dG0, dR, freedofs, K)
             
             if Debug and loop==1:
                 dG0_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nelem,elementFun)
@@ -283,7 +283,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
             elementFun = ERS.Tri    
         elif el_type == 3:
             elementFun = ERS.Quad
-        U, dR, lambdaF, sig_VM, fext_tilde, fextGlobal,eps_h = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
+        U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
 
     
     eps_h[np.where(x<0.1)]=0

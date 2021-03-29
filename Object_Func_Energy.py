@@ -3,10 +3,16 @@
 
 import numpy as np
 import calfem.core as cfc
+from scipy.sparse.linalg import spsolve
 
 
-
-def Energy(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_penal, x, dG0, lambdaF, dR):
+def Energy(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_penal, x, dG0, dR, freedofs, K):
+    
+    
+    
+    index1D=np.ix_(freedofs)
+    index2D=np.ix_(freedofs,freedofs)
+    
     for elem in range(nelem):
         if ep[3]:
                     
@@ -39,7 +45,11 @@ def Energy(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlo
                 eqe=np.array(eqe).reshape(1,6)
             else:
                 eqe=np.zeros([1,6])
+
+            lambdaF = np.zeros(U.shape)
+            lambdaF[index1D] = -spsolve(K[index2D],fextGlobal[freedofs]).reshape(len(freedofs),1)
             lambdaFe = lambdaF[np.ix_(edof[elem,:]-1)]
+            
             Ue = U[np.ix_(edof[elem,:]-1)]
             fext_tildee = fext_tilde[np.ix_(edof[elem,:]-1)]
             dG0[elem] = np.matmul(fext_tildee.T,Ue) + np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
