@@ -40,9 +40,10 @@ import matplotlib
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 import Material_Routine_Selection as mrs
+import Object_Func_Energy
 
 
-def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
+def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
     
     #Initiating
     change = 2
@@ -186,72 +187,25 @@ def Main(g,force,bmarker,settings,mp,ep, materialFun, eq=None):
             xold = x.copy()
             dc = xold.copy() 
             
-        
+            #FE Calculation
             U, dR, lambdaF, sig_VM, fext_tilde, fextGlobal,eps_h = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
                         
-            tic=time.perf_counter()
+            #Object Function Derivative Calculation
+            dc = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, SIMP_penal, x, dc, lambdaF, dR)
             
-            for elem in range(nelem):
-                if ep[3]:
-                    
-                    if el_type==2:
-                        Ke=cfc.plante(elemx[elem,:],elemy[elem,:],ep[0:2],D) #Element Stiffness Matrix for Triangular Element
-                        if eq is not None:
-                            eqe=[eq,eq,eq]
-                            eqe=np.array(eqe).reshape(1,6)
-                        else:
-                            eqe=np.zeros([1,6])
-                    else:
-                        Ke=cfc.plani4e(elemx[elem,:],elemy[elem,:],ep,D)[0]  #Element Stiffness Matrix for Quad Element
-                        if eq is not None:
-                            eqe=[eq,eq,eq,eq]
-                            eqe=np.array(eqe).reshape(1,8)
-                        else:
-                            eqe=np.zeros([1,8])
-
-                    Ue = U[np.ix_(edof[elem,:]-1)]
-                    fext_tildee = fext_tilde[np.ix_(edof[elem,:]-1)]
-                    dc[elem] = np.matmul(fext_tildee.T,Ue)  -  SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
-                    
-                    if dc[elem] >0:
-                        print(str(elem) + ':' +str(dc[elem]))
-                        dc[elem] = 0
-                    
-                else:
-                    if eq is not None:
-                            eqe=[eq,eq,eq]
-                            eqe=np.array(eqe).reshape(1,6)
-                    else:
-                            eqe=np.zeros([1,6])
-                    lambdaFe = lambdaF[np.ix_(edof[elem,:]-1)]
-                    Ue = U[np.ix_(edof[elem,:]-1)]
-                    fext_tildee = fext_tilde[np.ix_(edof[elem,:]-1)]
-                    dc[elem] = np.matmul(fext_tildee.T,Ue) + np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
-                    
-                    if dc[elem] >0:
-                        print(str(elem) + ':' +str(dc[elem]))
-                        dc[elem] = 0
-                        
             if Debug and loop==1:
                 dc_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nelem,elementFun)
-
                 plt.plot(range(0,nelem),(1-dc_Num/dc)*100)
                 plt.xlabel('Element')
-                plt.ylabel('Percent Error')    
-            
-            
-            toc=time.perf_counter()
+                plt.ylabel('Percent Error')
 
+            #Apply Filter
             dc = Filter.Filter(x,dc,weightMatrix)
 
-            ticOpt=time.perf_counter()
             x = Opt.Optimisation().OC(nelem,x,volFrac,dc)
-            tocOpt=time.perf_counter()
-    
+
             change = np.max(np.max(abs(x-xold)))
             
-            print('Sens. Anal.:'+str(toc-tic))
-            print('Opt:        '+str(tocOpt-ticOpt))
             print('Change:     '+str(change))
             print('Iteration:  '+str(loop))
             print('---------------------------')

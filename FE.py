@@ -72,10 +72,7 @@ class FE():
         #Settings
         epLin=ep.copy()
         epLin[3]=1
-        Timers=True                      #Print Timers 
-        
-        tic1 = time.perf_counter()       #Start timer
-        
+
         row=[]
         col=[]
         data=[]
@@ -102,17 +99,9 @@ class FE():
         K=coo_matrix((data,(row,col)),shape=(self.ndof,self.ndof))
         K=K.tocsc()
 
-        toc1 = time.perf_counter()
-        tic2 = time.perf_counter()
-        
+
         self.U[np.ix_(self.freedofs)] = spsolve(K[np.ix_(self.freedofs,self.freedofs)],fextGlobal[np.ix_(self.freedofs)]).reshape(len(self.freedofs),1)
-        toc2 = time.perf_counter()
-        
-    
-        if Timers==True:
-            print('FE, Assem.: '+str(toc1-tic1))
-            print('FE, Solve:  '+str(toc2-tic2))
-            
+
         
         return self.U, fext_tilde, fextGlobal
     

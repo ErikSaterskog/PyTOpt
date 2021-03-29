@@ -43,6 +43,7 @@ Then we call on the Main module to start the optimisation.
 import calfem.geometry as cfg
 import PyTOpt
 import Material_Routine_Selection as mrs
+import Object_Func_Selection as ofs
 g = cfg.Geometry()
 
 g.point([0,0])                 #0
@@ -67,7 +68,7 @@ g.surface([0, 1, 2, 3, 4,5,6])
 
 force = [-1e6,9,2]      #First magnitude, second marker, third direction
 bmarker = 5
-eq=[0,-9.81]
+eq=[0,0]
 
 
 E = 210e9               # Young's modulus
@@ -78,9 +79,9 @@ eps_y = 0
 mp = [E,nu,eps_y]
 
 volFrac = 0.3           # Constraint on volume
-meshSize=0.06            # The average length of one element. 
+meshSize=0.1            # The average length of one element. 
 rMin = meshSize*0.7     # How aggressive the filter should be. Smaller -> less aggressive
-changeLimit=0.01        # How small change between two optmisation we allow before stopping.
+changeLimit=0.0        # How small change between two optmisation we allow before stopping.
 ep=[1,True,2]          #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
 SIMP_penal = 3
 method='OC'
@@ -89,8 +90,9 @@ Debug=False
 settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 
 materialFun = mrs.Bilinear
+ObjectFun = ofs.Energy
 
-PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun, eq)
+PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq)
 
 
 

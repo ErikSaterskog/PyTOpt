@@ -7,7 +7,7 @@ def Bilinear(eps,mp):
     nu1      = mp[1]
     eps_y    = mp[2]
     
-    E2 = E1*0.1
+    E2 = E1*0.05
    
     G = E1/(2*(1+nu1))
     K1 = E1*G/(3*(3*G-E1))
