@@ -24,7 +24,7 @@ This file gives the functions mmasub, gcmmasub, subsolv and kktcheck.
 # Loading modules
 from __future__ import division
 from scipy.sparse import diags # or use numpy: from numpy import diag as diags
-from scipy.linalg import solve # or use numpy: from numpy.linalg import solve
+from numpy.linalg import solve
 import numpy as np
 
 

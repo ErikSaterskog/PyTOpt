@@ -30,7 +30,7 @@ def mma_solver(bc,MP,f,Edof,elemx,elemy,x,SIMP_penal,ep,elementType,materialFun,
     eeen = np.ones((nelem,1))
     eeem = np.ones((1,1))
     zerom = np.zeros((1,1))
-    xmin = 1.e-1*eeen   #lower bound on x
+    xmin = 1.e-2*eeen   #lower bound on x
     xmax = 1*eeen       #upper bound on x
     move = 1.0
     c = 1000*eeem
@@ -42,7 +42,7 @@ def mma_solver(bc,MP,f,Edof,elemx,elemy,x,SIMP_penal,ep,elementType,materialFun,
     low = xmin.copy()
     upp = xmax.copy()
     
-    maxoutit =150
+    maxoutit =50
     kkttol = 0	
     dc = x.copy()
     
