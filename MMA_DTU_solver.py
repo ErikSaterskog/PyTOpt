@@ -1,4 +1,4 @@
-def mma_solver(bc,MP,f,Edof,elemx,elemy,x,SIMP_penal,ep,elementType,materialFun,FEM,el_type,D,eq,weightMatrix,volFrac):
+def mma_solver(bc,MP,f,Edof,elemx,elemy,x,SIMP_penal,ep,elementType,materialFun,FEM,el_type,D,eq,weightMatrix,volFrac,ObjectFun):
     # -*- coding: utf-8 -*-
     """
     This function is uses Method of moving asymptotes along with KKt check to 
@@ -20,26 +20,23 @@ def mma_solver(bc,MP,f,Edof,elemx,elemy,x,SIMP_penal,ep,elementType,materialFun,
     """
     import numpy as np
     from MMA_DTU_funct import mmasub,kktcheck
-    import Object_Func_Selection as ofs
     import Filter
-    ObjectFun = ofs.Energy
-    
-    m=1
+   
     
     #algorithmic parameters and initial guess
     nelem = np.size(Edof,0)
     
     #initialization
     eeen = np.ones((nelem,1))
-    eeem = np.ones((m,1))
-    zerom = np.zeros((m,1))
+    eeem = np.ones((1,1))
+    zerom = np.zeros((1,1))
     xmin = 1.e-1*eeen   #lower bound on x
     xmax = 1*eeen       #upper bound on x
     move = 1.0
     c = 1000*eeem
     d = zerom.copy()
     a0 = 0
-    a=np.zeros((m,1))
+    a=np.zeros((1,1))
     xold1 = x.copy()
     xold2 = x.copy()
     low = xmin.copy()
@@ -62,11 +59,10 @@ def mma_solver(bc,MP,f,Edof,elemx,elemy,x,SIMP_penal,ep,elementType,materialFun,
     
 
     dfdx = eeen.copy()
-    dfdx = dfdx.reshape(m,nelem)
+    dfdx = dfdx.reshape(1,nelem)
     fval = sum(x)-volFrac*len(x)
     
     # The iterations starts
-    kktnorm = kkttol+10
     kktnorm = kkttol+10
     outit = 0
     
@@ -77,13 +73,12 @@ def mma_solver(bc,MP,f,Edof,elemx,elemy,x,SIMP_penal,ep,elementType,materialFun,
         
         
         dc = np.array(dc)
-        xmma,ymma,zmma,lam,xsi,eta,mu,zet,s,low,upp =  \
-            mmasub(m,nelem,outit,x,xmin,xmax,xold1,xold2,f0val,dc,fval,dfdx,low,upp,a0,a,c,d,move)
+        x,y,z,lam,xsi,eta,mu,zet,s,low,upp =  \
+            mmasub(1,nelem,outit,x,xmin,xmax,xold1,xold2,f0val,dc,fval,dfdx,low,upp,a0,a,c,d,move)
         dc = np.matrix(dc)                                                                
         # update
         xold2 = xold1.copy()
         xold1 = x.copy()
-        x = xmma.copy()
         
 #------------------------------------------------------------------------------        
         # Re-calculate function values and gradients of the objective and constraints functions
@@ -97,14 +92,14 @@ def mma_solver(bc,MP,f,Edof,elemx,elemy,x,SIMP_penal,ep,elementType,materialFun,
         
     
         dfdx = eeen.copy()
-        dfdx = dfdx.reshape(m,nelem)
+        dfdx = dfdx.reshape(1,nelem)
         fval = sum(x)-volFrac*len(x)
 #----------------------------------------------------------------------------- 
    
         # The residual vector of the KKT conditions is calculated
         dc = np.array(dc)
         residu,kktnorm,residumax = \
-            kktcheck(m,nelem,xmma,ymma,zmma,lam,xsi,eta,mu,zet,s,xmin,xmax,dc,fval,dfdx,a0,a,c,d)
+            kktcheck(1,nelem,x,y,z,lam,xsi,eta,mu,zet,s,xmin,xmax,dc,fval,dfdx,a0,a,c,d)
         dc = np.matrix(dc)
     
     return f0val,x,eps_h

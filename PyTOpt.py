@@ -230,7 +230,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
                 
         
     elif method =='MMA':
-        G0,x,eps_h = mds.mma_solver(bc,mp,f,edof,elemx,elemy,x,SIMP_penal,ep,elementFun,materialFun,FEM,el_type,D,eq,weightMatrix,volFrac)
+        G0,x,eps_h = mds.mma_solver(bc,mp,f,edof,elemx,elemy,x,SIMP_penal,ep,elementFun,materialFun,FEM,el_type,D,eq,weightMatrix,volFrac,ObjectFun)
     else:
         raise Exception('No Optimisation method of that name')
             
