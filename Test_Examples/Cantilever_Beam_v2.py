@@ -48,6 +48,8 @@ import calfem.vis as cfv
 import Material_Elastic as me
 import PyTOpt
 import Material_Bilinear as mb
+import Material_Routine_Selection as mrs
+import Object_Func_Selection as ofs
 
 g = cfg.Geometry()
 
@@ -70,33 +72,30 @@ g.surface([0, 1, 2, 3, 4])
 
 force = [-4e5,9,2] #First magnitude, second marker, third direction
 bmarker = 4
-
+eq=[0,0]
 
 E = 210e9       # Young's modulus
 nu = 0.3        #Poisson's ratio
-eps_y = 7e-6
+eps_y = 0
 
 
 mp = [E,nu,eps_y]
 
-volFrac = 0.5       # Constraint on volume
-meshSize=0.12       # The average length of one element. 
+volFrac = 0.3       # Constraint on volume
+meshSize=0.015       # The average length of one element. 
 rMin = meshSize*0.7 # How aggressive the filter should be. Smaller -> less aggressive
 changeLimit=0.01    # How small change between two optmisation we allow before stopping.
 ep=[1,True,2]       #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
 SIMP_penal = 3
-method='OC'
+method='MMA'
 Debug=False
 
 settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 
+materialFun = mrs.Bilinear
+ObjectFun = ofs.Energy
 
-#sick.sick(epsilon,mp)
-#mh.mod_hook(epsilon, mp)
-#materialFun=el.elastic
-materialFun = mb.head
-
-PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun)
+PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq)
 
 
 
