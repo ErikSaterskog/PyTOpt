@@ -1,8 +1,8 @@
 
 import numpy as np
-import nlopt 
 import calfem.core as cfc 
 import Filter
+from MMA_DTU_funct import mmasub,kktcheck
 
 
 class Optimisation:
@@ -28,62 +28,107 @@ class Optimisation:
     
         return xnew
 
-    def mma(self,nelem,SIMP_penal,edof,f,ep,elemx,elemy,D,weightMatrix,volFrac,x,elementType,el_type,FEM,materialFun,eq=None):
+    def mma(self,bc,MP,f,Edof,elemx,elemy,x,SIMP_penal,ep,elementType,materialFun,FEM,el_type,D,eq,weightMatrix,volFrac,ObjectFun):
+        # -*- coding: utf-8 -*-
+        """
+        This function is uses Method of moving asymptotes along with KKt check to 
+        optimize the objective function.
         
-        def Objfun(x,grad):
-            x = x.reshape(nelem,1)
-            grad = grad.reshape(nelem,1)
-            global U
-            U,dR,lambdaF,sig_VM = FEM.fe_nl(x,SIMP_penal,f,ep,elementType,materialFun)
-            c = np.matmul(f.T,U)            
-            for elem in range(nelem):
-                if ep[3]==1:
-                    
-                    if el_type==2:
-                        Ke=cfc.plante(elemx[elem,:],elemy[elem,:],ep[0:2],D)  #Element Stiffness Matrix for Triangular Element
-                        eqe=[eq,eq,eq]
-                        eqe=np.array(eqe).reshape(1,6)
-                    else:
-                        Ke=cfc.plani4e(elemx[elem,:],elemy[elem,:],ep,D)[0]  #Element Stiffness Matrix for Quad Element
-                        eqe=[eq,eq,eq,eq]
-                        eqe=np.array(eqe).reshape(1,8)   
-                        
-                    Ue = U[np.ix_(edof[elem,:]-1)]
-                    
-                    grad[elem] =  np.matmul(eqe,Ue)  - SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
-                    
-                else:
-                    lambdaFe = lambdaF[np.ix_(edof[elem,:]-1)]
-                    grad[elem] = np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
+           Input:
+            bc   : Boundary condition               
+            MP   : Material parameter [E,A,Sigma_y] 
+            f    : Loads                            
+            Edof : Element degrees of freedom       
+            ex   : Elements position in x           
+            ey   : Elements position in y           
+            Ndof : Number of degrees of freedom     
+            
+          Output:
+             xval: vector with the optimized areas
+             ed  : displacements
+    
+        """
+
+
+       
+        
+        #algorithmic parameters and initial guess
+        nelem = np.size(Edof,0)
+        
+        #initialization
+        eeen = np.ones((nelem,1))
+        eeem = np.ones((1,1))
+        zerom = np.zeros((1,1))
+        xmin = 1.e-2*eeen   #lower bound on x
+        xmax = 1*eeen       #upper bound on x
+        move = 1.0
+        c = 1000*eeem
+        d = zerom.copy()
+        a0 = 0
+        a=np.zeros((1,1))
+        xold1 = x.copy()
+        xold2 = x.copy()
+        low = xmin.copy()
+        upp = xmax.copy()
+        
+        maxoutit =250
+        kkttol = 0	
+        dc = x.copy()
+        
+        # Calculate function values and gradients of the objective and constraints functions
+    
+        
+        U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x,SIMP_penal,f,ep,elementType,materialFun)
+        
+          
+        f0val, dc = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, Edof, fext_tilde, fextGlobal, SIMP_penal, x, dc, dR, freedofs, K)
+        
+        dc = Filter.Filter(x,dc,weightMatrix)
+        
+        
+    
+        dfdx = eeen.copy()
+        dfdx = dfdx.reshape(1,nelem)
+        fval = sum(x)-volFrac*len(x)
+        
+        # The iterations starts
+        kktnorm = kkttol+10
+        outit = 0
+        
+    #-----------------------------------------------------------------------------
+        
+        while (kktnorm > kkttol) and (outit < maxoutit):
+            outit += 1
             
             
-            grad[:] = Filter.Filter(x,grad,weightMatrix)
-            grad = grad.reshape(len(x),)
-            x = x.reshape(len(x),)
+            dc = np.array(dc)
+            x,y,z,lam,xsi,eta,mu,zet,s,low,upp =  \
+                mmasub(1,nelem,outit,x,xmin,xmax,xold1,xold2,f0val,dc,fval,dfdx,low,upp,a0,a,c,d,move)
+            dc = np.matrix(dc)                                                                
+            # update
+            xold2 = xold1.copy()
+            xold1 = x.copy()
             
-            ce = np.array(c[0]).reshape([1,])
-            print('G0:'+str(ce[0]))
-            print('------------------------------')
-            return ce[0]
+    #------------------------------------------------------------------------------        
+            # Re-calculate function values and gradients of the objective and constraints functions
+            U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x,SIMP_penal,f,ep,elementType,materialFun)
+            f0val = np.matmul(f.T,U)  
+              
+            f0val, dc = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, Edof, fext_tilde, fextGlobal, SIMP_penal, x, dc, dR, freedofs, K)
+            
+            dc = Filter.Filter(x,dc,weightMatrix)
+            
         
-        def VolCon(x,grad):
-            grad[:] = 4**x.copy()
-            x = x.reshape(nelem,1)
-            grad = grad.reshape(nelem,1)
-            grad[:] = Filter.Filter(x,grad,weightMatrix)
-            grad = grad.reshape(len(x),)
-            x = x.reshape(len(x),)
-            return sum(x)-volFrac*len(x)
-        
-        opt = nlopt.opt(nlopt.LD_MMA, len(x))           #Choosing optmisation algorithm
-        opt.set_min_objective(Objfun)
-        lb = np.zeros(np.size(x))+0.001                    
-        ub = np.ones(np.size(x))                           
-        opt.set_lower_bounds(lb)
-        opt.set_upper_bounds(ub)
-        opt.add_inequality_constraint(VolCon,0)
-        opt.set_xtol_rel(1e-2)
-        opt.set_maxeval(150)
-        x = opt.optimize(x.reshape(len(x),))
-        
-        return x
+            dfdx = eeen.copy()
+            dfdx = dfdx.reshape(1,nelem)
+            fval = sum(x)-volFrac*len(x)
+    #----------------------------------------------------------------------------- 
+       
+            # The residual vector of the KKT conditions is calculated
+            dc = np.array(dc)
+            residu,kktnorm,residumax = \
+                kktcheck(1,nelem,x,y,z,lam,xsi,eta,mu,zet,s,xmin,xmax,dc,fval,dfdx,a0,a,c,d)
+            dc = np.matrix(dc)
+            print(f0val)
+        return f0val,x,eps_h
+
