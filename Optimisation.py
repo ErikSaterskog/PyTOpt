@@ -1,8 +1,7 @@
 
 import numpy as np
-import calfem.core as cfc 
 import Filter
-from MMA_DTU_funct import mmasub,kktcheck
+from MMA_funct import mmasub,kktcheck
 
 
 class Optimisation:
