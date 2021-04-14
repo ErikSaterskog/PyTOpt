@@ -61,8 +61,8 @@ class Optimisation:
         zerom = np.zeros((1,1))
         xmin = 1.e-2*eeen   #lower bound on x
         xmax = 1*eeen       #upper bound on x
-        move = 1.0
-        c = 1000*eeem
+        move = 0.1
+        c = 1*eeem
         d = zerom.copy()
         a0 = 0
         a=np.zeros((1,1))
@@ -71,14 +71,14 @@ class Optimisation:
         low = xmin.copy()
         upp = xmax.copy()
         
-        maxoutit =250
+        maxoutit =50
         kkttol = 0	
         dc = x.copy()
         
         # Calculate function values and gradients of the objective and constraints functions
     
         
-        U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x,SIMP_penal,f,ep,elementType,materialFun)
+        U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x,SIMP_penal,f,ep,elementType,materialFun,eq)
         
           
         f0val, dc = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, Edof, fext_tilde, fextGlobal, SIMP_penal, x, dc, dR, freedofs, K)
@@ -111,7 +111,7 @@ class Optimisation:
             
     #------------------------------------------------------------------------------        
             # Re-calculate function values and gradients of the objective and constraints functions
-            U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x,SIMP_penal,f,ep,elementType,materialFun)
+            U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x,SIMP_penal,f,ep,elementType,materialFun,eq)
             f0val = np.matmul(f.T,U)  
               
             f0val, dc = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, Edof, fext_tilde, fextGlobal, SIMP_penal, x, dc, dR, freedofs, K)
