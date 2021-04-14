@@ -8,7 +8,7 @@ Packages required:
 Calfem
 scipy
 numpy
-nlopt
+
 
 For the Meshgenerator to work must GMSH.exe be in the same folder. GMSH.exe can be downloaded from the Repository or at https://gmsh.info/.
 
