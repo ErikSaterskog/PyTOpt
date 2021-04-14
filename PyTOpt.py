@@ -1,7 +1,6 @@
 """
 This the main-module and is called by the user with the inputs
 g           - Geometry object
-el_type     - 2 if triangles, 3 if quad elements
 force       - A vector with the magnitude and position of the prescribed forces.
 bmarker     - A vector with the boundaries and prescribed displacements.
 settings    - Includes settings for restrictions on the optimisation and the filtering.
@@ -19,7 +18,7 @@ ep          - Element parameters
                 ir          - Integration rule
                 non/lin     - 1 if linear analysis, 2 if nonlinear analysis
 materialFun - A material model with strain and mp as input and stress and consitutive matrix as output.
-
+ObjectFun   - An objective function with multiply inputs.
 The module ends by plotting the result of 
 
 """
