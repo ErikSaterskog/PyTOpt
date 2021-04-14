@@ -130,7 +130,7 @@ class FE():
         """
         #Settings
         err=1e9                  # Setting an error, arbritary big.
-        TOL=1e-11*max(abs(F))    # Setting a resonable low tolerance. 
+        TOL=1e-11    # Setting a resonable low tolerance. 
         
         U,fext_tilde, fextGlobal, K = FE.fe(self, x, SIMP_penal, F, ep, elementFun, materialFun,eq)
         
@@ -191,6 +191,8 @@ class FE():
             
             if newtonIt ==100:
                 break
+            
+            TOL=1e-11*max(max(abs(fextGlobal)),1e4)
             
             U[index1D] = U[index1D] - spsolve(K[index2D],R[self.freedofs]).reshape(len(self.freedofs),1)
                     
