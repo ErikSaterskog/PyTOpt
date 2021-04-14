@@ -71,17 +71,17 @@ eq = [0,-9.81*7750]
 
 # Material parameters
 E = 210e9           # Young's modulus
-nu = 0.3            #Poisson's ratio
-eps_y = 1e-7
+nu = 0.3            # Poisson's ratio
+eps_y = 1e-7        # Strain border for Bilinear material model
 mp = [E,nu,eps_y]
 ######################
 
 # Settings
-volFrac = 0.3       # Constraint on 50% volume
-meshSize=0.08      # The average length of one element. 
-rMin = meshSize*0.7 # How aggressive the filter should be. Smaller -> less aggressive
-changeLimit=0.01    # How small change between two optmisation we allow before stopping.
-ep=[1,True,2]    #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
+volFrac = 0.3       
+meshSize=0.08      
+rMin = meshSize*0.7 
+changeLimit=0.01    
+ep=[1,True,2]    
 SIMP_penal = 3
 method='OC'
 Debug=False

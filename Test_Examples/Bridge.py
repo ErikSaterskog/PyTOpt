@@ -71,24 +71,24 @@ g.surface([0, 1, 2, 3, 4, 5, 6, 7])
 ####################
 
 # Forces and boundary conditions
-force = [7e4,6,2] #First magnitude, second marker, third direction
+force = [7e4,6,2]  # First magnitude, second marker, third direction
 bmarker = [1,3,5,7]
 eq = [0,-9.81*7750]
 ###################
 
 # Material parameters
 E = 210e9       # Young's modulus
-nu = 0.3        #Poisson's ratio
-eps_y = 1e-6
+nu = 0.3        # Poisson's ratio
+eps_y = 1e-6    # Strain border for Bilinear material model
 mp = [E,nu,eps_y]
 ###################
 
 # Settings 
-volFrac = 0.3       # Constraint on 50% volume
-meshSize=0.8        # The average length of one element. 
-rMin = meshSize*0.7 # How aggressive the filter should be. Smaller -> less aggressive
-changeLimit=0.01    # How small change between two optmisation we allow before stopping.
-ep=[1,True,2]       #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
+volFrac = 0.3       
+meshSize=0.8         
+rMin = meshSize*0.7 
+changeLimit=0.01    
+ep=[1,True,2]       
 SIMP_penal = 3
 method='OC'
 Debug=False

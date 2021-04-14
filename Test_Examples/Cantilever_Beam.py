@@ -49,13 +49,13 @@ import Object_Func_Selection as ofs
 # Creating geometry
 g = cfg.Geometry()
 
-g.point([0,0])                 #0
-g.point([1,0])                 #1
-g.point([1,0.4],marker=9)      #2               
-g.point([1,0.8])               #3
-g.point([0,0.8])               #4
-g.point([0,0.5])               #5
-g.point([0,0.3])               #6
+g.point([0,0])                 
+g.point([1,0])                 
+g.point([1,0.4],marker=9)                     
+g.point([1,0.8])               
+g.point([0,0.8])               
+g.point([0,0.5])               
+g.point([0,0.3])               
 
 
 g.line([0, 1],marker=0)
@@ -66,29 +66,28 @@ g.line([4, 5],marker=4)
 g.line([5, 6],marker=5)
 g.line([6, 0],marker=6)
 
-
 g.surface([0, 1, 2, 3, 4,5,6])
 #####################
 
 # Forces and boundary conditions
-force = [-1e5,9,2]      #First magnitude, second marker, third direction
-bmarker = 5
-eq=[0,0*-9.81*7750]
+force = [-1e5,9,2]      # First magnitude, second marker, third direction
+bmarker = 5             # Boundary marker    
+eq=[0,0*-9.81*7750]     # Body forces    
 #####################
 
 # Material parameters
 E = 210e9               # Young's modulus
-nu = 0.3                #Poisson's ratio
-eps_y = 0
+nu = 0.3                # Poisson's ratio
+eps_y = 0               # Strain border for Bilinear material model
 mp = [E,nu,eps_y]
 #####################
 
 # Settings
-volFrac = 0.3           # Constraint on volume
-meshSize=0.07            # The average length of one element. 
-rMin = meshSize*0.7     # How aggressive the filter should be. Smaller -> less aggressive
-changeLimit=0.0        # How small change between two optmisation we allow before stopping.
-ep=[1,True,2]          #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]  
+volFrac = 0.3           
+meshSize=0.07            
+rMin = meshSize*0.7     
+changeLimit=0.01        
+ep=[1,True,2]          
 SIMP_penal = 3
 method='MMA'
 Debug=False
