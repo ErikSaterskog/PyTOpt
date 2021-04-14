@@ -18,7 +18,6 @@ The resultant will influence the next guess of the displacements.
 
 """
 import numpy as np
-import time
 from scipy.sparse import coo_matrix
 from scipy.sparse.linalg import spsolve
 
@@ -196,9 +195,7 @@ class FE():
             
             U[index1D] = U[index1D] - spsolve(K[index2D],R[self.freedofs]).reshape(len(self.freedofs),1)
                     
-
-        #lambdaF[index1D] = -spsolve(K[index2D],fextGlobal[self.freedofs]).reshape(len(self.freedofs),1)
-              
+      
      
         
         print('N.iters:    ' + str(newtonIt))

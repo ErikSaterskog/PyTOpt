@@ -12,7 +12,7 @@ class Optimisation:
         pass
     
     def OC(self,nel,x,volfrac,dc):
-        l1,l2,step,damping=0,1e5,0.2,0.5
+        l1,l2,step,damping=0,1e5,0.02,0.5
         while (l2-l1) > 1e-4:
             lmid = 0.5*(l2+l1)
             
@@ -28,43 +28,40 @@ class Optimisation:
     
         return xnew
 
-    def mma(self,bc,MP,f,Edof,elemx,elemy,x,SIMP_penal,ep,elementType,materialFun,FEM,el_type,D,eq,weightMatrix,volFrac,ObjectFun):
-        # -*- coding: utf-8 -*-
+    def mma(self,f,edof,elemx,elemy,x,SIMP_penal,ep,elementType,materialFun,FEM,el_type,D,eq,weightMatrix,volFrac,ObjectFun):
         """
-        This function is uses Method of moving asymptotes along with KKt check to 
+        This function is uses Method of moving asymptotes along with KKT check to 
         optimize the objective function.
         
            Input:
-            bc   : Boundary condition               
-            MP   : Material parameter [E,A,Sigma_y] 
-            f    : Loads                            
-            Edof : Element degrees of freedom       
-            ex   : Elements position in x           
-            ey   : Elements position in y           
-            Ndof : Number of degrees of freedom     
+           
+            f       : Loads                            
+            edof    : Element degrees of freedom       
+            elemx   : Elements position in x           
+            elemy   : Elements position in y           
+            
             
           Output:
-             xval: vector with the optimized areas
-             ed  : displacements
+             f0val  : The object function value 
+             x      : Vector with the design variables
+             eps_h  : Vector with the element hydrostatic strain 
     
         """
 
 
        
         
-        #algorithmic parameters and initial guess
-        nelem = np.size(Edof,0)
         
-        #initialization
+        #Initialization ##############################
+        
+        nelem = np.size(edof,0)     
         eeen = np.ones((nelem,1))
-        eeem = np.ones((1,1))
-        zerom = np.zeros((1,1))
-        xmin = 1.e-2*eeen   #lower bound on x
-        xmax = 1*eeen       #upper bound on x
+        xmin = 1.e-2*eeen           #Lower bound on x
+        xmax = eeen                 #Upper bound on x
         move = 0.1
-        c = 1*eeem
-        d = zerom.copy()
-        a0 = 0
+        c = 1000 
+        d = np.zeros((1,1))
+        a0 = 1
         a=np.zeros((1,1))
         xold1 = x.copy()
         xold2 = x.copy()
@@ -75,13 +72,15 @@ class Optimisation:
         kkttol = 0	
         dc = x.copy()
         
+        ###########################################
+        
         # Calculate function values and gradients of the objective and constraints functions
     
         
         U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x,SIMP_penal,f,ep,elementType,materialFun,eq)
         
           
-        f0val, dc = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, Edof, fext_tilde, fextGlobal, SIMP_penal, x, dc, dR, freedofs, K)
+        f0val, dc = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_penal, x, dc, dR, freedofs, K)
         
         dc = Filter.Filter(x,dc,weightMatrix)
         
@@ -114,7 +113,7 @@ class Optimisation:
             U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x,SIMP_penal,f,ep,elementType,materialFun,eq)
             f0val = np.matmul(f.T,U)  
               
-            f0val, dc = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, Edof, fext_tilde, fextGlobal, SIMP_penal, x, dc, dR, freedofs, K)
+            f0val, dc = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_penal, x, dc, dR, freedofs, K)
             
             dc = Filter.Filter(x,dc,weightMatrix)
             

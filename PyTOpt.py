@@ -23,6 +23,8 @@ materialFun - A material model with strain and mp as input and stress and consit
 The module ends by plotting the result of 
 
 """
+
+## IMPORTING MODULES ############################
 import numpy as np
 import calfem.utils as cfu
 import Mesh
@@ -32,7 +34,7 @@ import Filter
 import time
 import matplotlib.pyplot as plt
 import calfem.core as cfc
-from scipy.sparse import lil_matrix, coo_matrix
+from scipy.sparse import coo_matrix
 import Debugger
 import Element_Routine_Selection as ERS
 import json
@@ -40,20 +42,14 @@ import matplotlib
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 import Material_Routine_Selection as mrs
-import Object_Func_Energy
-import MMA_DTU_solver as mds
+
+################################################
 
 
 def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
     
-    #Initiating
-    change = 2
-    loop = 0
-    ticGlobal=time.perf_counter()
-    save=False
     
-    
-    #Settings
+    """ Settings """
     E = mp[0]
     nu = mp[1]
     el_type=ep[2]
@@ -76,6 +72,9 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
             except:
                 raise Exception('Too few inputet settings. Requires a least 5 inputs.')
     
+    """------------------------------------------"""
+    
+    
     """ Meshing """
     
     mesh = Mesh.Mesh(g,meshSize)
@@ -95,6 +94,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
     else:
         print("Wrong Element Type!")
     
+    """---------------------------------------------"""
     
     """ Denote Forces and Boundary Conditions """
     
@@ -117,13 +117,22 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
     except:
         cfu.applyforce(bdofs, f, force[1], force[0], force[2])
     
+    """---------------------------------------------"""
     
-    """ Initialization Cont."""
-
+    """ Initialization"""
+    
+    change = 2
+    loop = 0
+    ticGlobal=time.perf_counter()
+    save=False
+    
     nelem = np.size(edof,0)
+    x = np.zeros([nelem,1])+volFrac # Startguess
     
-    x = np.zeros([nelem,1])+volFrac
-        
+    #Initiate the FEM and Linear Elastic Constitutive Matrix
+    FEM = FE.FE(edof,coords,mp,bc)
+    D=cfc.hooke(ep[0], E, nu)
+    
     #Check sizes, Initialize
     nx=coords[:,0]
     ny=coords[:,1]
@@ -132,8 +141,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
     print('Initializing...')
     print('Number of elements: '+str(nelem))
     
-    
-    #Check element type
+    #Find The coordinates for each element's nodes
     if len(edof[0,:])==6:   #Triangular Element
         elemx=np.zeros([nelem,3])
         elemy=np.zeros([nelem,3])
@@ -142,8 +150,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
         elemy=np.zeros([nelem,4])
     else:
         raise Exception('Unrecognized Element Shape, Check edof Matrix')
-    
-    #Find The coordinates for each element's nodes
+        
     for elem in range(nelem):
             
         nnode=np.ceil(np.multiply(edof[elem,:],0.5))-1
@@ -154,9 +161,9 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
         elemCenterx[elem]=np.mean(elemx[elem])
         elemCentery[elem]=np.mean(elemy[elem])
 
-    #Linear Elastic Constitutive Matrix
-    D=cfc.hooke(ep[0], E, nu)
+    """---------------------------------"""
 
+    """ Creating weighting matrix for Filter"""
     data = []
     row = []
     col = []
@@ -171,14 +178,13 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
         row.extend(np.where(weightdata>0)[0])
         col.extend(np.repeat(elem,len(np.where(weightdata>0)[0])))
         
-    #Create weighting matrix for Filter
+    
     weightMatrix=coo_matrix((data,(row,col)),shape=(nelem,nelem))
        
     tocH=time.perf_counter()
     print('H:'+str(tocH-ticH))
-
-    #Initiate the FEM
-    FEM = FE.FE(edof,coords,mp,bc)
+    """-------------------------------------"""
+    
 
     """ MAIN LOOP """
     if method == 'OC':
@@ -230,26 +236,27 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
                 
         
     elif method =='MMA':
-        G0,x,eps_h = Opt.Optimisation().mma(bc,mp,f,edof,elemx,elemy,x,SIMP_penal,ep,elementFun,materialFun,FEM,el_type,D,eq,weightMatrix,volFrac,ObjectFun)
+        G0,x,eps_h = Opt.Optimisation().mma(f,edof,elemx,elemy,x,SIMP_penal,ep,elementFun,materialFun,FEM,el_type,D,eq,weightMatrix,volFrac,ObjectFun)
     else:
-        raise Exception('No Optimisation method of that name')
-            
+        raise Exception('No Optimisation method of that name. Try OC or MMA.')
+    
+    """--------------------------------------------------"""        
             
     """ Visualisation """
     
+    # Time and objective function value
     tocGlobal=time.perf_counter()
     timeMin=(tocGlobal-ticGlobal)/60
     print('Total computation time: '+str(int(timeMin))+'m '+str(round(np.mod(timeMin,1)*60,1))+'s')
-
-
     print('Final G0: '+str(float(G0)))
     
-    
+    # Possibility to save settings
     if save:
         data = {'x': x.tolist(),'coords': coords.tolist(),'edof': edof.tolist(), 'el_type': el_type}
         with open('Saved_Results/myfile.json', 'w') as outfile:
             json.dump(data, outfile, indent=4)
     
+    # Plot the final optimised structure
     patches = []
     fig, ax = plt.subplots()
     for j in range(0,nelem):
@@ -262,6 +269,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
     ax.axis('equal')
     plt.show()  
     
+    # If linear, find the hydrostatic strain
     if ep[3]:
         ep[3] = False
         materialFun = mrs.Elastic 
@@ -271,9 +279,9 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
             elementFun = ERS.Quad
         U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
 
-    
     eps_h[np.where(x<0.1)]=0
     
+    # Plot the hydrostatic strain over the optimised structure.
     patches = []
     fig, ax = plt.subplots()
     for j in range(0,nelem):
@@ -289,6 +297,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
     plt.title('Hydrostatic Strain')
     plt.show()  
 
+    """------------------------------------------------------"""
     
     
     
