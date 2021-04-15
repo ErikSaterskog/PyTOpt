@@ -35,7 +35,7 @@ setup(
           'calfem-python',
           'sphinx==1.6.6',
           'scipy',
-          'nunmpy',
+          'numpy',
           ],
       
       keywords = 'optimisation, FEM, optimization, topology',
