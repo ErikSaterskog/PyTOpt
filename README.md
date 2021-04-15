@@ -12,6 +12,6 @@ numpy
 
 For the Meshgenerator to work must GMSH.exe be in the same folder. GMSH.exe can be downloaded from the Repository or at https://gmsh.info/.
 
-
+To install the package write: 'pip install git+https://github.com/ErikSaterskog/Thesis_Repo.git --user' in your terminal.
 
 
