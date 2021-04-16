@@ -26,21 +26,18 @@ The module ends by plotting the result of
 ## IMPORTING MODULES ############################
 import numpy as np
 import calfem.utils as cfu
-import Mesh
-import FE
-import Optimisation as Opt
-import Filter
+from Pytopt import Mesh, FE, Filter, Debugger
+from Pytopt import Optimisation as Opt
 import time
 import matplotlib.pyplot as plt
 import calfem.core as cfc
 from scipy.sparse import coo_matrix
-import Debugger
-import Element_Routine_Selection as ERS
+from Pytopt import Element_Routine_Selection as ERS
 import json
 import matplotlib
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
-import Material_Routine_Selection as mrs
+from Pytopt import Material_Routine_Selection as mrs
 
 ################################################
 
