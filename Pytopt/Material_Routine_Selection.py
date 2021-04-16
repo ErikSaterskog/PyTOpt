@@ -1,8 +1,6 @@
 
 import numpy as np
-import Material_Elastic
-import Material_Bilinear
-import Material_ModifiedHooke
+from Pytopt import Material_Elastic, Material_Bilinear, Material_ModifiedHooke
 
 def Elastic(eps,mp):
     return Material_Elastic.elastic(eps,mp) 
