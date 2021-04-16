@@ -1,7 +1,7 @@
 
 import numpy as np
 from Pytopt import Filter
-from Pytopt.MMA_funct import mmasub,kktcheck
+from Pytopt.MMA_fun import mmasub,kktcheck
 
 
 class Optimisation:
