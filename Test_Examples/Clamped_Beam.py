@@ -25,9 +25,6 @@ ep         -
              t          - thickness 
              linear     - True-linear, False-nonlinear
              el_type    - 2 means triangular elements and 3 means quad elements.
-method     - 
-             OC - Optimal Criterion methon
-             MMA - Method of moving asymptotes
 debug      - True/False if the sensitivity should be checked numerically.
 materialFun- Determine which material model that should be used. The user can 
              add ones own material model as long as the input is a strain
@@ -35,6 +32,9 @@ materialFun- Determine which material model that should be used. The user can
 ObjectivFun- Determine which objective function that should be used. The user can 
              add ones own objective function as long as the input is the same
              as for the already exisitng objective funtions.
+Optfun     - Determine which objective function that should be used. The user can 
+             add ones own optimisation algorithm as long as the input is the same
+             as for the already exisitng optimisation algorithms.
 
 Then we call on the Main module to start the optimisation.
 """
@@ -43,6 +43,7 @@ import calfem.geometry as cfg
 import Pytopt.PyTOpt as PyTOpt
 from Pytopt import Material_Routine_Selection as mrs
 from Pytopt import Object_Func_Selection as ofs
+from Pytopt import Optimisation as opt
 #####################
 
 # Creating geometry
@@ -83,14 +84,14 @@ rMin = meshSize*0.7
 changeLimit=0.01    
 ep=[1,True,2]    
 SIMP_penal = 3
-method='OC'
 Debug=False
-settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
+settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, Debug]
 #####################
 
 # Material model and Objective function
 materialFun = mrs.Elastic
 ObjectFun = ofs.Energy
+OptFun = opt.MMA
 #####################
 
 # Calling the optimisation
