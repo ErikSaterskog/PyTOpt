@@ -55,18 +55,13 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq
     plt.rcParams["figure.dpi"] = 200
     
     try:
-        volFrac,meshSize, rMin, changeLimit,SIMP_penal,method,Debug = settings
+        volFrac,meshSize, rMin, changeLimit,SIMP_penal,Debug = settings
     except:
         try:
-            volFrac,meshSize, rMin, changeLimit,SIMP_penal,method = settings
+            volFrac,meshSize, rMin, changeLimit,SIMP_penal = settings
             Debug = False
         except:
-            try:
-                volFrac,meshSize, rMin, changeLimit,SIMP_penal = settings
-                Debug = False
-                method ='OC'
-            except:
-                raise Exception('Too few inputet settings. Requires a least 5 inputs.')
+            raise Exception('Too few inputet settings. Requires a least 5 inputs.')
     
     """------------------------------------------"""
     
@@ -231,13 +226,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq
             ax.add_collection(p)
             ax.axis('equal')
             plt.show() 
-                
-        
-    #elif method =='MMA':
-    #    G0,x,eps_h = Opt.Optimisation().mma(f,edof,elemx,elemy,x,SIMP_penal,ep,elementFun,materialFun,FEM,el_type,D,eq,weightMatrix,volFrac,ObjectFun)
-    #else:
-    #    raise Exception('No Optimisation method of that name. Try OC or MMA.')
-    
+     
     """--------------------------------------------------"""        
             
     """ Visualisation """
