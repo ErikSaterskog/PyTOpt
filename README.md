@@ -17,7 +17,7 @@ This repository contains all of the files necessary for execution of the topolog
  \
   DISCLAIMER: Git may must be installed and added to PATH. In the future will the package hopefully be uploaded to pypi.org and thereafter will this not be an issue.
 
-## Lincense
+## License
   Copyright (c) 2021 Daniel Pettersson\
   Copyright (c) 2021 Erik Säterskog
   
