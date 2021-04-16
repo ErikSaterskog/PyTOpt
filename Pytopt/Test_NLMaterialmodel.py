@@ -13,7 +13,7 @@ second input to np.linespace.
 
 import numpy as np
 import matplotlib.pyplot as plt
-import Material_Bilinear as MB
+from Pytopt import Material_Routine_Selection as mrs
 
 E = 210e9
 nu= 0.3
