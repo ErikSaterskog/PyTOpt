@@ -44,6 +44,7 @@ import calfem.geometry as cfg
 import Pytopt.PyTOpt as PyTOpt
 from Pytopt import Material_Routine_Selection as mrs
 from Pytopt import Object_Func_Selection as ofs
+from Pytopt import Optimisation as opt
 #####################
 
 # Creating geometry
@@ -90,14 +91,14 @@ rMin = meshSize*0.7
 changeLimit=0.01    
 ep=[1,True,2]       
 SIMP_penal = 3
-method='OC'
 Debug=False
-settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
+settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, Debug]
 ###################
 
 # Material model and Objective function
 materialFun = mrs.Elastic
 ObjectFun = ofs.Energy
+OptFun = opt.MMA
 ###################
 
 # Calling the optimisation
