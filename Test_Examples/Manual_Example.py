@@ -1,7 +1,9 @@
-
+# Importing Modules
 import calfem.geometry as cfg
-import Material_Elastic as me
-import PyTOpt
+import Pytopt.PyTOpt as PyTOpt
+from Pytopt import Material_Routine_Selection as mrs
+from Pytopt import Object_Func_Selection as ofs
+#####################
 
 g = cfg.Geometry()
 
@@ -19,6 +21,7 @@ g.surface([0 ,1, 2])
 
 force = [-1e5, 1, 2]
 bmarker = 2
+eq = [0,0]
 
 volFrac = 0.3 
 meshSize=0.1
@@ -27,7 +30,6 @@ changeLimit=0.01
 SIMP_penal = 3
 method='OC'
 Debug=False
-
 E = 210e9 
 nu = 0.3 
 mp = [E,nu]
@@ -36,13 +38,14 @@ ep=[1,True,2]    #ep[thickness, linear(True)/nonlinear(False),2-Tri,  3-Quad]
 
 settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
 
+# Material model and Objective function
+materialFun = mrs.Elastic
+ObjectFun = ofs.Energy
+#######################
 
-materialFun=me.elastic
-
-PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun)
-
-
-
+# Calling the optimisation
+PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq)
+#######################
 
 
 

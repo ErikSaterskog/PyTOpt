@@ -39,12 +39,12 @@ ObjectivFun- Determine which objective function that should be used. The user ca
 Then we call on the Main module to start the optimisation.
 """
 
-# Importing Modules 
+# Importing Modules
 import calfem.geometry as cfg
-import PyTOpt
-import Material_Routine_Selection as mrs
-import Object_Func_Selection as ofs
-###################
+import Pytopt.PyTOpt as PyTOpt
+from Pytopt import Material_Routine_Selection as mrs
+from Pytopt import Object_Func_Selection as ofs
+#####################
 
 # Creating geometry
 g = cfg.Geometry()

@@ -41,9 +41,9 @@ Then we call on the Main module to start the optimisation.
 
 # Importing Modules
 import calfem.geometry as cfg
-import PyTOpt
-import Material_Routine_Selection as mrs
-import Object_Func_Selection as ofs
+import Pytopt.PyTOpt as PyTOpt
+from Pytopt import Material_Routine_Selection as mrs
+from Pytopt import Object_Func_Selection as ofs
 #####################
 
 # Creating geometry
@@ -87,7 +87,7 @@ volFrac = 0.3
 meshSize=0.07            
 rMin = meshSize*0.7     
 changeLimit=0.01        
-ep=[1,True,2]          
+ep=[1,False,2]          
 SIMP_penal = 3
 method='MMA'
 Debug=False
