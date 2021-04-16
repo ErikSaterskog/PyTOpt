@@ -95,5 +95,5 @@ OptFun = opt.MMA
 #####################
 
 # Calling the optimisation
-PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq)
+PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq)
 #####################
