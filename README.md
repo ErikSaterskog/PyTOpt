@@ -11,7 +11,7 @@ This repository contains all of the files necessary for execution of the topolog
   visvis\
   pyvtk\
   calfem-python\
-  sphinx==1.6.6\
+  sphinx==1.6.6
 
   For the Meshgenerator to work must GMSH.exe be in the same folder as the test file. GMSH.exe can be downloaded from the Repository or at https://gmsh.info/.
 
