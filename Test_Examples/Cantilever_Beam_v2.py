@@ -86,9 +86,8 @@ rMin = meshSize*0.7
 changeLimit=0.0 
 ep=[1,True,2]       
 SIMP_penal = 3
-method='OC'
 Debug=False
-settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, method, Debug]
+settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, Debug]
 ###################
 #46s 154
 # Material model and Objective funtion
