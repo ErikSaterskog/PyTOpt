@@ -42,7 +42,7 @@ from Pytopt import Material_Routine_Selection as mrs
 ################################################
 
 
-def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
+def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq=None):
     
     
     """ Settings """
@@ -183,58 +183,60 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, eq=None):
     
 
     """ MAIN LOOP """
-    if method == 'OC':
-        while change > changeLimit:
+    #if method == 'OC':
+    while change > changeLimit:
             
-            loop = loop + 1
-            xold = x.copy()
-            dG0 = xold.copy() 
+        loop = loop + 1
+        xold = x.copy()
+        dG0 = xold.copy() 
             
-            #FE Calculation
-            U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
+        #FE Calculation
+        U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
                         
-            #Object Function Calculation
-            G0, dG0 = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_penal, x, dG0, dR, freedofs, K)
+        #Object Function Calculation
+        G0, dG0 = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_penal, x, dG0, dR, freedofs, K)
             
-            if Debug and loop==1:
-                dG0_Num=Debugger.num_Sens_Anal(x,SIMP_penal,edof,coords,bc,f,ep,mp,nelem,elementFun)
-                plt.plot(range(0,nelem),(1-dG0_Num/dG0)*100)
-                plt.xlabel('Element')
-                plt.ylabel('Percent Error')
-
-            #Apply Filter
-            dG0 = Filter.Filter(x,dG0,weightMatrix)
-
-            x = Opt.Optimisation().OC(nelem,x,volFrac,dG0)
-
-            change = np.max(np.max(abs(x-xold)))
+        if Debug and loop==1:
+            dG0_Num=Debugger.num_Sens_Anal(x, SIMP_penal, edof, coords, bc, f, ep, mp, nelem, elementFun)
+            plt.plot(range(0,nelem),(1-dG0_Num/dG0)*100)
+            plt.xlabel('Element')
+            plt.ylabel('Percent Error')
             
-            print('G0:         '+str(float(G0)))
-            print('Change:     '+str(change))
-            print('Iteration:  '+str(loop))
-            print('---------------------------')
-            
-            if loop == 50:
-                break
-            
-            if loop % 5 == 0: 
-                patches = []
-                fig, ax = plt.subplots()
-                for j in range(0,nelem):
-                    polygon = Polygon(np.transpose([elemx[j,:], elemy[j,:]]))
-                    patches.append(polygon)
+        #Apply Filter
+        dG0 = Filter.Filter(x, dG0, weightMatrix)
 
-                p = PatchCollection(patches, cmap=matplotlib.cm.Greys)
-                p.set_array(np.transpose(x)[0])
-                ax.add_collection(p)
-                ax.axis('equal')
-                plt.show() 
+        x = OptFun(x, volFrac, G0, dG0, loop)
+            
+        
+        change = np.max(np.max(abs(x-xold)))
+    
+            
+        print('G0:         '+str(float(G0)))
+        print('Change:     '+str(change))
+        print('Iteration:  '+str(loop))
+        print('---------------------------')
+            
+        if loop == 50:
+            break
+            
+        if loop % 5 == 0: 
+            patches = []
+            fig, ax = plt.subplots()
+            for j in range(0,nelem):
+                polygon = Polygon(np.transpose([elemx[j,:], elemy[j,:]]))
+                patches.append(polygon)
+
+            p = PatchCollection(patches, cmap=matplotlib.cm.Greys)
+            p.set_array(np.transpose(x)[0])
+            ax.add_collection(p)
+            ax.axis('equal')
+            plt.show() 
                 
         
-    elif method =='MMA':
-        G0,x,eps_h = Opt.Optimisation().mma(f,edof,elemx,elemy,x,SIMP_penal,ep,elementFun,materialFun,FEM,el_type,D,eq,weightMatrix,volFrac,ObjectFun)
-    else:
-        raise Exception('No Optimisation method of that name. Try OC or MMA.')
+    #elif method =='MMA':
+    #    G0,x,eps_h = Opt.Optimisation().mma(f,edof,elemx,elemy,x,SIMP_penal,ep,elementFun,materialFun,FEM,el_type,D,eq,weightMatrix,volFrac,ObjectFun)
+    #else:
+    #    raise Exception('No Optimisation method of that name. Try OC or MMA.')
     
     """--------------------------------------------------"""        
             

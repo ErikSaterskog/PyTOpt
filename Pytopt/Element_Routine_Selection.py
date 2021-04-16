@@ -25,4 +25,4 @@ def LinQuad(ue,ex,ey,ep,mp, materialFun, eq=None):
         eq=[0,0] 
     D = cfc.hooke(ep[0],mp[0],mp[1])
     Ke,fe = cfc.plani4e(ex, ey, ep, D, eq)
-    return Ke,[],fe.reshape(6,1),[],[]
+    return Ke,[],fe.reshape(8,1),[],[]
