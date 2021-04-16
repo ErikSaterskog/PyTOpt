@@ -19,7 +19,7 @@ This repository contains all of the files necessary for execution of the topolog
   DISCLAIMER: Git may must be installed and added to path. In the future will the library hopefully be uploaded to Pypi and thereafter will this not be an issue.
 
 ## Lincense
-  Copyright (c) 2021 Daniel Pettersson
+  Copyright (c) 2021 Daniel Pettersson\\
   Copyright (c) 2021 Erik Säterskog
   
   PyTOpt is under the terms of the GNU General Public License as published by the Free Software Foundation. This means that it is free to distribute and modify. However, this    program is without warranty. For more information about the terms and conditions read the LICENSE file or go to <http://www.gnu.org/licenses/>.
