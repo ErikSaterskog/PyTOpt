@@ -16,7 +16,7 @@ This repository contains all of the files necessary for execution of the topolog
   For the Meshgenerator to work must GMSH.exe be in the same folder as the test file. GMSH.exe can be downloaded from the Repository or at https://gmsh.info/.
 
   To install the package write: 'pip install git+https://github.com/ErikSaterskog/Thesis_Repo.git --user' in your terminal.\
-  DISCLAIMER: Git may must be installed and added to path. In the future will the library hopefully be uploaded to Pypi and thereafter will this not be an issue.
+  DISCLAIMER: Git may must be installed and added to PATH. In the future will the library hopefully be uploaded to Pypi and thereafter will this not be an issue.
 
 ## Lincense
   Copyright (c) 2021 Daniel Pettersson\
