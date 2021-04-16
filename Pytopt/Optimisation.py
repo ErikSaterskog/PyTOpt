@@ -60,13 +60,13 @@ def MMA(x, volFrac, G0, dG0, loop):
     
     
     ###########################################
-
+    
     dfdx = eeen.copy()
     dfdx = dfdx.reshape(1,nelem)
     fval = sum(x)-volFrac*len(x)
     outit=0                        
-    maxoutit=10
-    kkttol = 0	
+    maxoutit=5
+    kkttol = 0.1	
     kktnorm = 10
 
     while (kktnorm > kkttol) and (outit < maxoutit):
