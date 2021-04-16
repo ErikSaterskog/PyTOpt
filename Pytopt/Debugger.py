@@ -1,6 +1,6 @@
 
 
-import FE
+from Pytopt import FE
 import numpy as np
 
 
