@@ -30,7 +30,6 @@ setup(
       
       install_requires=[
           'visvis',
-          'PyQt5',
           'pyvtk',
           'calfem-python',
           'sphinx==1.6.6',
