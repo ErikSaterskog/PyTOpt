@@ -13,5 +13,6 @@ import MMA_fun
 import Object_Func_Displacement
 import Object_Func_Energy
 import Object_Func_Selection as ofs
+import Optimisation as Opt
 import PyTOpt
 import Test_NLMaterialmodel
