@@ -13,7 +13,7 @@ This repository contains all of the files necessary for execution of the topolog
   calfem-python\
   sphinx==1.6.6
 
-  To install the package write: 'pip install git+https://github.com/ErikSaterskog/Thesis_Repo.git --user' in your terminal. Be sure that setuptools is installed before installing this package.\
+  To install the package write: 'pip install git+https://github.com/ErikSaterskog/Thesis_Repo.git --user' in your terminal. Make sure that setuptools is installed before installing this package.\
  \
   DISCLAIMER: Git may must be installed and added to PATH. In the future will the package hopefully be uploaded to pypi.org and thereafter will this not be an issue.
 
