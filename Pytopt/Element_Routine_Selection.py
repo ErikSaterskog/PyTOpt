@@ -1,6 +1,5 @@
 
-import Element_Tri_Routine
-import Element_Quad_Routine
+from Pytopt import Element_Tri_Routine, Element_Quad_Routine
 import calfem.core as cfc
 
 
