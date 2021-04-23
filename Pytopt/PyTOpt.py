@@ -190,12 +190,25 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq
                         
         #Object Function Calculation
         G0, dG0 = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_penal, x, dG0, dR, freedofs, K)
-            
+        G0List.append(G0)
+        
         if Debug and loop==1:
-            dG0_Num=Debugger.num_Sens_Anal(x, SIMP_penal, edof, coords, bc, f, ep, mp, nelem, elementFun)
-            plt.plot(range(0,nelem),(1-dG0_Num/dG0)*100)
-            plt.xlabel('Element')
-            plt.ylabel('Percent Error')
+            error_Std=[]
+            error_Mean=[]
+            epsList=np.logspace(-7,-2.9, num=70)
+            for eps in epsList:
+                dG0_Num=Debugger.num_Sens(x, SIMP_penal, edof, coords, bc, f, ep, mp, nelem, elementFun, materialFun, eq, eps)
+                error=(1-dG0_Num/dG0)
+                error_Std.append(np.std(error))
+                error_Mean.append(np.mean(error))
+                print(eps)
+            
+            plt.figure()
+
+            plt.errorbar(np.log10(epsList), error_Mean, yerr=error_Std)
+            plt.xlabel('Log10 of Perturbation')
+            plt.ylabel('Error')
+
             
         #Apply Filter
         dG0 = Filter.Filter(x, dG0, weightMatrix)
@@ -211,7 +224,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq
         print('Iteration:  '+str(loop))
         print('---------------------------')
             
-        if loop == 50:
+        if loop == 100:
             break
             
         if loop % 5 == 0: 
@@ -226,6 +239,26 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq
             ax.add_collection(p)
             ax.axis('equal')
             plt.show() 
+            
+            
+
+        if loop % 5 == -1:
+            rMin=np.maximum(rMin/1.2,0.001)
+            
+            data = []
+            row = []
+            col = []
+            for elem in range(0,nelem):
+                xdist=elemCenterx-elemCenterx[elem]
+                ydist=elemCentery-elemCentery[elem]
+                dist=np.sqrt(xdist**2+ydist**2)            
+                weightdata = np.maximum(rMin-dist,np.zeros([nelem,1]))
+                data.extend(weightdata[np.where(weightdata>0)])
+                row.extend(np.where(weightdata>0)[0])
+                col.extend(np.repeat(elem,len(np.where(weightdata>0)[0])))
+            
+            weightMatrix=[]
+            weightMatrix=coo_matrix((data,(row,col)),shape=(nelem,nelem))
      
     """--------------------------------------------------"""        
             
