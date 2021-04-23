@@ -1,10 +1,9 @@
 
 import numpy as np
-from Pytopt import Filter
 from Pytopt.MMA_fun import mmasub,kktcheck
 
 
-def OC(x, volfrac, G0, dG0, loop):
+def OC(x, volfrac, G0, dG0, loop, Areae):
     nel=len(x)
     l1,l2,step,damping=0,1e5,0.02,0.5
     while (l2-l1) > 1e-4:
@@ -15,14 +14,14 @@ def OC(x, volfrac, G0, dG0, loop):
         FirstMax = np.maximum.reduce([(x-step),SecondMin])
         xnew = np.maximum.reduce([0.001*np.ones([nel,1]),FirstMax])
         
-        if (sum(sum(xnew)) - volfrac*nel) > 0:
+        if (sum(np.dot(xnew.T,Areae)) - volfrac) > 0:
             l1 = lmid
         else:
             l2 = lmid
             
     return xnew
 
-def MMA(x, volFrac, G0, dG0, loop):
+def MMA(x, volFrac, G0, dG0, loop, Areae):
     """
     This function is uses Method of moving asymptotes along with KKT check to 
     optimize the objective function.
@@ -63,7 +62,7 @@ def MMA(x, volFrac, G0, dG0, loop):
     
     dfdx = eeen.copy()
     dfdx = dfdx.reshape(1,nelem)
-    fval = sum(x)-volFrac*len(x)
+    fval = sum(np.dot(x.T,Areae))-volFrac
     outit=0                        
     maxoutit=5
     kkttol = 0.1	
@@ -81,7 +80,7 @@ def MMA(x, volFrac, G0, dG0, loop):
         
         dfdx = eeen.copy()
         dfdx = dfdx.reshape(1,nelem)
-        fval = sum(x)-volFrac*len(x)
+        fval = sum(np.dot(x.T,Areae))-volFrac
 #----------------------------------------------------------------------------- 
    
         # The residual vector of the KKT conditions is calculated

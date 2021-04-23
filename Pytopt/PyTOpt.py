@@ -24,25 +24,23 @@ The module ends by plotting the result of
 """
 
 ## IMPORTING MODULES ############################
+import time
+import json
 import numpy as np
 import calfem.utils as cfu
-from Pytopt import Mesh, FE, Filter, Debugger
-from Pytopt import Optimisation as Opt
-import time
-import matplotlib.pyplot as plt
 import calfem.core as cfc
 from scipy.sparse import coo_matrix
-from Pytopt import Element_Routine_Selection as ERS
-import json
 import matplotlib
+import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
+from Pytopt import Element_Routine_Selection as ERS
 from Pytopt import Material_Routine_Selection as mrs
-
+from Pytopt import Mesh, FE, Filter, Debugger
 ################################################
 
 
-def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq=None):
+def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq=None, maxiter=30):
     
     
     """ Settings """
@@ -124,6 +122,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq
     FEM = FE.FE(edof,coords,mp,bc)
     D=cfc.hooke(ep[0], E, nu)
     G0List=[]
+    Areae = []
     
     #Check sizes, Initialize
     nx=coords[:,0]
@@ -152,9 +151,28 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq
         elemy[elem,:]=ny[nnode[0:8:2]]
         elemCenterx[elem]=np.mean(elemx[elem])
         elemCentery[elem]=np.mean(elemy[elem])
+        
+        PQ = np.sqrt((elemx[elem,1]-elemx[elem,0])**2 + (elemy[elem,1]-elemy[elem,0])**2)
+        PR = np.sqrt((elemx[elem,2]-elemx[elem,0])**2 + (elemy[elem,2]-elemy[elem,0])**2)
+        QR = np.sqrt((elemx[elem,2]-elemx[elem,1])**2 + (elemy[elem,2]-elemy[elem,1])**2)
+        if len(edof[0,:])==6:
+            semiper = (PR+PQ+QR)/2
+            Areae.append(np.sqrt(semiper*(semiper-PR)*(semiper-PQ)*(semiper-QR)))
+        else:
+            
+            RS = np.sqrt((elemx[elem,3]-elemx[elem,2])**2 + (elemy[elem,3]-elemy[elem,2])**2)
+            PS = np.sqrt((elemx[elem,3]-elemx[elem,0])**2 + (elemy[elem,3]-elemy[elem,0])**2)
 
+            semiper1 = (PS+RS+PR)/2
+            semiper2 = (PR+PQ+QR)/2
+
+            A1 = np.sqrt(semiper1*(semiper1-PR)*(semiper1-RS)*(semiper1-PS))
+            A2 = np.sqrt(semiper2*(semiper2-PR)*(semiper2-PQ)*(semiper2-QR))
+
+            Areae.append(A1+A2)
     """---------------------------------"""
-
+    Areae = (Areae/sum(Areae)).reshape(nelem,1)  
+    
     """ Creating weighting matrix for Filter"""
     data = []
     row = []
@@ -179,7 +197,6 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq
     
 
     """ MAIN LOOP """
-    #if method == 'OC':
     while change > changeLimit:
             
         loop = loop + 1
@@ -214,7 +231,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq
         #Apply Filter
         dG0 = Filter.Filter(x, dG0, weightMatrix)
 
-        x = OptFun(x, volFrac, G0, dG0, loop)
+        x = OptFun(x, volFrac, G0, dG0, loop, Areae)
             
         
         change = np.max(np.max(abs(x-xold)))
@@ -225,7 +242,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq
         print('Iteration:  '+str(loop))
         print('---------------------------')
             
-        if loop == 100:
+        if loop == maxiter:
             break
             
         if loop % 5 == 0: 
