@@ -123,6 +123,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq
     #Initiate the FEM and Linear Elastic Constitutive Matrix
     FEM = FE.FE(edof,coords,mp,bc)
     D=cfc.hooke(ep[0], E, nu)
+    G0List=[]
     
     #Check sizes, Initialize
     nx=coords[:,0]
