@@ -12,6 +12,9 @@ def Energy(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlo
     
     index1D=np.ix_(freedofs)
     index2D=np.ix_(freedofs,freedofs)
+    if ep[3]==False:
+        lambdaF = np.zeros(U.shape)
+        lambdaF[index1D] = -spsolve(K[index2D],fextGlobal[freedofs]).reshape(len(freedofs),1)
     
     for elem in range(nelem):
         if ep[3]:
@@ -46,8 +49,7 @@ def Energy(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlo
             else:
                 eqe=np.zeros([1,6])
 
-            lambdaF = np.zeros(U.shape)
-            lambdaF[index1D] = -spsolve(K[index2D],fextGlobal[freedofs]).reshape(len(freedofs),1)
+            
             lambdaFe = lambdaF[np.ix_(edof[elem,:]-1)]
             
             Ue = U[np.ix_(edof[elem,:]-1)]
