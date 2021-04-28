@@ -40,26 +40,28 @@ from Pytopt import Mesh, FE, Filter, Debugger
 ################################################
 
 
-def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq=None, maxiter=30):
+_defaultSettings = {'volFrac':0.5,'meshSize':0.1,'rmin':0.1*0.7,'changeLimit': 0.01,'SIMP_penal':3,'Debug':False}
+
+def Main(g, force, bmarker, mp, ep, materialFun, ObjectFun, OptFun, settingsdict=None, eq=None, maxiter=30):
     
     
     """ Settings """
-    E = mp[0]
-    nu = mp[1]
+    E = mp['E']
+    nu = mp['nu']
     el_type=ep[2]
     ptype=2
     intRule=2
     ep=[ptype, ep[0], intRule, ep[1], ep[2]]
     plt.rcParams["figure.dpi"] = 200
+    settings=[]
+    for setting in _defaultSettings.keys():
+        if settingsdict.get(setting) != None:
+            settings.append(settingsdict.get(setting))
+        else:
+            settings.append(settingsdict.get(setting))
     
-    try:
-        volFrac,meshSize, rMin, changeLimit,SIMP_penal,Debug = settings
-    except:
-        try:
-            volFrac,meshSize, rMin, changeLimit,SIMP_penal = settings
-            Debug = False
-        except:
-            raise Exception('Too few inputet settings. Requires a least 5 inputs.')
+    
+    volFrac,meshSize, rMin, changeLimit,SIMP_penal,Debug = settings
     
     """------------------------------------------"""
     
@@ -205,10 +207,13 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq
             
         #FE Calculation
         U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
-                        
+        
+        ticobjtime = time.perf_counter()
         #Object Function Calculation
         G0, dG0 = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_penal, x, dG0, dR, freedofs, K)
-        G0List.append(G0)
+        G0List.append(G0[0][0])
+        tocobjtime = time.perf_counter()
+        print('G0 time:'+str(tocobjtime-ticobjtime))
         
         if Debug and loop==1:
             error_Std=[]
@@ -230,10 +235,10 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq
             
         #Apply Filter
         dG0 = Filter.Filter(x, dG0, weightMatrix)
-
+        ticoptime = time.perf_counter()
         x = OptFun(x, volFrac, G0, dG0, loop, Areae)
-            
-        
+        tocoptime = time.perf_counter()  
+        print('Opt time:'+str(tocoptime-ticoptime))
         change = np.max(np.max(abs(x-xold)))
     
             
@@ -287,7 +292,7 @@ def Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq
     timeMin=(tocGlobal-ticGlobal)/60
     print('Total computation time: '+str(int(timeMin))+'m '+str(round(np.mod(timeMin,1)*60,1))+'s')
     print('Final G0: '+str(float(G0)))
-    
+    print(G0List)
     # Possibility to save settings
     if save:
         data = {'x': x.tolist(),'coords': coords.tolist(),'edof': edof.tolist(), 'el_type': el_type}

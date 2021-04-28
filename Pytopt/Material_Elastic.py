@@ -9,8 +9,8 @@ Created on Wed Feb 24 12:33:02 2021
 import numpy as np
 
 def elastic(eps,mp):
-    E = mp[0]
-    nu = mp[1]
+    E = mp['E']
+    nu = mp['nu']
     G = E/(2*(1+nu))
     K = E/(3*(1-2*nu))
     

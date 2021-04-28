@@ -27,8 +27,8 @@ class FE():
     
     def __init__(self,edof,coords,mp,fixdofs):
         self.mp = mp
-        self.E=mp[0]
-        self.v=mp[1]
+        self.E=mp['E']
+        self.v=mp['nu']
         
         self.ndof=np.max(edof)
         self.nElem=np.size(edof,0)

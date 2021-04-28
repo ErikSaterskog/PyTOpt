@@ -56,10 +56,10 @@ g.point([30,0])
 g.point([35,0])
 g.point([65,0])
 g.point([70,0])
-g.point([100,0])
-g.point([100,25])                 
+g.point([200,0])
+g.point([200,25])                 
 g.point([0,25])
-g.point([100,50])
+g.point([200,50])
 g.point([0,50])
 
 g.line([0, 1],marker=0)
@@ -79,9 +79,9 @@ g.surface([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
 #######################
 
 # Forces and boundary conditions
-force = [-7e4,10,2] #First magnitude, second marker, third direction
-bmarker = [5,9,7]
-eq = [0,-9.81*7750]
+force = [-7e6,10,2] #First magnitude, second marker, third direction
+bmarker = [5,6,8,9]
+eq = [0,0*-9.81*7750]
 #######################
 
 # Material parameters
@@ -93,7 +93,7 @@ mp = [E,nu,eps_y]
 
 # Settings
 volFrac = 0.3       
-meshSize=2       
+meshSize=3       
 rMin = meshSize*0.7 
 changeLimit=0.01    
 ep=[1,True,2]       
@@ -105,7 +105,7 @@ settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, Debug]
 # Material model and Objective function
 materialFun = mrs.Elastic
 ObjectFun = ofs.Energy
-OptFun = opt.MMA
+OptFun = opt.OC
 ######################
 
 # Calling the optimisation

@@ -3,9 +3,9 @@ import numpy as np
 
 def Bilinear(eps,mp):
     
-    E1       = mp[0]
-    nu1      = mp[1]
-    eps_y    = mp[2]
+    E1       = mp['E']
+    nu1      = mp['nu']
+    eps_y    = mp['eps_y']
     
     E2 = E1*0.05
    

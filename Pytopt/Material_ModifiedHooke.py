@@ -6,8 +6,8 @@ def mod_hooke(eps,mp):
         raise Exception('ERROR ERROR Part is breaking')
     else:
         pass
-    E = mp[0]
-    nu = mp[1]
+    E = mp['E']
+    nu = mp['nu']
     G = np.zeros([3,1])
     G[0] = E/(2*(1+nu))
     G[1] = -G[0].copy()*10

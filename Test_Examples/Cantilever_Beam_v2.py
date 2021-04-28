@@ -32,7 +32,7 @@ materialFun- Determine which material model that should be used. The user can
 ObjectivFun- Determine which objective function that should be used. The user can 
              add ones own objective function as long as the input is the same
              as for the already exisitng objective funtions.
-Optfun     - Determine which objective function that should be used. The user can 
+Optfun     - Determine which optimisation algorithm that should be used. The user can 
              add ones own optimisation algorithm as long as the input is the same
              as for the already exisitng optimisation algorithms.
 

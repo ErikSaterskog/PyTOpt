@@ -32,7 +32,7 @@ materialFun- Determine which material model that should be used. The user can
 ObjectivFun- Determine which objective function that should be used. The user can 
              add ones own objective function as long as the input is the same
              as for the already exisitng objective funtions.
-Optfun     - Determine which objective function that should be used. The user can 
+Optfun     - Determine which optimisation algorithm that should be used. The user can 
              add ones own optimisation algorithm as long as the input is the same
              as for the already exisitng optimisation algorithms.
 
@@ -46,7 +46,6 @@ from Pytopt import Material_Routine_Selection as mrs
 from Pytopt import Object_Func_Selection as ofs
 from Pytopt import Optimisation as opt
 #####################
-
 # Creating geometry
 g = cfg.Geometry()
 
@@ -69,37 +68,32 @@ g.line([6, 0],marker=6)
 
 g.surface([0, 1, 2, 3, 4,5,6])
 #####################
-
 # Forces and boundary conditions
-force = [-1e5,9,2]      # First magnitude, second marker, third direction
+force = [-1e6,9,2]      # [Magnitude, Force marker, Direction]
 bmarker = 5             # Boundary marker    
-eq=[0,0*-9.81*7750]     # Body forces    
+eq=[0,0]     # Body forces    
 #####################
-
 # Material parameters
 E = 210e9               # Young's modulus
 nu = 0.3                # Poisson's ratio
 eps_y = 0               # Strain border for Bilinear material model
-mp = [E,nu,eps_y]
+mp = {'E':E,'nu':nu,'eps_y':eps_y}
 #####################
-
 # Settings
 volFrac = 0.3           
-meshSize=0.07            
+meshSize=0.1           
 rMin = meshSize*0.7     
 changeLimit=0.01        
-ep=[1,False,2]          
+ep=[1,True,2]          
 SIMP_penal = 3
-Debug=False
-settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, Debug]
+#settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal]
+settings = {'volFrac':volFrac,'meshSize':meshSize,'rmin':rMin,'changeLimit':changeLimit,'SIMP_penal':SIMP_penal}
 #######################
-
-# Material model and Objective function
+# Objective function and Optimisation routine
 materialFun = mrs.Elastic
 ObjectFun = ofs.Energy
 OptFun = opt.MMA
 #######################
-
 # Calling the optimisation
-PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq)
+PyTOpt.Main(g, force, bmarker, mp, ep, materialFun, ObjectFun, OptFun, settings, eq)
 #######################
