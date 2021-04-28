@@ -78,29 +78,18 @@ eq = [0,-9.81*7750]
 ###################
 
 # Material parameters
-E = 210e9       # Young's modulus
-nu = 0.3        # Poisson's ratio
-eps_y = 1e-6    # Strain border for Bilinear material model
-mp = [E,nu,eps_y]
-###################
-
-# Settings 
-volFrac = 0.3       
-meshSize=0.8         
-rMin = meshSize*0.7 
-changeLimit=0.01    
-ep=[1,True,2]       
-SIMP_penal = 3
-Debug=False
-settings = [volFrac,meshSize, rMin, changeLimit, SIMP_penal, Debug]
-###################
-
-# Material model and Objective function
-materialFun = mrs.Elastic
+E = 210e9               # Young's modulus
+nu = 0.3                # Poisson's ratio
+eps_y = 0               # Strain border for Bilinear material model
+mp = {'E':E,'nu':nu,'eps_y':eps_y}
+materialFun = mrs.Bilinear # Material model
+#####################
+# Settings, Objective function and Optimisation routine
+ep=[1,True,3]
+settings = {'volFrac':0.3,'meshSize':1,'rmin':0.08*0.7,'changeLimit': 0.01,'SIMP_penal':3}
 ObjectFun = ofs.Energy
 OptFun = opt.MMA
-###################
-
+#####################
 # Calling the optimisation
-PyTOpt.Main(g, force, bmarker, settings, mp, ep, materialFun, ObjectFun, OptFun, eq)
-###################
+PyTOpt.Main(g, force, bmarker, mp, ep, materialFun, ObjectFun, OptFun,settings,eq)
+#######################

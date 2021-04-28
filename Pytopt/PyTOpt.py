@@ -42,7 +42,7 @@ from Pytopt import Mesh, FE, Filter, Debugger
 
 _defaultSettings = {'volFrac':0.5,'meshSize':0.1,'rmin':0.1*0.7,'changeLimit': 0.01,'SIMP_penal':3,'Debug':False}
 
-def Main(g, force, bmarker, mp, ep, materialFun, ObjectFun, OptFun, settingsdict=None, eq=None, maxiter=30):
+def Main(g, force, bmarker, mp, ep, materialFun, ObjectFun, OptFun, settingsdict={}, eq=None, maxiter=30):
     
     
     """ Settings """
@@ -58,7 +58,7 @@ def Main(g, force, bmarker, mp, ep, materialFun, ObjectFun, OptFun, settingsdict
         if settingsdict.get(setting) != None:
             settings.append(settingsdict.get(setting))
         else:
-            settings.append(settingsdict.get(setting))
+            settings.append(_defaultSettings.get(setting))
     
     
     volFrac,meshSize, rMin, changeLimit,SIMP_penal,Debug = settings
