@@ -1,4 +1,20 @@
+"""
+Creates the mesh. Triangular or quad elements are used.
 
+Input:
+    g       -Geometrical object
+    elsize  -aproximate element size
+    
+Output:
+    coords  -Coordinates of nodes
+    edof    -Element degree of freedom
+    dofs    -degree of freedoms
+    bdofs   -boundary degree of freedoms
+    
+
+Written 2021-05
+Made By: Daniel Pettersson & Erik Säterskog
+"""
 
 import calfem.mesh as cfm
 

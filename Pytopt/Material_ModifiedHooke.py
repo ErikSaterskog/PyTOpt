@@ -1,4 +1,20 @@
+"""
+Modified Hooke material model.
+Inputs:
+    eps     -epsilon, the strain
+    mp[E,nu,eps_y]
+             E          - Young's modulus
+             nu         - Poission's ratio
+             eps_y      - Yielding strain for bilinear material model
 
+Outputs:
+    sigma   -Stress
+    D       -Constitutive matrix
+
+
+Written 2021-05
+Made By: Daniel Pettersson & Erik Säterskog
+"""
 import numpy as np
 
 def mod_hooke(eps,mp):

@@ -1,42 +1,35 @@
 """
-The example starts by importing the necessary libaries. After that is the 
-geometry constructed. The marker indicates an ID for the point or line. 
-This ID is later used to define boundary conditions and prescribed forces. 
-Change these if you are sure about how they works. 
+This is an example of a Cantilever Beam topology optimisation. The geometry is
+rectangular with a partially clamped boundary on the left side and a downwards force
+in the middle on the right side. The example utilises the program PyTOpt written
+by Daniel Pettersson and Erik Säterskog
 
-The force vector is consisting of three values. The first value is the applied
-force magnitude and can be altered by the user. The second inicated where the load 
-is applied and the last in what direction the force is pointing. A value of 2 
-indicates in y-direction. b-marker inidicates what line should be prescirbed.
-E, nu and eps_y are material parameters and can be altered after what material 
-of interest.
-
-VolFrac    - How many procent of the volume should the final solution have contra
-             the original.
-meshsize   - How large the average element should be. 
-rMin       - For the filtering, how large radius should the filter take into 
-             account. With a low value the filter will only notice the closest 
-             neighbour for each element. A large value will make the filter take 
-             a large elements into account when filtering each element.
-changeLimit- For OC as optimisation method, what tolerance for the change 
-             between iteration is sufficiant.
-
-ep         -
-             t          - thickness 
+Settings explanation:
+force      - [Magnitude, Force Marker, Direction]
+bmarker    - Boundary marker
+eq         - Body forces,  [0, -9.81*7750] for steel on earth
+mp[E,nu,eps_y]
+             E          - Young's modulus
+             nu         - Poission's ratio
+             eps_y      - Yielding strain for bilinear material model
+ep[thickness, linear, el_type]
+             thickness  - thickness of the 2D material
              linear     - True-linear, False-nonlinear
-             el_type    - 2 means triangular elements and 3 means quad elements.
-debug      - True/False if the sensitivity should be checked numerically.
-materialFun- Determine which material model that should be used. The user can 
-             add ones own material model as long as the input is a strain
-             and a material parametervector 
-ObjectivFun- Determine which objective function that should be used. The user can 
-             add ones own objective function as long as the input is the same
-             as for the already exisitng objective funtions.
-Optfun     - Determine which optimisation algorithm that should be used. The user can 
-             add ones own optimisation algorithm as long as the input is the same
-             as for the already exisitng optimisation algorithms.
+             el_type    - 2 indicates triangular elements and 3 indicates
+             quad elements.
+Settings[volfrac, meshSize, rmin, changelimit, SIMP_const
+             VolFrac    - Fraction of max material allowed in optimisation.
+             meshsize   - Avarage element size. [m]
+             rMin       - Filter radius. Large values gives smudged solutions. [m]
+             changeLimit- Determines at what change the optimisation breaks
+             SIMP_const - Solid isotropic material penalisation constant
+materialFun- Determines which material model that should be used.
+ObjectivFun- Determines which objective function that should be used.
+Optfun     - Determines which optimisation algorithm that should be used.
 
-Then we call on the Main module to start the optimisation.
+
+Written 2021-05
+Made By: Daniel Pettersson & Erik Säterskog
 """
 
 # Importing Modules
@@ -45,7 +38,7 @@ import Pytopt.PyTOpt as PyTOpt
 from Pytopt import Material_Routine_Selection as mrs
 from Pytopt import Object_Func_Selection as ofs
 from Pytopt import Optimisation as opt
-#####################
+
 # Creating geometry
 g = cfg.Geometry()
 
@@ -69,21 +62,18 @@ g.line([6, 0],marker=6)
 g.surface([0, 1, 2, 3, 4,5,6])
 
 # Forces and boundary conditions
-force = [-1e6,9,2]                      # [Magnitude, Force marker, Direction]
-bmarker = 5                             # Boundary marker    
-eq=[0,0]                                # Body forces    
+force = [-1e6,9,2]                              
+bmarker = 5                                     
+eq=[0,0]                                            
 
 # Material parameters
-E = 210e9                               # Young's modulus
-nu = 0.3                                # Poisson's ratio
-eps_y = 0                               # Strain border for Bilinear material model
-mp = {'E':E,'nu':nu,'eps_y':eps_y}
-materialFun = mrs.Elastic              # Material model
+mp = {'E':210e9,'nu':0.3,'eps_y':0 }            
+materialFun = mrs.Bilinear                      
 
 # Settings, Objective function and Optimisation routine
-ep=[1,False,2]
-settings = {'volFrac':0.3,'meshSize':0.02,'rmin':0.02*0.07,'changeLimit': 0.01,'SIMP_penal':1}
-ObjectFun = ofs.Displacement
+ep=[1,True,2]
+settings = {'volFrac':0.3,'meshSize':0.1,'rmin':0.08*0.7,'changeLimit': 0.01,'SIMP_const':3}
+ObjectFun = ofs.Energy
 OptFun = opt.OC
 
 # Calling the optimisation

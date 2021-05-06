@@ -1,4 +1,34 @@
+"""
+Calculates the objective function energy and its derivate.
 
+Inputs:
+    nelem       -number of elements
+    ep          -element parameters
+    el_type     -element type
+    elemx       -x-coordinates for element corners
+    elemy       -y-coordinates for element corners
+    D           -constitutive matrix
+    eq          -Body forces
+    U           -Displacement vector
+    edof        -Element degrees of freedom
+    fext_tilde  -External force vector with only body forces
+    fextGlobal  -External force vector
+    SIMP_const  -Solid isotropic material with penalisation constant
+    x           -Design variables
+    dG0         -Derivative of objective function
+    dR          -Derivative of Residual from FEM
+    freedofs    -Free degree of freedoms
+    K           -Stiffness matrix
+    
+Output:
+    G0          -Objective Function
+    dG0         -Derivative of objective function
+    
+    
+
+Written 2021-05
+Made By: Daniel Pettersson & Erik Säterskog
+"""
 
 
 import numpy as np
@@ -6,7 +36,7 @@ import calfem.core as cfc
 from scipy.sparse.linalg import spsolve
 
 
-def Energy(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_penal, x, dG0, dR, freedofs, K):
+def Energy(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_const, x, dG0, dR, freedofs, K):
     
     
     
@@ -36,11 +66,8 @@ def Energy(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlo
 
             Ue = U[np.ix_(edof[elem,:]-1)]
             fext_tildee = fext_tilde[np.ix_(edof[elem,:]-1)]
-            dG0[elem] = np.matmul(fext_tildee.T,Ue)  -  SIMP_penal*x[elem][0]**(SIMP_penal-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
+            dG0[elem] = np.matmul(fext_tildee.T,Ue)  -  SIMP_const*x[elem][0]**(SIMP_const-1)*np.matmul(np.transpose(Ue), np.matmul(Ke,Ue))
                     
-            if dG0[elem] >0:
-                print(str(elem) + ':' +str(dG0[elem]))
-                dG0[elem] = 0
                     
         else:
             if eq is not None:
@@ -56,9 +83,6 @@ def Energy(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlo
             fext_tildee = fext_tilde[np.ix_(edof[elem,:]-1)]
             dG0[elem] = np.matmul(fext_tildee.T,Ue) + np.matmul(lambdaFe.T,dR[elem,:].reshape(np.size(edof,1),1))
                     
-            if dG0[elem] >0:
-                print(str(elem) + ':' +str(dG0[elem]))
-                dG0[elem] = 0
                 
         G0=np.matmul(fextGlobal.T,U)
             

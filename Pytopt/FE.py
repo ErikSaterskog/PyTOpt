@@ -16,6 +16,8 @@ internal forcevector and checks the differens with the external force vector.
 The resultant will influence the next guess of the displacements.
 
 
+Written 2021-05
+Made By: Daniel Pettersson & Erik Säterskog
 """
 import numpy as np
 from scipy.sparse import coo_matrix
@@ -68,6 +70,35 @@ class FE():
     
         
     def fe(self,x,SIMP_penal,F,ep,elementFun,materialFun, eq=None):
+        
+        """
+        INPUT:
+            x          - element densities, design variables
+            SIMP_penal - Penaltyfactor preventing x to be between 0-1
+            eDof       - Element degrees of freedom
+            coord      - Node coordinates both in x- and y-direction
+            fixDofs    - Degrees of freedom prescribed by boundary condition
+            F          - Forcevector
+            ep[thickness, linear, el_type]
+                 thickness  - thickness of the 2D material
+                 linear     - True-linear, False-nonlinear
+                 el_type    - 2 indicates triangular elements and 3 indicates
+                 quad elements.
+            mp[E,nu,eps_y]
+                 E          - Young's modulus
+                 nu         - Poission's ratio
+                 eps_y      - Yielding strain for bilinear material model
+                         
+                         
+        OUTPUT:
+            U           -Displacement vector
+            fext_tilde  -External force vector with only body forces
+            fextGlobal  -External force vector
+            K           -Stiffness matrix
+        
+          
+        """
+        
         #Settings
         epLin=ep.copy()
         epLin[3]=1
@@ -77,7 +108,6 @@ class FE():
         data=[]
         fextGlobal = F.copy()
         fext_tilde = np.zeros(F.shape)
-        #ASSEMBLE, should be done using coo_matrix() if possible
         
         for elem in range(self.nElem):  
                 
@@ -105,25 +135,38 @@ class FE():
         return self.U, fext_tilde, fextGlobal, K
     
     
-    def fe_nl(self,x,SIMP_penal,F,ep,elementFun, materialFun, eq=None):
+    def fe_nl(self,x,SIMP_const,F,ep,elementFun, materialFun, eq=None):
         """
         INPUT:
             x          - element densities, design variables
-            SIMP_penal - Penaltyfactor preventing x to be between 0-1
+            SIMP_const - Penaltyfactor preventing x to be between 0-1
             eDof       - Element degrees of freedom
             coord      - Node coordinates both in x- and y-direction
             fixDofs    - Degrees of freedom prescribed by boundary condition
             F          - Forcevector
-            ep         - element parameters
-                            - ptype(if plane strain or plain stress)
-                            - t thickness
-                            - ir intregration rule
-            mp         - Material parameters consisting of Young's modulus and 
-                         Poisson's ratio.
+            ep[thickness, linear, el_type]
+                 thickness  - thickness of the 2D material
+                 linear     - True-linear, False-nonlinear
+                 el_type    - 2 indicates triangular elements and 3 indicates
+                 quad elements.
+            mp[E,nu,eps_y]
+                 E          - Young's modulus
+                 nu         - Poission's ratio
+                 eps_y      - Yielding strain for bilinear material model
+            elementFun  -Element function
+            materialFun -Material model
+            eq          -Body force
                          
                          
         OUTPUT:
-            U          - Displacement vector
+            U           -Displacement vector
+            dR          -Derivative of Residual
+            sig_VM      -Von Mises stress
+            fext_tilde  -External force vector with only body forces
+            fextGlobal  -External force vector
+            eps_h       -Hydrostatic strain
+            freedofs    -Free degrees of freedom
+            K           -Stiffness matrix
         
           
         """
@@ -131,7 +174,7 @@ class FE():
         err=1e9                  # Setting an error, arbritary big.
         TOL=1e-11    # Setting a resonable low tolerance. 
         
-        U,fext_tilde, fextGlobal, K = FE.fe(self, x, SIMP_penal, F, ep, elementFun, materialFun,eq)
+        U,fext_tilde, fextGlobal, K = FE.fe(self, x, SIMP_const, F, ep, elementFun, materialFun,eq)
         
 
         #lambdaF = U.copy()
@@ -169,13 +212,13 @@ class FE():
                 Ke=np.matrix(Ke)
                 
                 fextGlobal[edofIndex1D]+=fext*x[elem][0]
-                fintGlobal[edofIndex1D]+=fint*x[elem][0]**SIMP_penal
-                fext_tilde[edofIndex1D]+= fext 
-                dR[elem,:] = (SIMP_penal*x[elem][0]**(SIMP_penal-1)*fint).reshape(np.size(self.edof,1),)-(fext).reshape(np.size(self.edof,1),)
+                fintGlobal[edofIndex1D]+=fint*x[elem][0]**SIMP_const
+                fext_tilde[edofIndex1D]+=fext 
+                dR[elem,:] = (SIMP_const*x[elem][0]**(SIMP_const-1)*fint).reshape(np.size(self.edof,1),)-(fext).reshape(np.size(self.edof,1),)
                 
                 row.extend(edofIndexList*len(edofIndexList))
                 col.extend(np.repeat(edofIndexList,len(edofIndexList)))
-                data.extend(np.reshape(Ke*x[elem][0]**SIMP_penal,np.size(Ke)).tolist()[0])
+                data.extend(np.reshape(Ke*x[elem][0]**SIMP_const,np.size(Ke)).tolist()[0])
                 
                 sig_VM[elem]= np.sqrt(((sig[0]-sig[1])**2+(sig[1]-sig[2])**2+(sig[2]-sig[0])**2)/2+3*(sig[3]**2+sig[4]**2+sig[5]**2))
                 eps_h[elem] = sum(epsilon[:2])/3
@@ -186,7 +229,6 @@ class FE():
               
             R=fintGlobal-fextGlobal
             err = np.linalg.norm(R[self.freedofs])
-            print(err)
             
             if newtonIt ==100:
                 break

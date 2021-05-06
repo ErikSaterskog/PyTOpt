@@ -1,31 +1,38 @@
 """
-This the main-module and is called by the user with the inputs
-g           - Geometry object
-force       - A vector with the magnitude and position of the prescribed forces.
-bmarker     - A vector with the boundaries and prescribed displacements.
-settings    - Includes settings for restrictions on the optimisation and the filtering.
-                volfrac     - How much material is allowed
-                meshSize    - How big the average element should be.
-                rMin        - In how large radius the element should accknowledge other elements in the filter
-                changeLimit - A tolerance for the optimisation
-                SIMP_penal  - A penalty factor forcing elementdensity towards zero or one
-                method      - Which optimisation method should be used.
-                Debug       - A option to check the sensitivity analysis against numerical sensitivity.
-mp          - Material parameters
-ep          - Element parameters
-                ptype       - 2 if plain strain
-                t           - Thickness
-                ir          - Integration rule
-                non/lin     - 1 if linear analysis, 2 if nonlinear analysis
-materialFun - A material model with strain and mp as input and stress and consitutive matrix as output.
-ObjectFun   - An objective function with multiply inputs.
-The module ends by plotting the result of 
+This the main-module and is called by the user.
+Inputs:
+    g           - Geometry object
+    force       - A vector with the magnitude and position of the prescribed forces.
+    bmarker     - A vector with the boundaries and prescribed displacements.
+    settings    - Includes settings for restrictions on the optimisation and the filtering.
+                    volfrac     - How much material is allowed
+                    meshSize    - How big the average element should be.
+                    rMin        - In how large radius the element should accknowledge other elements in the filter
+                    changeLimit - A tolerance for the optimisation
+                    SIMP_penal  - A penalty factor forcing elementdensity towards zero or one
+                    method      - Which optimisation method should be used.
+                    Debug       - A option to check the sensitivity analysis against numerical sensitivity.
+    mp[E,nu,eps_y]
+             E          - Young's modulus
+             nu         - Poission's ratio
+             eps_y      - Yielding strain for bilinear material model
+    ep[thickness, linear, el_type]
+             thickness  - thickness of the 2D material
+             linear     - True-linear, False-nonlinear
+             el_type    - 2 indicates triangular elements and 3 indicates
+             quad elements.
+    materialFun - A material model with strain and mp as input and stress and consitutive matrix as output.
+    ObjectFun   - An objective function with multiply inputs.
 
+Output:
+    Plots showing the density of the optimised result.
+
+Written 2021-05
+Made By: Daniel Pettersson & Erik Säterskog
 """
 
 ## IMPORTING MODULES ############################
 import time
-import json
 import numpy as np
 import calfem.utils as cfu
 import calfem.core as cfc
@@ -40,7 +47,7 @@ from Pytopt import Mesh, FE, Filter, Debugger
 ################################################
 
 
-_defaultSettings = {'volFrac':0.5,'meshSize':0.1,'rmin':0.1*0.7,'changeLimit': 0.01,'SIMP_penal':3,'Debug':False}
+_defaultSettings = {'volFrac':0.5,'meshSize':0.1,'rmin':0.1*0.7,'changeLimit': 0.01,'SIMP_const':3,'Debug':False}
 
 def Main(g, force, bmarker, mp, ep, materialFun, ObjectFun, OptFun, settingsdict={}, eq=None, maxiter=30):
     
@@ -61,7 +68,7 @@ def Main(g, force, bmarker, mp, ep, materialFun, ObjectFun, OptFun, settingsdict
             settings.append(_defaultSettings.get(setting))
     
     
-    volFrac,meshSize, rMin, changeLimit,SIMP_penal,Debug = settings
+    volFrac,meshSize, rMin, changeLimit,SIMP_const,Debug = settings
     
     """------------------------------------------"""
     
@@ -115,7 +122,7 @@ def Main(g, force, bmarker, mp, ep, materialFun, ObjectFun, OptFun, settingsdict
     change = 2
     loop = 0
     ticGlobal=time.perf_counter()
-    save=False
+
     
     nelem = np.size(edof,0)
     x = np.zeros([nelem,1])+volFrac # Startguess
@@ -206,21 +213,19 @@ def Main(g, force, bmarker, mp, ep, materialFun, ObjectFun, OptFun, settingsdict
         dG0 = xold.copy() 
             
         #FE Calculation
-        U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
+        U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x, SIMP_const, f, ep, elementFun, materialFun, eq)
         
-        ticobjtime = time.perf_counter()
         #Object Function Calculation
-        G0, dG0 = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_penal, x, dG0, dR, freedofs, K)
+        G0, dG0 = ObjectFun(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_const, x, dG0, dR, freedofs, K)
         G0List.append(G0[0][0])
-        tocobjtime = time.perf_counter()
-        print('G0 time:'+str(tocobjtime-ticobjtime))
+
         
         if Debug and loop==1:
             error_Std=[]
             error_Mean=[]
             epsList=np.logspace(-7,-2.9, num=70)
             for eps in epsList:
-                dG0_Num=Debugger.num_Sens(x, SIMP_penal, edof, coords, bc, f, ep, mp, nelem, elementFun, materialFun, eq, eps)
+                dG0_Num=Debugger.num_Sens(x, SIMP_const, edof, coords, bc, f, ep, mp, nelem, elementFun, materialFun, eq, eps)
                 error=(1-dG0_Num/dG0)
                 error_Std.append(np.std(error))
                 error_Mean.append(np.mean(error))
@@ -235,17 +240,16 @@ def Main(g, force, bmarker, mp, ep, materialFun, ObjectFun, OptFun, settingsdict
             
         #Apply Filter
         dG0 = Filter.Filter(x, dG0, weightMatrix)
-        ticoptime = time.perf_counter()
-        x = OptFun(x, volFrac, G0, dG0, loop, Areae)
-        tocoptime = time.perf_counter()  
-        print('Opt time:'+str(tocoptime-ticoptime))
+
+        x = OptFun(x, volFrac, G0, dG0, Areae)
+
         change = np.max(np.max(abs(x-xold)))
     
             
         print('G0:         '+str(float(G0)))
         print('Change:     '+str(change))
-        print('Iteration:  '+str(loop))
-        print('---------------------------')
+        print('Opt.Iters:  '+str(loop))
+        print('---------------------------------')
             
         if loop == maxiter:
             break
@@ -292,13 +296,9 @@ def Main(g, force, bmarker, mp, ep, materialFun, ObjectFun, OptFun, settingsdict
     timeMin=(tocGlobal-ticGlobal)/60
     print('Total computation time: '+str(int(timeMin))+'m '+str(round(np.mod(timeMin,1)*60,1))+'s')
     print('Final G0: '+str(float(G0)))
-    print(G0List)
-    # Possibility to save settings
-    if save:
-        data = {'x': x.tolist(),'coords': coords.tolist(),'edof': edof.tolist(), 'el_type': el_type}
-        with open('Saved_Results/myfile.json', 'w') as outfile:
-            json.dump(data, outfile, indent=4)
-    
+    print('---------------------------------')
+    #print(G0List)
+
     # Plot the final optimised structure
     patches = []
     fig, ax = plt.subplots()
@@ -320,8 +320,10 @@ def Main(g, force, bmarker, mp, ep, materialFun, ObjectFun, OptFun, settingsdict
             elementFun = ERS.Tri    
         elif el_type == 3:
             elementFun = ERS.Quad
-        U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x, SIMP_penal, f, ep, elementFun, materialFun, eq)
-
+        U, dR, sig_VM, fext_tilde, fextGlobal, eps_h, freedofs, K = FEM.fe_nl(x, SIMP_const, f, ep, elementFun, materialFun, eq)
+    
+    print('Max eps_h:  '+str(np.max(eps_h)))
+    print('Min eps_h:  '+str(np.min(eps_h)))
     eps_h[np.where(x<0.1)]=0
     
     # Plot the hydrostatic strain over the optimised structure.

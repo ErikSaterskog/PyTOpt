@@ -1,11 +1,16 @@
+"""
+Numerical Sensitivity Analysis
+Calculates the numerical sensitivty so that it can be compared to the analytical
+sensitivity. The numerical calculatation utilizes
+the symmetric difference quotient.
 
+
+Written 2021-05
+Made By: Daniel Pettersson & Erik Säterskog
+"""
 
 from Pytopt import FE
 import numpy as np
-
-
-
-"""Numerical Sensitivity Analysis"""
 
 
 def num_Sens(x, SIMP_penal, edof, coords, bc, f, ep, mp, numElem, elementFun, materialFun, eq, eps):

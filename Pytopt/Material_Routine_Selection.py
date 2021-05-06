@@ -1,3 +1,12 @@
+"""
+Selection routine for the different material models.
+
+A numerical calculation of the constitutive matrix is also included
+
+
+Written 2021-05
+Made By: Daniel Pettersson & Erik Säterskog
+"""
 
 import numpy as np
 from Pytopt import Material_Elastic, Material_Bilinear, Material_ModifiedHooke

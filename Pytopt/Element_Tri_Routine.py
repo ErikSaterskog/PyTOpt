@@ -1,3 +1,34 @@
+"""
+Triangular element routine
+
+Inputs:
+    ue          -Element displacements
+    ex          -Element x coordinates
+    ey          -Element y coordinates
+    ep[thickness, linear, el_type]
+                 thickness  - thickness of the 2D material
+                 linear     - True-linear, False-nonlinear
+                 el_type    - 2 indicates triangular elements and 3 indicates
+                 quad elements.
+    mp[E,nu,eps_y]
+                 E          - Young's modulus
+                 nu         - Poission's ratio
+                 eps_y      - Yielding strain for bilinear material model
+    materialFun -Material model
+    eq          -Body force
+Outputs:
+    Ke          -Element stiffness matrix
+    fint        -Interal force vector
+    fext        -External force vector
+    stress      -Stress
+    epsilon     -Strain
+    
+
+Written 2021-05
+Made By: Daniel Pettersson & Erik Säterskog
+"""
+
+
 import numpy as np
 from scipy.sparse.linalg import spsolve
 
@@ -10,7 +41,7 @@ def Element_Tri_Routine(ue, ex, ey, ep, mp, materialFun, eq=None):
     ngp=3                   # Integration rule and number of gauss points
 
 
-#% If 6th input argument present, assign body load. !IMPLEMENT!
+#% If 6th input argument present, assign body load.
     b=np.zeros([2,1])
     
     if not eq is None:

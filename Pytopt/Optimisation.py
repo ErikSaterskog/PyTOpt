@@ -3,9 +3,30 @@ import numpy as np
 from Pytopt.MMA_fun import mmasub,kktcheck
 
 
-def OC(x, volfrac, G0, dG0, loop, Areae):
+def OC(x, volfrac, G0, dG0, Areae):
+    """
+    This function is uses Optimality Criteria to 
+    optimize the objective function.
+    
+       Inputs:
+       
+        x       - Vector with the design variables                        
+        VolFrac - Fraction of max material allowed in optimisation.
+        G0      - Value of objective function
+        dG0     - Derivative of objective function
+        Areae   - sizes of all elements
+        
+        
+      Outputs:
+          
+        xnew    - Vector with the updated design variables 
+
+
+    Written 2021-05
+    Made By: Daniel Pettersson & Erik Säterskog
+    """
     nel=len(x)
-    l1,l2,step,damping=0,1e5,0.02,0.5
+    l1,l2,step,damping=0,1e5,0.1,0.3
     while (l2-l1) > 1e-4:
         lmid = 0.5*(l2+l1)
         
@@ -21,24 +42,27 @@ def OC(x, volfrac, G0, dG0, loop, Areae):
             
     return xnew
 
-def MMA(x, volFrac, G0, dG0, loop, Areae):
+def MMA(x, volFrac, G0, dG0, Areae):
     """
     This function is uses Method of moving asymptotes along with KKT check to 
     optimize the objective function.
     
-       Input:
+       Inputs:
        
-        f       : Loads                            
-        edof    : Element degrees of freedom       
-        elemx   : Elements position in x           
-        elemy   : Elements position in y           
+        x       - Vector with the design variables                        
+        VolFrac - Fraction of max material allowed in optimisation.
+        G0      - Value of objective function
+        dG0     - Derivative of objective function
+        Areae   - sizes of all elements
         
         
-      Output:
-         f0val  : The object function value 
-         x      : Vector with the design variables
-         eps_h  : Vector with the element hydrostatic strain 
+      Outputs:
+          
+        xnew    - Vector with the updated design variables 
 
+
+    Written 2021-05
+    Made By: Daniel Pettersson & Erik Säterskog
     """
     
     #Initialization ##############################
@@ -72,21 +96,21 @@ def MMA(x, volFrac, G0, dG0, loop, Areae):
         outit += 1
 
         dG0 = np.array(dG0)
-        x,y,z,lam,xsi,eta,mu,zet,s,low,upp = mmasub(1, nelem, outit, x, xmin, xmax, xold1, xold2, G0, dG0, fval, dfdx, low, upp, a0, a, c, d, move)
+        xnew,y,z,lam,xsi,eta,mu,zet,s,low,upp = mmasub(1, nelem, outit, x, xmin, xmax, xold1, xold2, G0, dG0, fval, dfdx, low, upp, a0, a, c, d, move)
     
         # update
         xold2 = xold1.copy()
-        xold1 = x.copy()
+        xold1 = xnew.copy()
         
         dfdx = eeen.copy()
         dfdx = dfdx.reshape(1,nelem)
-        fval = sum(np.dot(x.T,Areae))-volFrac
+        fval = sum(np.dot(xnew.T,Areae))-volFrac
 #----------------------------------------------------------------------------- 
    
         # The residual vector of the KKT conditions is calculated
-        residu,kktnorm,residumax = kktcheck(1,nelem,x,y,z,lam,xsi,eta,mu,zet,s,xmin,xmax,dG0,fval,dfdx,a0,a,c,d)
+        residu,kktnorm,residumax = kktcheck(1,nelem,xnew,y,z,lam,xsi,eta,mu,zet,s,xmin,xmax,dG0,fval,dfdx,a0,a,c,d)
 
-    return x
+    return xnew
 
 
 

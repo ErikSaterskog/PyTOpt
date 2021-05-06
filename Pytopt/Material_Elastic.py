@@ -1,10 +1,20 @@
-# -*- coding: utf-8 -*-
 """
-Created on Wed Feb 24 12:33:02 2021
+Elastic material model.
+Inputs:
+    eps     -epsilon, the strain
+    mp[E,nu,eps_y]
+             E          - Young's modulus
+             nu         - Poission's ratio
+             eps_y      - Yielding strain for bilinear material model
 
-@author: Daniel
+Outputs:
+    sigma   -Stress
+    D       -Constitutive matrix
+
+
+Written 2021-05
+Made By: Daniel Pettersson & Erik Säterskog
 """
-
 
 import numpy as np
 

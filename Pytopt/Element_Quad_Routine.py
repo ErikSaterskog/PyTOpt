@@ -47,6 +47,38 @@ def shape_functions(xsi,eta,ir):
 
 def Element_Quad_Routine(ue, ex, ey, ep, mp, materialFun, eq=None):
     
+    """
+    Quad element routine
+
+    Inputs:
+        ue          -Element displacements
+        ex          -Element x coordinates
+        ey          -Element y coordinates
+        ep[thickness, linear, el_type]
+                     thickness  - thickness of the 2D material
+                     linear     - True-linear, False-nonlinear
+                     el_type    - 2 indicates triangular elements and 3 indicates
+                     quad elements.
+        mp[E,nu,eps_y]
+                     E          - Young's modulus
+                     nu         - Poission's ratio
+                     eps_y      - Yielding strain for bilinear material model
+        materialFun -Material model
+        eq          -Body force
+    Outputs:
+        Ke          -Element stiffness matrix
+        fint        -Interal force vector
+        fext        -External force vector
+        stress      -Stress
+        epsilon     -Strain
+        
+        
+        Written 2021-05
+        Made By: Daniel Pettersson & Erik Säterskog
+    """
+    
+    
+    
     ptype   = ep[0]             # Which analysis type?
     t       = ep[1]             # Element thickness
     ir      = ep[2]  
