@@ -1,4 +1,10 @@
+"""
+Element routine selection
 
+
+Written 2021-05
+Made By: Daniel Pettersson & Erik Säterskog
+"""
 from Pytopt import Element_Tri_Routine, Element_Quad_Routine
 import calfem.core as cfc
 

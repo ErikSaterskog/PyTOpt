@@ -36,7 +36,7 @@ import calfem.core as cfc
 from scipy.sparse.linalg import spsolve
 
 
-def Energy(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_const, x, dG0, dR, freedofs, K):
+def Compliance(nelem, ep, el_type, elemx, elemy, D, eq, U, edof, fext_tilde, fextGlobal, SIMP_const, x, dG0, dR, freedofs, K):
     
     
     

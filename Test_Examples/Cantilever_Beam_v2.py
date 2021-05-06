@@ -24,8 +24,11 @@ Settings[volfrac, meshSize, rmin, changelimit, SIMP_const
              changeLimit- Determines at what change the optimisation breaks
              SIMP_const - Solid isotropic material penalisation constant
 materialFun- Determines which material model that should be used.
+             Bilinear/Elastic/ModifiedHooke
 ObjectivFun- Determines which objective function that should be used.
+             Compliance/Displacement
 Optfun     - Determines which optimisation algorithm that should be used.
+             OC/MMA
 
 
 Written 2021-05
@@ -69,7 +72,7 @@ materialFun = mrs.Bilinear
 # Settings, Objective function and Optimisation routine
 ep=[1,True,2]
 settings = {'volFrac':0.3,'meshSize':0.08,'rmin':0.08*0.7,'changeLimit': 0.01,'SIMP_const':3}
-ObjectFun = ofs.Energy
+ObjectFun = ofs.Compliance
 OptFun = opt.OC
 
 # Calling the optimisation
