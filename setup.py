@@ -26,7 +26,7 @@ setup(
       
       long_description_content_type = 'text/markdown',
       
-      url = 'https://github.com/ErikSaterskog/Thesis_Repo',
+      url = 'https://github.com/ErikSaterskog/PyTOpt',
       
       install_requires=[
           'visvis',
