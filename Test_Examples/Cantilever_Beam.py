@@ -67,25 +67,25 @@ g.line([5, 6],marker=5)
 g.line([6, 0],marker=6)
 
 g.surface([0, 1, 2, 3, 4,5,6])
-#####################
+
 # Forces and boundary conditions
-force = [-1e6,9,2]      # [Magnitude, Force marker, Direction]
-bmarker = 5             # Boundary marker    
-eq=[0,0]     # Body forces    
-#####################
+force = [-1e6,9,2]                      # [Magnitude, Force marker, Direction]
+bmarker = 5                             # Boundary marker    
+eq=[0,0]                                # Body forces    
+
 # Material parameters
-E = 210e9               # Young's modulus
-nu = 0.3                # Poisson's ratio
-eps_y = 0               # Strain border for Bilinear material model
+E = 210e9                               # Young's modulus
+nu = 0.3                                # Poisson's ratio
+eps_y = 0                               # Strain border for Bilinear material model
 mp = {'E':E,'nu':nu,'eps_y':eps_y}
-materialFun = mrs.Bilinear # Material model
-#####################
+materialFun = mrs.Elastic              # Material model
+
 # Settings, Objective function and Optimisation routine
-ep=[1,True,3]
-settings = {'volFrac':0.3,'meshSize':0.08,'rmin':0.08*0.7,'changeLimit': 0.01,'SIMP_penal':3}
-ObjectFun = ofs.Energy
-OptFun = opt.MMA
-#####################
+ep=[1,False,2]
+settings = {'volFrac':0.3,'meshSize':0.02,'rmin':0.02*0.07,'changeLimit': 0.01,'SIMP_penal':1}
+ObjectFun = ofs.Displacement
+OptFun = opt.OC
+
 # Calling the optimisation
-PyTOpt.Main(g, force, bmarker, mp, ep, materialFun, ObjectFun, OptFun,settings,eq)
-#######################
+PyTOpt.Main(g, force, bmarker, mp, ep, materialFun, ObjectFun, OptFun,settings,eq,maxiter=50)
+
