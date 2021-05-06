@@ -297,7 +297,7 @@ def Main(g, force, bmarker, mp, ep, materialFun, ObjectFun, OptFun, settingsdict
     print('Total computation time: '+str(int(timeMin))+'m '+str(round(np.mod(timeMin,1)*60,1))+'s')
     print('Final G0: '+str(float(G0)))
     print('---------------------------------')
-    #print(G0List)
+    print(G0List)
 
     # Plot the final optimised structure
     patches = []
