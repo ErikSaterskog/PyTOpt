@@ -71,10 +71,10 @@ eq=[0,0]
 
 # Material parameters
 mp = {'E':210e9,'nu':0.3,'eps_y':0 }            
-materialFun = mrs.ModifiedHooke                      
+materialFun = mrs.Bilinear                      
 
 # Settings, Objective function and Optimisation routine
-ep=[1,False,2]
+ep=[1,True,2]
 settings = {'volFrac':0.3,'meshSize':0.1,'rmin':0.08*0.7,'changeLimit': 0.01,'SIMP_const':3}
 ObjectFun = ofs.Compliance
 OptFun = opt.OC
