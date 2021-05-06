@@ -37,7 +37,7 @@ setup(
           'numpy',
           ],
       
-      keywords = 'optimisation, FEM, optimization, topology',
+      keywords = 'optimisation, FEM, optimization, topology, mma, oc',
       
       packages = find_packages(
           include=['Pytopt']
