@@ -18,7 +18,7 @@ setup(
       
       author_email ='danielpettersson974@gmail.com , eric.saterskog@gmail.com',
       
-      version = '0a1.0.0',
+      version = '1.0.1',
       
       description = 'A python library used in topology optimisation in 2D created at Chalmers University of Technology',
       
