@@ -26,7 +26,7 @@ def OC(x, volfrac, G0, dG0, Areae):
     Made By: Daniel Pettersson & Erik Säterskog
     """
     nel=len(x)
-    l1,l2,step,damping=0,1e5,0.1,0.3
+    l1,l2,step,damping=0,1e5,0.1,0.5
     while (l2-l1) > 1e-4:
         lmid = 0.5*(l2+l1)
         
@@ -71,7 +71,7 @@ def MMA(x, volFrac, G0, dG0, Areae):
     eeen = np.ones((nelem,1))
     xmin = 1.e-2*eeen           #Lower bound on x
     xmax = eeen                 #Upper bound on x
-    move = 0.01
+    move = 0.05
     c = 1000 
     d = np.zeros((1,1))
     a0 = 1
@@ -88,7 +88,7 @@ def MMA(x, volFrac, G0, dG0, Areae):
     dfdx = dfdx.reshape(1,nelem)
     fval = sum(np.dot(x.T,Areae))-volFrac
     outit=0                        
-    maxoutit=5
+    maxoutit=1
     kkttol = 0.1	
     kktnorm = 10
 
@@ -108,7 +108,7 @@ def MMA(x, volFrac, G0, dG0, Areae):
 #----------------------------------------------------------------------------- 
    
         # The residual vector of the KKT conditions is calculated
-        residu,kktnorm,residumax = kktcheck(1,nelem,xnew,y,z,lam,xsi,eta,mu,zet,s,xmin,xmax,dG0,fval,dfdx,a0,a,c,d)
+        #residu,kktnorm,residumax = kktcheck(1,nelem,xnew,y,z,lam,xsi,eta,mu,zet,s,xmin,xmax,dG0,fval,dfdx,a0,a,c,d)
 
     return xnew
 
